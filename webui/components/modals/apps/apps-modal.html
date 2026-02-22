@@ -106,8 +106,10 @@
 
                 <!-- Delete -->
                 <button class="apps-btn apps-btn-delete"
+                        :class="{ 'apps-btn-disabled': app.core }"
+                        :disabled="app.core"
                         @click="$confirmClick($event, () => $store.appsStore.removeApp(app.name))"
-                        title="Remove app">
+                        :title="app.core ? 'This app is vital for core functionality and cannot be removed' : 'Remove app'">
                   <span class="material-symbols-outlined">delete</span>
                 </button>
 
@@ -302,6 +304,13 @@
 
     .apps-btn-autostart-on  { border-color: #3a86ff; color: #3a86ff; }
     .apps-btn-autostart-off { border-color: var(--color-border); color: var(--color-secondary); }
+
+    .apps-btn:disabled,
+    .apps-btn-disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
 
     .apps-autostart-label {
       font-size: 0.65rem;

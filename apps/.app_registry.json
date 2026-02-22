@@ -8,10 +8,11 @@
     "env": {},
     "autostart": true,
     "status": "running",
-    "pid": 129,
+    "pid": 117,
     "created_at": "2026-02-22T17:43:17Z",
     "url": "/shared-browser/",
     "ws_port": 6081,
-    "started_at": "2026-02-22T18:38:59Z"
+    "started_at": "2026-02-22T20:20:33Z",
+    "core": true
   }
 }

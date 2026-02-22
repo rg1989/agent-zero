@@ -7,7 +7,7 @@
 </head>
 
 <body>
-    <div x-data >
+    <div x-data x-effect="if (!$store.welcomeStore?.isVisible) $store.welcomeStore?.stopBannersStream?.()">
         <template x-if="$store.welcomeStore && $store.welcomeStore.isVisible">
             <div x-create="$store.welcomeStore.onCreate()" class="welcome-container">
                 <div class="welcome-content">
@@ -61,22 +61,12 @@
                         <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('shared-browser')"
                              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
                              :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
-                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">open_in_browser</span>
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">public</span>
                             <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Shared Browser</h3>
                         </div>
                     </div>
 
-                    <div class="welcome-actions-footer">
-                        <button type="button"
-                                class="welcome-refresh-button"
-                                x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
-                                :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40;` : ''"
-                                @click="$store.welcomeStore.refreshBanners(true)"
-                                :disabled="$store.welcomeStore.bannersLoading"
-                                title="Refresh banners">
-                            <span class="material-symbols-outlined" :class="{ 'welcome-spin': $store.welcomeStore.bannersLoading }" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">refresh</span>
-                        </button>
-
+                    <div class="welcome-actions-footer" x-show="$store.welcomeStore.hasDismissedBanners">
                         <button type="button"
                                 class="welcome-refresh-button"
                                 x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"

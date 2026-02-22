@@ -134,6 +134,7 @@ class AppManager:
         description: str = "",
         env: Optional[dict] = None,
         autostart: bool = False,
+        core: bool = False,
         ws_port: Optional[int] = None,
     ) -> dict:
         """Register an app. Does not start it.
@@ -141,6 +142,8 @@ class AppManager:
         ws_port: if set, WebSocket connections to /{name}/... are forwarded to
         this port instead of port. Useful for apps that run a WebSocket service
         (e.g. websockify for VNC) on a separate port from their HTTP server.
+
+        core: if True, the app is vital for core functionality and cannot be removed.
         """
         with _lock:
             entry: dict = {
@@ -151,6 +154,7 @@ class AppManager:
                 "description": description,
                 "env": env or {},
                 "autostart": autostart,
+                "core": core,
                 "status": "registered",
                 "pid": None,
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -230,10 +234,13 @@ class AppManager:
             return dict(self._registry[name])
 
     def remove_app(self, name: str) -> bool:
-        """Stop and unregister an app."""
+        """Stop and unregister an app. Raises ValueError if the app is core."""
         with _lock:
             if name not in self._registry:
                 return False
+            info = self._registry[name]
+            if info.get("core", False) or name == "shared-browser":
+                raise ValueError(f"Cannot remove core app '{name}': it is vital for core functionality")
             try:
                 self.stop_app(name)
             except Exception:
@@ -252,16 +259,24 @@ class AppManager:
     # Query
     # ──────────────────────────────────────────────
 
+    def _normalize_app_info(self, info: dict) -> dict:
+        """Ensure core is set for known built-in core apps (backward compat)."""
+        out = dict(info)
+        if info.get("name") == "shared-browser" and not out.get("core"):
+            out["core"] = True
+        out.setdefault("core", False)
+        return out
+
     def get_app(self, name: str) -> Optional[dict]:
         with _lock:
             self._cleanup_dead_processes()
             info = self._registry.get(name)
-            return dict(info) if info else None
+            return self._normalize_app_info(info) if info else None
 
     def list_apps(self) -> list[dict]:
         with _lock:
             self._cleanup_dead_processes()
-            return [dict(v) for v in self._registry.values()]
+            return [self._normalize_app_info(v) for v in self._registry.values()]
 
     def is_registered(self, name: str) -> bool:
         return name in self._registry

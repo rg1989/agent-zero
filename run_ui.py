@@ -223,8 +223,8 @@ async def serve_index():
         gitinfo = git.get_git_info()
     except Exception:
         gitinfo = {
-            "version": "unknown",
-            "commit_time": "unknown",
+            "version": "V1",
+            "commit_time": "V1",
         }
     dev_reload_script = ""
     if os.environ.get("DEV_RELOAD"):

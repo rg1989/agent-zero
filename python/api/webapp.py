@@ -80,6 +80,7 @@ class WebappHandler(ApiHandler):
                 cwd = os.path.join(APPS_DIR, name)
             description = input.get("description", "")
             env = input.get("env", {})
+            core = bool(input.get("core", False))
             ws_port = input.get("ws_port")
             info = mgr.register_app(
                 name=name,
@@ -88,6 +89,7 @@ class WebappHandler(ApiHandler):
                 cwd=cwd,
                 description=description,
                 env=env,
+                core=core,
                 ws_port=int(ws_port) if ws_port is not None else None,
             )
             return {"app": info, "url": f"/{name}/"}
@@ -122,8 +124,11 @@ class WebappHandler(ApiHandler):
         if action == "remove":
             if not name:
                 return {"error": "name required"}
-            removed = mgr.remove_app(name)
-            return {"removed": removed, "name": name}
+            try:
+                removed = mgr.remove_app(name)
+                return {"removed": removed, "name": name}
+            except ValueError as e:
+                return {"error": str(e)}
 
         if action == "autostart":
             if not name:

@@ -12,6 +12,7 @@ const model = {
   bannersLoading: false,
   lastBannerRefresh: 0,
   hasDismissedBanners: false,
+  _bannersEventSource: null,
 
   get isVisible() {
     return !chatsStore.selected;
@@ -20,14 +21,58 @@ const model = {
   init() {
     // Reload banners when settings change
     document.addEventListener("settings-updated", () => {
-      this.refreshBanners(true);
+      this.refreshBannersOnce();
     });
   },
 
   onCreate() {
     if (this.isVisible) {
-      this.refreshBanners();
+      // Initial fetch with client context (ensures API key, unsecured, etc. banners)
+      this.refreshBannersOnce();
+      // Then start live stream for system resources and other updates
+      this.startBannersStream();
     }
+  },
+
+  stopBannersStream() {
+    if (this._bannersEventSource) {
+      this._bannersEventSource.close();
+      this._bannersEventSource = null;
+    }
+  },
+
+  startBannersStream() {
+    this.stopBannersStream();
+    this.bannersLoading = true;
+    const url = "/banners_stream";
+    this._bannersEventSource = new EventSource(url, { withCredentials: true });
+    this._bannersEventSource.onmessage = (e) => {
+      try {
+        const data = JSON.parse(e.data);
+        if (data.error) {
+          console.error("Banners stream error:", data.error);
+          return;
+        }
+        const backendBanners = data.banners || [];
+        const frontendBanners = this.runFrontendBannerChecks();
+        const dismissed = this.getDismissedBannerIds();
+        const loadIds = new Set(
+          [...frontendBanners, ...backendBanners]
+            .filter((b) => b?.id && b.dismissible !== false)
+            .map((b) => b.id),
+        );
+        this.hasDismissedBanners = Array.from(loadIds).some((id) => dismissed.has(id));
+        this.banners = this.mergeBanners(frontendBanners, backendBanners);
+      } catch (err) {
+        console.error("Failed to parse banners stream event:", err);
+      } finally {
+        this.bannersLoading = false;
+      }
+    };
+    this._bannersEventSource.onerror = () => {
+      this.bannersLoading = false;
+      this.stopBannersStream();
+    };
   },
 
   // Build frontend context to send to backend
@@ -99,10 +144,10 @@ const model = {
     );
   },
 
-  // Refresh banners: frontend checks → backend checks → merge
-  async refreshBanners(force = false) {
+  // One-shot refresh (for settings-updated, undismiss). Stream handles live updates.
+  async refreshBannersOnce() {
     const now = Date.now();
-    if (!force && now - this.lastBannerRefresh < 1000) return;
+    if (now - this.lastBannerRefresh < 500) return;
     this.lastBannerRefresh = now;
     this.bannersLoading = true;
 
@@ -169,7 +214,7 @@ const model = {
     localStorage.removeItem("dismissed_banners");
     sessionStorage.removeItem("dismissed_banners");
     this.hasDismissedBanners = false;
-    this.refreshBanners(true);
+    this.refreshBannersOnce();
   },
 
   getBannerClass(type) {

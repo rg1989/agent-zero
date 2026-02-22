@@ -22,6 +22,7 @@ ENTRY = {
     "description": "Shared Browser — Collaborative browser instance",
     "env": {},
     "autostart": True,
+    "core": True,
     "status": "registered",
     "pid": None,
     "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -59,6 +60,11 @@ else:
         existing['autostart'] = True
         changed = True
         print(f"[shared-browser] enabled autostart")
+    # Ensure core is set (cannot be removed via UI)
+    if not existing.get('core'):
+        existing['core'] = True
+        changed = True
+        print(f"[shared-browser] set core=True")
 
 if changed:
     # Reset stale pid/status so AppManager doesn't think it's still running
