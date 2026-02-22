@@ -32,7 +32,8 @@
                 :style="context.id === $store.chats.selected ? `background-color: ${itemColor}25;` : (isHovered ? `background-color: ${itemColor}15;` : '')"
                 @click="$store.chats.selectChat(context.id)">
                 <div class="chat-list-button">
-                  <span :class="{'project-color-ball': true, 'heartbeat': context.running}"
+                  <span :class="{'project-color-ball': true, 'chat-running-pulse': context.running}"
+                    :title="context.running ? 'Processing...' : ''"
                     :style="context.id === $store.chats.selected ? `background-color: ${itemColor}; box-shadow: 0 0 8px ${itemColor}; border: none;` : (isHovered ? `background-color: ${itemColor}; box-shadow: 0 0 8px ${itemColor}; border: none;` : (context.project?.color ? `background-color: ${context.project.color};` : `border: 1px solid var(--color-border);`))"></span>
                   <span class="chat-name"
                     :style="context.id === $store.chats.selected ? `color: ${itemColor}; text-shadow: 0 0 5px ${itemColor}80;` : (isHovered ? `color: ${itemColor}; text-shadow: 0 0 5px ${itemColor}66;` : '')"
@@ -138,6 +139,25 @@
       box-sizing: border-box;
       flex-shrink: 0;
       box-shadow: 0 0 5px currentColor;
+    }
+
+    /* Process indicator: visible pulse when chat is running (agent working, not awaiting input) */
+    .project-color-ball.chat-running-pulse {
+      animation: chat-process-pulse 1.2s ease-in-out infinite;
+      transform-origin: center;
+    }
+
+    @keyframes chat-process-pulse {
+      0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        filter: brightness(1);
+      }
+      50% {
+        opacity: 0.85;
+        transform: scale(1.35);
+        filter: brightness(1.5);
+      }
     }
 
     .chat-name {

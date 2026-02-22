@@ -1,19 +1,17 @@
 {
-  "agent-monitor": {
-    "name": "agent-monitor",
-    "port": 9000,
-    "cmd": "python app.py",
-    "cwd": "/a0/apps/agent-monitor",
-    "description": "Real-time Agent Zero monitoring dashboard",
-    "env": {
-      "PYTHONPATH": "/a0"
-    },
-    "autostart": false,
-    "status": "stopped",
-    "pid": null,
-    "created_at": "2026-02-22T15:06:13Z",
-    "url": "/agent-monitor/",
-    "started_at": "2026-02-22T15:36:21Z"
-  },
-  "apps": []
+  "shared-browser": {
+    "name": "shared-browser",
+    "port": 9003,
+    "cmd": "bash startup.sh",
+    "cwd": "/a0/apps/shared-browser",
+    "description": "Shared Browser \u2014 Collaborative browser instance",
+    "env": {},
+    "autostart": true,
+    "status": "running",
+    "pid": 129,
+    "created_at": "2026-02-22T17:43:17Z",
+    "url": "/shared-browser/",
+    "ws_port": 6081,
+    "started_at": "2026-02-22T18:38:59Z"
+  }
 }

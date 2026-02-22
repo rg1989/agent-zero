@@ -221,8 +221,8 @@ const model = {
       case "website":
         window.open("https://agent-zero.ai", "_blank");
         break;
-      case "github":
-        window.open("https://github.com/rg1989/agent-zero", "_blank");
+      case "shared-browser":
+        window.open("/shared-browser/", "_blank");
         break;
     }
   },

@@ -134,10 +134,16 @@ class AppManager:
         description: str = "",
         env: Optional[dict] = None,
         autostart: bool = False,
+        ws_port: Optional[int] = None,
     ) -> dict:
-        """Register an app. Does not start it."""
+        """Register an app. Does not start it.
+
+        ws_port: if set, WebSocket connections to /{name}/... are forwarded to
+        this port instead of port. Useful for apps that run a WebSocket service
+        (e.g. websockify for VNC) on a separate port from their HTTP server.
+        """
         with _lock:
-            self._registry[name] = {
+            entry: dict = {
                 "name": name,
                 "port": port,
                 "cmd": cmd,
@@ -150,6 +156,9 @@ class AppManager:
                 "created_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "url": f"/{name}/",
             }
+            if ws_port is not None:
+                entry["ws_port"] = ws_port
+            self._registry[name] = entry
             self._save_registry()
             return dict(self._registry[name])
 

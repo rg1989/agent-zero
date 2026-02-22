@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>VNC Browser Viewer</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #1a1a1a;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .header {
+            background: #000;
+            padding: 15px;
+            border-bottom: 2px solid #00ff00;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        .header h1 {
+            font-size: 24px;
+            margin-right: auto;
+        }
+        .status {
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .status.ready { background: #0f0; color: #000; }
+        .status.loading { background: #ff0; color: #000; }
+        .status.connected { background: #0f0; color: #000; }
+        .status.error { background: #f00; color: #fff; }
+        .btn {
+            background: #00ff00;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #00cc00; }
+        .btn:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            position: relative;
+        }
+        #screen {
+            width: 100%;
+            height: 100%;
+            display: none;
+        }
+        #screen.active {
+            display: block;
+        }
+        .message {
+            color: #0f0;
+            font-size: 18px;
+            text-align: center;
+            padding: 20px;
+        }
+        .error-msg {
+            color: #f00;
+            background: #300;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px;
+            max-width: 600px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🌐 VNC Browser Viewer</h1>
+        <span id="status" class="status ready">⚡ Ready</span>
+        <button class="btn" id="initBtn" onclick="startBrowser()">Start Browser</button>
+    </div>
+    <div class="content">
+        <div id="message" class="message">Click "Start Browser" to begin</div>
+        <div id="screen"></div>
+    </div>
+
+    <!-- Load noVNC libraries -->
+    <script type="module">
+        import RFB from './static/novnc/core/rfb.js';
+
+        let rfb = null;
+
+        window.startBrowser = async function() {
+            const status = document.getElementById('status');
+            const btn = document.getElementById('initBtn');
+            const message = document.getElementById('message');
+            const screen = document.getElementById('screen');
+
+            // Disable button and show loading
+            btn.disabled = true;
+            status.textContent = '⏳ Initializing...';
+            status.className = 'status loading';
+            message.textContent = 'Starting VNC components...';
+
+            try {
+                // Initialize backend (Xvfb, x11vnc, Chromium, websockify)
+                const initResp = await fetch('./api/init');
+                const initData = await initResp.json();
+
+                if (!initData.success) {
+                    throw new Error(initData.error || 'Initialization failed');
+                }
+
+                message.textContent = 'Connecting to VNC...';
+
+                // Build WebSocket URL using page's own origin
+                // This is the key - use the proxy's path, not direct port
+                const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                const wsUrl = `${wsProtocol}//${window.location.host}/browser-vnc/websockify`;
+
+                console.log('Connecting to:', wsUrl);
+
+                // Create RFB client
+                rfb = new RFB(screen, wsUrl, {
+                    credentials: { password: '' },
+                    repeaterID: '',
+                    shared: true,
+                    wsProtocols: ['binary']
+                });
+
+                // Set up event handlers
+                rfb.addEventListener('connect', () => {
+                    console.log('VNC connected');
+                    status.textContent = '✅ Connected';
+                    status.className = 'status connected';
+                    message.style.display = 'none';
+                    screen.classList.add('active');
+                    btn.textContent = '✅ Running';
+                });
+
+                rfb.addEventListener('disconnect', (e) => {
+                    console.log('VNC disconnected:', e.detail);
+                    if (e.detail.clean) {
+                        status.textContent = '⚠️ Disconnected';
+                        status.className = 'status ready';
+                    } else {
+                        status.textContent = '❌ Connection Lost';
+                        status.className = 'status error';
+                    }
+                    screen.classList.remove('active');
+                    message.style.display = 'block';
+                    message.innerHTML = `<div class="error-msg">Connection closed: ${e.detail.clean ? 'Clean disconnect' : 'Unexpected disconnect'}</div>`;
+                    btn.disabled = false;
+                    btn.textContent = 'Reconnect';
+                });
+
+                rfb.addEventListener('credentialsrequired', () => {
+                    console.log('Credentials required (unexpected)');
+                    status.textContent = '⚠️ Auth Required';
+                    status.className = 'status error';
+                });
+
+                // Configure display settings
+                rfb.scaleViewport = true;
+                rfb.resizeSession = true;
+
+            } catch (error) {
+                console.error('Failed to start:', error);
+                status.textContent = '❌ Error';
+                status.className = 'status error';
+                message.innerHTML = `<div class="error-msg"><strong>Failed to start browser viewer:</strong><br>${error.message}</div>`;
+                btn.disabled = false;
+                btn.textContent = 'Retry';
+            }
+        };
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (rfb) {
+                rfb.disconnect();
+            }
+        });
+    </script>
+</body>
+</html>

@@ -10,6 +10,7 @@ through to the wrapped ASGI app (Flask).
 
 from __future__ import annotations
 
+import asyncio
 import time
 from typing import TYPE_CHECKING
 
@@ -95,8 +96,10 @@ class AppProxy:
     async def __call__(
         self, scope: "Scope", receive: "Receive", send: "Send"
     ) -> None:
-        if scope["type"] not in ("http",):
-            # WebSocket and lifespan pass straight through
+        scope_type = scope["type"]
+
+        if scope_type not in ("http", "websocket"):
+            # lifespan and other types pass straight through
             await self._app(scope, receive, send)
             return
 
@@ -112,14 +115,22 @@ class AppProxy:
             if info is not None:
                 # App is registered — proxy if running, else show status page
                 if info.get("status") == "running":
-                    await self._proxy(scope, receive, send, app_name, info, path)
+                    if scope_type == "websocket":
+                        await self._proxy_ws(scope, receive, send, app_name, info, path)
+                    else:
+                        await self._proxy(scope, receive, send, app_name, info, path)
                 else:
-                    await self._send_html(
-                        send, 503, _not_running_html(app_name, info)
-                    )
+                    if scope_type == "websocket":
+                        await receive()  # consume websocket.connect
+                        await send({"type": "websocket.close", "code": 1008,
+                                    "reason": f"App '{app_name}' is not running"})
+                    else:
+                        await self._send_html(
+                            send, 503, _not_running_html(app_name, info)
+                        )
                 return
 
-        # Not a registered app — fall through to Flask
+        # Not a registered app — fall through to Flask / Socket.IO
         await self._app(scope, receive, send)
 
     # ──────────────────────────────────────────────
@@ -212,6 +223,217 @@ class AppProxy:
             }
         )
         await send({"type": "http.response.body", "body": resp.content})
+
+    # ──────────────────────────────────────────────
+    # WebSocket proxy
+    # ──────────────────────────────────────────────
+
+    async def _proxy_ws(
+        self,
+        scope: "Scope",
+        receive: "Receive",
+        send: "Send",
+        app_name: str,
+        info: dict,
+        path: str,
+    ) -> None:
+        """Proxy a WebSocket connection to the app's inner port.
+
+        Uses ws_port (if registered) instead of port so that VNC-style apps
+        can route HTTP to Flask and WebSocket directly to websockify without
+        any gevent/async Flask requirement.
+
+        Implemented with wsproto + asyncio streams — no extra dependencies.
+        """
+        import wsproto
+        import wsproto.events as wsevents
+
+        # ws_port overrides port for WebSocket traffic (e.g. VNC → websockify)
+        port = info.get("ws_port") or info["port"]
+
+        prefix = f"/{app_name}"
+        stripped = path[len(prefix):] or "/"
+        if not stripped.startswith("/"):
+            stripped = "/" + stripped
+
+        query = scope.get("query_string", b"")
+        target_path = stripped + ("?" + query.decode("utf-8", errors="replace") if query else "")
+        subprotocols = scope.get("subprotocols", [])
+
+        # Consume the websocket.connect message from the ASGI server
+        connect_msg = await receive()
+        if connect_msg.get("type") != "websocket.connect":
+            return
+
+        # Open raw TCP connection to the inner service
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection("127.0.0.1", port),
+                timeout=5.0,
+            )
+        except (OSError, asyncio.TimeoutError):
+            await send({"type": "websocket.close", "code": 1001,
+                        "reason": "App port unreachable"})
+            return
+
+        # Use wsproto to perform the HTTP WebSocket upgrade handshake
+        ws = wsproto.WSConnection(wsproto.ConnectionType.CLIENT)
+        upgrade_bytes = ws.send(wsevents.Request(
+            host=f"127.0.0.1:{port}",
+            target=target_path,
+            subprotocols=subprotocols,
+        ))
+        try:
+            writer.write(upgrade_bytes)
+            await writer.drain()
+        except Exception:
+            writer.close()
+            await send({"type": "websocket.close", "code": 1001,
+                        "reason": "Upstream write error"})
+            return
+
+        # Wait for AcceptConnection; buffer any data frames that arrive in
+        # the same TCP segment as the HTTP 101 response
+        accepted_subprotocol: str | None = None
+        queued: list[dict] = []
+        try:
+            while True:
+                chunk = await asyncio.wait_for(reader.read(4096), timeout=10.0)
+                if not chunk:
+                    writer.close()
+                    await send({"type": "websocket.close", "code": 1001,
+                                "reason": "Upstream closed during handshake"})
+                    return
+                ws.receive_data(chunk)
+                done = False
+                for event in ws.events():
+                    if isinstance(event, wsevents.AcceptConnection):
+                        accepted_subprotocol = event.subprotocol
+                        done = True
+                    elif isinstance(event, wsevents.RejectConnection):
+                        writer.close()
+                        await send({"type": "websocket.close", "code": 1001,
+                                    "reason": "Upstream rejected handshake"})
+                        return
+                    elif done and isinstance(event, wsevents.Message):
+                        # Data arrived in same buffer as 101 response
+                        if isinstance(event.data, bytes):
+                            queued.append({"type": "websocket.send", "bytes": event.data})
+                        else:
+                            queued.append({"type": "websocket.send", "text": event.data})
+                if done:
+                    break
+        except asyncio.TimeoutError:
+            writer.close()
+            await send({"type": "websocket.close", "code": 1001,
+                        "reason": "Upstream handshake timeout"})
+            return
+
+        # Accept the browser's WebSocket connection
+        accept: dict = {"type": "websocket.accept"}
+        if accepted_subprotocol:
+            accept["subprotocol"] = accepted_subprotocol
+        await send(accept)
+
+        # Flush any frames that arrived alongside the 101 response
+        for msg in queued:
+            await send(msg)
+
+        # ── Bidirectional pump ──────────────────────────────────────────────
+
+        async def client_to_upstream() -> None:
+            try:
+                while True:
+                    msg = await receive()
+                    t = msg.get("type")
+                    if t == "websocket.receive":
+                        raw: bytes | None = msg.get("bytes")
+                        text: str | None = msg.get("text")
+                        if raw is not None:
+                            out = ws.send(wsevents.Message(data=raw))
+                        elif text is not None:
+                            out = ws.send(wsevents.Message(data=text))
+                        else:
+                            continue
+                        writer.write(out)
+                        await writer.drain()
+                    elif t == "websocket.disconnect":
+                        try:
+                            out = ws.send(wsevents.CloseConnection(
+                                code=msg.get("code") or 1000))
+                            writer.write(out)
+                            await writer.drain()
+                        except Exception:
+                            pass
+                        writer.close()
+                        return
+            except Exception:
+                pass
+            try:
+                writer.close()
+            except Exception:
+                pass
+
+        async def upstream_to_client() -> None:
+            try:
+                while True:
+                    chunk = await reader.read(65536)
+                    if not chunk:
+                        break
+                    ws.receive_data(chunk)
+                    for event in ws.events():
+                        if isinstance(event, wsevents.Message):
+                            if isinstance(event.data, bytes):
+                                await send({"type": "websocket.send", "bytes": event.data})
+                            else:
+                                await send({"type": "websocket.send", "text": event.data})
+                        elif isinstance(event, wsevents.CloseConnection):
+                            try:
+                                out = ws.send(wsevents.CloseConnection(
+                                    code=event.code or 1000))
+                                writer.write(out)
+                                await writer.drain()
+                            except Exception:
+                                pass
+                            writer.close()
+                            await send({"type": "websocket.close",
+                                        "code": event.code or 1000})
+                            return
+                        elif isinstance(event, wsevents.Ping):
+                            try:
+                                out = ws.send(wsevents.Pong(payload=event.payload))
+                                writer.write(out)
+                                await writer.drain()
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+            try:
+                await send({"type": "websocket.close", "code": 1001})
+            except Exception:
+                pass
+            try:
+                writer.close()
+            except Exception:
+                pass
+
+        tasks = [
+            asyncio.create_task(client_to_upstream()),
+            asyncio.create_task(upstream_to_client()),
+        ]
+        try:
+            _done, pending = await asyncio.wait(
+                tasks, return_when=asyncio.FIRST_COMPLETED
+            )
+            for task in pending:
+                task.cancel()
+                try:
+                    await task
+                except asyncio.CancelledError:
+                    pass
+        except Exception:
+            for task in tasks:
+                task.cancel()
 
     # ──────────────────────────────────────────────
     # Helper

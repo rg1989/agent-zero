@@ -80,6 +80,7 @@ class WebappHandler(ApiHandler):
                 cwd = os.path.join(APPS_DIR, name)
             description = input.get("description", "")
             env = input.get("env", {})
+            ws_port = input.get("ws_port")
             info = mgr.register_app(
                 name=name,
                 port=int(port),
@@ -87,6 +88,7 @@ class WebappHandler(ApiHandler):
                 cwd=cwd,
                 description=description,
                 env=env,
+                ws_port=int(ws_port) if ws_port is not None else None,
             )
             return {"app": info, "url": f"/{name}/"}
 
