@@ -439,6 +439,12 @@ div#right-panel::-webkit-scrollbar-thumb:hover {
   align-items: center;
   gap: var(--spacing-sm);
   margin-top: var(--spacing-md);
+  /* Much less transparent background so content beneath doesn't show through */
+  background: color-mix(in srgb, var(--color-background) 96%, transparent);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: 8px;
+  border: 1px solid var(--color-border);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
 }
 
 #time-date {

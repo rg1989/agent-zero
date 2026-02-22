@@ -54,64 +54,75 @@
       
       <div class="dropdown-header">Navigation</div>
       
-      <button class="dropdown-item" @click="deselectChat(); dropdownOpen = false">
-        <span class="material-symbols-outlined">home</span>
-        <span>Dashboard</span>
+      <button class="dropdown-item dd-dashboard" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="deselectChat(); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">home</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Dashboard</span>
       </button>
 
-      <button class="dropdown-item" @click="$store.projects.openProjectsModal(); dropdownOpen = false">
-        <span class="material-symbols-outlined">snippet_folder</span>
-        <span>Projects</span>
+      <button class="dropdown-item dd-projects" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$store.projects.openProjectsModal(); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">snippet_folder</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Projects</span>
       </button>
       
-      <button class="dropdown-item" @click="openModal('modals/memory/memory-dashboard.html'); dropdownOpen = false">
-        <span class="material-symbols-outlined">psychology</span>
-        <span>Memories</span>
+      <button class="dropdown-item dd-memories" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="openModal('modals/memory/memory-dashboard.html'); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">psychology</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Memories</span>
       </button>
       
-      <button class="dropdown-item" @click="openModal('modals/scheduler/scheduler-modal.html'); dropdownOpen = false">
-        <span class="material-symbols-outlined">schedule</span>
-        <span>Scheduler</span>
+      <button class="dropdown-item dd-scheduler" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="openModal('modals/scheduler/scheduler-modal.html'); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">schedule</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Scheduler</span>
       </button>
       
-      <button class="dropdown-item" @click="openModal('settings/settings.html'); dropdownOpen = false">
-        <span class="material-symbols-outlined">settings</span>
-        <span>Settings</span>
+      <button class="dropdown-item dd-settings" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="openModal('settings/settings.html'); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">settings</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Settings</span>
       </button>
       
       <div class="dropdown-separator"></div>
       <div class="dropdown-header">Chat Actions</div>
       
-      <button class="dropdown-item" @click="$store.chats.newChat(); dropdownOpen = false">
-        <span class="material-symbols-outlined">edit_square</span>
-        <span>New Chat</span>
+      <button class="dropdown-item dd-new-chat" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$store.chats.newChat(); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">edit_square</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">New Chat</span>
       </button>
       
-      <button class="dropdown-item" @click="$store.chats.loadChats(); dropdownOpen = false">
-        <span class="material-symbols-outlined">folder_open</span>
-        <span>Load Chat</span>
+      <button class="dropdown-item dd-load-chat" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$store.chats.loadChats(); dropdownOpen = false"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">folder_open</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Load Chat</span>
       </button>
       
-      <button class="dropdown-item" @click="$store.chats.saveChat(); dropdownOpen = false" :disabled="!$store.chats.selected">
-        <span class="material-symbols-outlined">save</span>
-        <span>Save Chat</span>
+      <button class="dropdown-item dd-save-chat" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$store.chats.saveChat(); dropdownOpen = false" :disabled="!$store.chats.selected"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">save</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Save Chat</span>
       </button>
 
-      <button class="dropdown-item" @click="$confirmClick($event, () => { $store.chats.resetChat(); dropdownOpen = false })" :disabled="!$store.chats.selected">
-        <span class="material-symbols-outlined">delete_sweep</span>
-        <span>Clear Chat</span>
+      <button class="dropdown-item dd-clear-chat" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$confirmClick($event, () => { $store.chats.resetChat(); dropdownOpen = false })" :disabled="!$store.chats.selected"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">delete_sweep</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Clear Chat</span>
       </button>
       
       <div class="dropdown-separator"></div>
       
-      <button class="dropdown-item" @click="$confirmClick($event, () => { $store.chats.logout(); dropdownOpen = false })" :disabled="!$store.chats.loggedIn">
-        <span class="material-symbols-outlined">logout</span>
-        <span>Logout</span>
+      <button class="dropdown-item dd-logout" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$confirmClick($event, () => { $store.chats.logout(); dropdownOpen = false })" :disabled="!$store.chats.loggedIn"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">logout</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Logout</span>
       </button>
 
-      <button class="dropdown-item" @click="$confirmClick($event, () => { $store.chats.restart(); dropdownOpen = false })">
-        <span class="material-symbols-outlined">restart_alt</span>
-        <span>Restart A0</span>
+      <button class="dropdown-item dd-restart" x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''" @click="$confirmClick($event, () => { $store.chats.restart(); dropdownOpen = false })"
+              :style="hoverColor ? `background-color: ${hoverColor}20;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor};` : ''">restart_alt</span>
+        <span :style="hoverColor ? `color: ${hoverColor};` : ''">Restart A0</span>
       </button>
 
     </div>
@@ -124,6 +135,8 @@
     position: relative;
     border-radius: 0.6rem;
     z-index: 100;
+    flex: 1;
+    min-width: 0;
     /* Ensure dropdown appears above all sidebar content */
   }
 
@@ -228,6 +241,19 @@
     font-size: 18px;
   }
 
+  /* Dropdown items: distinct default colors (dark mode) */
+  .dd-dashboard .material-symbols-outlined, .dd-dashboard > span:last-child { color: #00f2fe; }
+  .dd-projects .material-symbols-outlined, .dd-projects > span:last-child { color: #3a86ff; }
+  .dd-memories .material-symbols-outlined, .dd-memories > span:last-child { color: #bf00ff; }
+  .dd-scheduler .material-symbols-outlined, .dd-scheduler > span:last-child { color: #ffb86c; }
+  .dd-settings .material-symbols-outlined, .dd-settings > span:last-child { color: #00ff9d; }
+  .dd-new-chat .material-symbols-outlined, .dd-new-chat > span:last-child { color: #00f2fe; }
+  .dd-load-chat .material-symbols-outlined, .dd-load-chat > span:last-child { color: #3a86ff; }
+  .dd-save-chat .material-symbols-outlined, .dd-save-chat > span:last-child { color: #00ff9d; }
+  .dd-clear-chat .material-symbols-outlined, .dd-clear-chat > span:last-child { color: #ff007f; }
+  .dd-logout .material-symbols-outlined, .dd-logout > span:last-child { color: #ff007f; }
+  .dd-restart .material-symbols-outlined, .dd-restart > span:last-child { color: #ffb86c; }
+
   /* New Chat Button */
   #newChat {
   display: flex;
@@ -255,6 +281,13 @@
 
   .light-mode .config-button:hover { background-color: var(--color-background-hover); }
   .light-mode .config-button:active { background-color: var(--color-background-hover); }
+
+  /* Dark mode: give each icon its own neon color */
+  #dashboard .material-symbols-outlined { color: #00f2fe; }
+  #memory-dash .material-symbols-outlined { color: #bf00ff; }
+  #scheduler .material-symbols-outlined { color: #ffb86c; }
+  #settings .material-symbols-outlined { color: #00ff9d; }
+  .dropdown-toggle .material-symbols-outlined { color: #3a86ff; }
 
   /* Light mode: give each icon its own default color */
   .light-mode #dashboard .material-symbols-outlined { color: #1565c0; }

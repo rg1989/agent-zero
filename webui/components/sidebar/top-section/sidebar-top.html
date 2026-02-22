@@ -8,22 +8,32 @@
   <div x-data>
     <template x-if="$store.sidebar">
       <div class="sidebar-top-wrapper">
-        <!-- Header Icons (Toggle + Logo) -->
-        <x-component path="sidebar/top-section/header-icons.html"></x-component>
-        
-        <!-- Quick Actions Buttons -->
-        <x-component path="sidebar/top-section/quick-actions.html"></x-component>
+        <!-- Quick Actions (drawer toggle is fixed on left, outside this row) -->
+        <div class="sidebar-top-row">
+          <x-component path="sidebar/top-section/quick-actions.html"></x-component>
+        </div>
       </div>
     </template>
   </div>
 
 
   <style>
-    /* Sidebar top wrapper - ensures proper spacing and layout */
+    /* Sidebar top: row with quick-actions; margin-left clears the fixed drawer toggle */
     .sidebar-top-wrapper {
       display: flex;
       flex-direction: column;
       flex-shrink: 0;
+      margin-left: calc(2.25rem + var(--spacing-xs));
+    }
+    .sidebar-top-row {
+      display: flex;
+      flex-direction: row;
+      align-items: stretch;
+      width: 100%;
+    }
+    .sidebar-top-row > * {
+      flex: 1;
+      min-width: 0;
     }
   </style>
 </body>

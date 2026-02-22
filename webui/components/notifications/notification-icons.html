@@ -9,14 +9,18 @@
         <template x-if="$store.notificationStore">
             <!-- Notification Toggle Button -->
             <div class="notification-toggle"
+                 x-data="{ hoverColor: '' }"
+                 @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                 @mouseleave="hoverColor = ''"
                  :class="{
                      'has-unread': $store.notificationStore.unreadPrioCount > 0,
                      'has-notifications': $store.notificationStore.notifications.length > 0
                  }"
                  @click="$store.notificationStore.openModal()"
-                 title="View Notifications">
+                 title="View Notifications"
+                 :style="hoverColor ? `background: ${hoverColor}20; border-color: ${hoverColor}; box-shadow: 0 0 8px ${hoverColor}40;` : ''">
                 <div class="notification-icon">
-                    <span class="material-symbols-outlined">notifications</span>
+                    <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">notifications</span>
                 </div>
                 <span x-show="$store.notificationStore.unreadPrioCount > 0"
                       class="notification-badge"

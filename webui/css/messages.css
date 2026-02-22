@@ -32,6 +32,17 @@
   align-self: flex-start;
 }
 
+/* AI/model messages: complete wrapping frame (matches user message style) */
+.ai-container .message {
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  background-color: var(--color-message-bg);
+  padding: var(--spacing-sm) var(--spacing-md);
+  overflow-x: hidden; /* prevent inner scrollbar; content wraps instead */
+  overflow-y: visible;
+  min-width: 0; /* allow shrinking in flex to prevent overflow */
+}
+
 .center-container {
   align-self: center;
   max-width: 80%;
@@ -216,14 +227,23 @@
   color: #24292f;
 }
 
+.message-body {
+  min-width: 0;
+  max-width: 100%;
+}
+
 .message-body .markdown-block-wrap {
   margin: 1em 0;
+  max-width: 100%;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 .message-body .message-markdown-table-wrap {
   display: block;
   width: 100%;
-  overflow-x: auto;
+  max-width: 100%;
+  overflow-x: auto; /* tables may need horizontal scroll when very wide */
   /* padding-bottom: 1em; */
 }
 
@@ -233,16 +253,20 @@
   white-space: nowrap;
 }
 
-.message-body .code-block-wrapper{
+.message-body .code-block-wrapper {
   max-width: 100%;
-  overflow-x: auto;
+  overflow-x: auto; /* code blocks can scroll if truly long */
+  overflow-wrap: break-word;
   padding: 0.5em;
   border: 1px solid var(--color-border);
   border-radius: var(--border-radius-sm);
 }
 
-.message-body .code-block-wrapper pre{
+.message-body .code-block-wrapper pre {
   max-width: 100%;
+  white-space: pre-wrap;
+  word-break: break-word;
+  overflow-wrap: anywhere;
 }
 
 /* .message-body code {
@@ -435,9 +459,13 @@
 
 .msg-content {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   margin-bottom: 0;
   padding: 0;
   overflow: hidden;
+  overflow-wrap: break-word;
+  word-break: break-word;
 }
 
 /* Math (KaTeX) */

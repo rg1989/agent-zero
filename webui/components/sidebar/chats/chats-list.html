@@ -75,15 +75,21 @@
       font-size: 0.85rem;
     }
 
-    #newChat {
-      color: var(--color-highlight);
-      text-shadow: var(--glow-text-accent);
+    /* New chat icon: distinct from menu items (neon yellow) */
+    #newChat,
+    #newChat .material-symbols-outlined {
+      color: #ffd700;
     }
 
     #newChat:hover {
-      background-color: rgba(191, 0, 255, 0.15);
-      box-shadow: 0 0 8px rgba(191, 0, 255, 0.3);
-      border-color: var(--color-highlight);
+      background-color: rgba(255, 215, 0, 0.15);
+      box-shadow: 0 0 8px rgba(255, 215, 0, 0.3);
+      border-color: #ffd700;
+    }
+
+    .light-mode #newChat,
+    .light-mode #newChat .material-symbols-outlined {
+      color: #b38600;
     }
 
     .light-mode #newChat:hover {

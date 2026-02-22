@@ -10,9 +10,10 @@
 <body>
   <div x-data>
     <template x-if="$store.sidebar">
-      <div id="left-panel" class="panel" x-data :class="{'hidden': !$store.sidebar.isOpen}">
-        <!--Sidebar upper elements-->
-        <div class="left-panel-top no-scrollbar">
+      <div class="sidebar-wrapper">
+        <div id="left-panel" class="panel" x-data :class="{'hidden': !$store.sidebar.isOpen}">
+          <!--Sidebar upper elements-->
+          <div class="left-panel-top no-scrollbar">
           <!-- Top Section: Header Icons + Quick Actions -->
           <x-component path="sidebar/top-section/sidebar-top.html"></x-component>
           <!-- Chats List -->
@@ -29,11 +30,67 @@
         <div class="left-panel-bottom">
           <x-component path="sidebar/bottom/sidebar-bottom.html"></x-component>
         </div>
+        </div>
+
+        <!-- Single drawer toggle: fixed at left edge, always visible -->
+        <button id="toggle-sidebar" class="drawer-toggle-fixed"
+                x-data="{ hoverColor: '' }"
+                @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                @mouseleave="hoverColor = ''"
+                :style="hoverColor ? `border-color: ${hoverColor}; box-shadow: 0 0 8px ${hoverColor}40; color: ${hoverColor};` : ''"
+                @click="$store.sidebar.toggle()"
+                :aria-label="$store.sidebar.isOpen ? 'Close sidebar' : 'Open sidebar'"
+                :title="$store.sidebar.isOpen ? 'Close sidebar' : 'Open sidebar'">
+          <span class="material-symbols-outlined" :style="hoverColor ? `text-shadow: 0 0 5px ${hoverColor}80;` : ''">menu</span>
+        </button>
       </div>
     </template>
   </div>
 
   <style>
+    .sidebar-wrapper {
+      position: relative;
+    }
+
+    /* Single drawer toggle: fixed at left edge, matched to config-button menu icons */
+    .drawer-toggle-fixed {
+      position: fixed;
+      left: var(--spacing-xs);
+      top: var(--spacing-md);
+      z-index: 1005;
+      height: 2.25rem;
+      width: 2.25rem;
+      min-width: 2.25rem;
+      background-color: var(--color-panel);
+      border: 0.05rem solid var(--color-border);
+      border-radius: 6px;
+      color: #ff007f;
+      opacity: 0.8;
+      cursor: pointer;
+      padding: var(--spacing-xs);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 2px 0 12px rgba(0, 0, 0, 0.3);
+      -webkit-transition: all var(--transition-speed) ease-in-out;
+      transition: all var(--transition-speed) ease-in-out;
+    }
+    .drawer-toggle-fixed:hover {
+      background-color: var(--color-background-hover);
+      opacity: 1;
+    }
+    .drawer-toggle-fixed:active {
+      opacity: 0.5;
+      transform: scale(0.95);
+    }
+    .drawer-toggle-fixed .material-symbols-outlined {
+      font-size: 20px;
+    }
+
+    .light-mode .drawer-toggle-fixed {
+      color: #b00020;
+    }
+
     /* Left Panel styles from index.css */
     #left-panel {
       background-color: var(--color-panel);
@@ -83,15 +140,16 @@
       /* Critical for allowing flex children to shrink */
       overflow: hidden;
       justify-content: space-between;
-      margin-top: 3.5rem;
-      padding: var(--spacing-md) var(--spacing-md) 0 var(--spacing-md);
+      /* Minimal side padding; top row has its own margin to clear the drawer toggle */
+      padding: var(--spacing-md) var(--spacing-xs) 0 var(--spacing-xs);
     }
 
     .left-panel-bottom {
       position: relative;
       flex-shrink: 0;
       flex-grow: 0;
-      /* Prevent bottom from growing */
+      /* Match horizontal padding of content above (tasks, chats) */
+      padding: 0 var(--spacing-xs);
     }
 
     /* Chats section container inside sidebar */
@@ -104,6 +162,7 @@
       /* Take all available space */
       max-height: 100%;
       overflow: hidden;
+      padding: 0 var(--spacing-sm);
     }
 
     /* Tasks section container inside sidebar */
@@ -117,7 +176,7 @@
       max-height: 40%;
       /* Limit to 40% of viewport height when expanded */
       margin-top: 0;
-      padding-top: var(--spacing-md);
+      padding: var(--spacing-md) var(--spacing-sm) 0 var(--spacing-sm);
       overflow: hidden;
     }
 
