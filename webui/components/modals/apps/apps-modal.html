@@ -1,0 +1,313 @@
+<html>
+<head>
+  <title>My Apps</title>
+  <script type="module">
+    import { store } from "/components/modals/apps/apps-store.js";
+  </script>
+</head>
+<body>
+  <div x-data x-init="$store.appsStore.onModalOpen()">
+    <template x-if="$store.appsStore">
+      <div class="apps-modal-content">
+
+        <!-- Header row -->
+        <div class="apps-header">
+          <span class="apps-description">Web apps built and managed by Agent Zero. Access each app at <code>localhost:50000/{name}/</code></span>
+          <button class="apps-refresh-btn" @click="$store.appsStore.refresh()" title="Refresh" :disabled="$store.appsStore.loading">
+            <span class="material-symbols-outlined" :class="{ 'apps-spin': $store.appsStore.loading }">refresh</span>
+          </button>
+        </div>
+
+        <!-- Error -->
+        <div x-show="$store.appsStore.error" class="apps-error" x-text="$store.appsStore.error"></div>
+
+        <!-- Empty state -->
+        <div x-show="!$store.appsStore.loading && $store.appsStore.apps.length === 0 && !$store.appsStore.error" class="apps-empty">
+          <span class="material-symbols-outlined apps-empty-icon">web</span>
+          <p>No apps yet.</p>
+          <p class="apps-empty-hint">Ask Agent Zero to build one:<br><em>"Build me a dashboard"</em></p>
+        </div>
+
+        <!-- App list -->
+        <div class="apps-list" x-show="$store.appsStore.apps.length > 0">
+          <template x-for="app in $store.appsStore.apps" :key="app.name">
+            <div class="apps-item">
+
+              <!-- Status indicator + name -->
+              <div class="apps-item-left">
+                <span class="material-symbols-outlined apps-status-icon"
+                      :style="`color: ${$store.appsStore.statusColor(app.status)}`"
+                      :title="app.status"
+                      x-text="$store.appsStore.statusIcon(app.status)"></span>
+                <div class="apps-item-info">
+                  <div class="apps-item-name" x-text="app.name"></div>
+                  <div class="apps-item-meta">
+                    <span x-text="app.status" class="apps-status-label"
+                          :style="`color: ${$store.appsStore.statusColor(app.status)}`"></span>
+                    <span class="apps-meta-sep">·</span>
+                    <span x-text="`port ${app.port}`" class="apps-meta-dim"></span>
+                    <template x-if="app.description">
+                      <span>
+                        <span class="apps-meta-sep">·</span>
+                        <span x-text="app.description" class="apps-meta-dim"></span>
+                      </span>
+                    </template>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div class="apps-item-actions">
+
+                <!-- Open in browser (only when running) -->
+                <button class="apps-btn apps-btn-open"
+                        x-show="app.status === 'running'"
+                        @click="$store.appsStore.openApp(app.name)"
+                        title="Open in browser">
+                  <span class="material-symbols-outlined">open_in_new</span>
+                </button>
+
+                <!-- Start -->
+                <button class="apps-btn apps-btn-start"
+                        x-show="app.status !== 'running'"
+                        @click="$store.appsStore.startApp(app.name)"
+                        title="Start">
+                  <span class="material-symbols-outlined">play_arrow</span>
+                </button>
+
+                <!-- Stop -->
+                <button class="apps-btn apps-btn-stop"
+                        x-show="app.status === 'running'"
+                        @click="$store.appsStore.stopApp(app.name)"
+                        title="Stop">
+                  <span class="material-symbols-outlined">stop</span>
+                </button>
+
+                <!-- Restart -->
+                <button class="apps-btn apps-btn-restart"
+                        x-show="app.status === 'running'"
+                        @click="$store.appsStore.restartApp(app.name)"
+                        title="Restart">
+                  <span class="material-symbols-outlined">restart_alt</span>
+                </button>
+
+                <!-- Autostart toggle -->
+                <button class="apps-btn"
+                        :class="app.autostart ? 'apps-btn-autostart-on' : 'apps-btn-autostart-off'"
+                        @click="$store.appsStore.toggleAutostart(app.name, app.autostart)"
+                        :title="app.autostart ? 'Autostart ON — click to disable' : 'Autostart OFF — click to enable'">
+                  <span class="material-symbols-outlined">
+                    <span x-text="app.autostart ? 'bolt' : 'bolt'"></span>
+                  </span>
+                  <span class="material-symbols-outlined" x-text="app.autostart ? 'bolt' : 'bolt_slash'" style="display:none"></span>
+                  <!-- simpler: just use a letter indicator -->
+                  <span class="apps-autostart-label" x-text="app.autostart ? 'AUTO' : 'AUTO'" :style="app.autostart ? 'opacity:1' : 'opacity:0.35'">AUTO</span>
+                </button>
+
+                <!-- Delete -->
+                <button class="apps-btn apps-btn-delete"
+                        @click="$confirmClick($event, () => $store.appsStore.removeApp(app.name))"
+                        title="Remove app">
+                  <span class="material-symbols-outlined">delete</span>
+                </button>
+
+              </div>
+            </div>
+          </template>
+        </div>
+
+      </div>
+    </template>
+  </div>
+
+  <style>
+    .apps-modal-content {
+      display: flex;
+      flex-direction: column;
+      min-height: 300px;
+      padding: 0;
+    }
+
+    .apps-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 0.75rem 0 0.75rem 0;
+      border-bottom: 1px solid var(--color-border);
+      margin-bottom: 0.75rem;
+    }
+
+    .apps-description {
+      font-size: 0.85rem;
+      color: var(--color-secondary);
+      line-height: 1.4;
+    }
+
+    .apps-description code {
+      background: var(--color-panel);
+      padding: 0.1em 0.4em;
+      border-radius: 4px;
+      font-size: 0.82em;
+      color: var(--color-primary);
+    }
+
+    .apps-refresh-btn {
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 8px;
+      color: var(--color-secondary);
+      cursor: pointer;
+      padding: 6px;
+      display: flex;
+      align-items: center;
+      transition: all 0.2s;
+    }
+
+    .apps-refresh-btn:hover {
+      border-color: var(--color-primary);
+      color: var(--color-primary);
+    }
+
+    .apps-refresh-btn:disabled { opacity: 0.5; cursor: default; }
+
+    .apps-spin {
+      animation: apps-spin 0.8s linear infinite;
+    }
+
+    @keyframes apps-spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+
+    .apps-error {
+      color: var(--color-error-text);
+      background: rgba(255,42,95,0.1);
+      border: 1px solid rgba(255,42,95,0.3);
+      border-radius: 8px;
+      padding: 0.6rem 0.9rem;
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .apps-empty {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem 1rem;
+      color: var(--color-secondary);
+      text-align: center;
+    }
+
+    .apps-empty-icon {
+      font-size: 3rem;
+      opacity: 0.3;
+      margin-bottom: 0.5rem;
+    }
+
+    .apps-empty p { margin: 0.25rem 0; font-size: 0.9rem; }
+    .apps-empty-hint { color: var(--color-secondary); opacity: 0.7; font-size: 0.82rem !important; }
+
+    .apps-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .apps-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: var(--color-panel);
+      border: 1px solid var(--color-border);
+      border-radius: 10px;
+      padding: 0.65rem 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .apps-item:hover {
+      border-color: var(--color-primary);
+    }
+
+    .apps-item-left {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      min-width: 0;
+    }
+
+    .apps-status-icon {
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .apps-item-info {
+      min-width: 0;
+    }
+
+    .apps-item-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .apps-item-meta {
+      font-size: 0.78rem;
+      color: var(--color-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+      margin-top: 2px;
+    }
+
+    .apps-status-label { font-weight: 500; }
+    .apps-meta-sep { opacity: 0.4; }
+    .apps-meta-dim { opacity: 0.7; }
+
+    .apps-item-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex-shrink: 0;
+    }
+
+    .apps-btn {
+      background: transparent;
+      border: 1px solid var(--color-border);
+      border-radius: 7px;
+      color: var(--color-secondary);
+      cursor: pointer;
+      padding: 5px 7px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.75rem;
+      transition: all 0.18s;
+    }
+
+    .apps-btn .material-symbols-outlined { font-size: 1.05rem; }
+
+    .apps-btn:hover { background: var(--color-message-bg); color: var(--color-text); border-color: var(--color-text); }
+
+    .apps-btn-open:hover  { border-color: var(--color-primary); color: var(--color-primary); }
+    .apps-btn-start:hover { border-color: #00ff9d; color: #00ff9d; }
+    .apps-btn-stop:hover  { border-color: #ff6b6b; color: #ff6b6b; }
+    .apps-btn-restart:hover { border-color: #ffd700; color: #ffd700; }
+    .apps-btn-delete:hover { border-color: var(--color-error-text); color: var(--color-error-text); }
+
+    .apps-btn-autostart-on  { border-color: #3a86ff; color: #3a86ff; }
+    .apps-btn-autostart-off { border-color: var(--color-border); color: var(--color-secondary); }
+
+    .apps-autostart-label {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+  </style>
+</body>
+</html>

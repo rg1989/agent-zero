@@ -215,6 +215,9 @@ const model = {
       case "files":
         chatInputStore.browseFiles();
         break;
+      case "apps":
+        window.openModal("modals/apps/apps-modal.html", { title: "My Apps" });
+        break;
       case "website":
         window.open("https://agent-zero.ai", "_blank");
         break;

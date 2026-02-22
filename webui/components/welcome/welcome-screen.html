@@ -52,11 +52,11 @@
                             <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">folder_open</span>
                             <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Files</h3>
                         </div>
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('website')"
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('apps')"
                              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
                              :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
-                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">language</span>
-                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Visit Website</h3>
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">web</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">My Apps</h3>
                         </div>
                         <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('github')"
                              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"

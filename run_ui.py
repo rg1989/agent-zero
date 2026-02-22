@@ -511,11 +511,12 @@ def run():
     init_a0()
 
     wsgi_app = WSGIMiddleware(webapp)
+    from python.helpers.app_proxy import AppProxy
     starlette_app = Starlette(
         routes=[
             Mount("/mcp", app=mcp_server.DynamicMcpProxy.get_instance()),
             Mount("/a2a", app=fasta2a_server.DynamicA2AProxy.get_instance()),
-            Mount("/", app=wsgi_app),
+            Mount("/", app=AppProxy(wsgi_app)),
         ]
     )
 
@@ -590,6 +591,14 @@ def init_a0():
     initialize.initialize_job_loop()
     # preload
     initialize.initialize_preload()
+    # autostart web apps marked for autostart
+    try:
+        from python.helpers.app_manager import AppManager
+        started = AppManager.get_instance().autostart_all()
+        if started:
+            PrintStyle().print(f"[AppManager] Autostarted apps: {', '.join(started)}")
+    except Exception as e:
+        PrintStyle.warning(f"[AppManager] Autostart failed: {e}")
 
 
 # run the internal server

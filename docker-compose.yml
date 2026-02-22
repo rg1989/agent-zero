@@ -10,6 +10,7 @@ services:
     volumes:
       - agent-zero-data:/per
       - ./webui:/a0/webui  # live-reload: host webui/ is served directly
+      - ./apps:/a0/apps    # persist built web apps across rebuilds
     environment:
       - AUTH_LOGIN=${AUTH_LOGIN:-}
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
