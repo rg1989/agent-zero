@@ -1,9 +1,9 @@
 ---
 name: "web-app-builder"
 description: "Build, deploy, and manage local web applications within Agent Zero. Use when the user asks to build a dashboard, visualisation, web app, or anything best served as a browser-based interface. Apps are served at localhost:50000/{app_name}/ with no extra port forwarding required."
-version: "1.0.0"
+version: "2.0.0"
 author: "Agent Zero"
-tags: ["webapp", "dashboard", "visualisation", "flask", "fastapi", "react", "server", "deploy", "monitor", "apps"]
+tags: ["webapp", "dashboard", "visualisation", "flask", "server", "deploy", "monitor", "apps"]
 trigger_patterns:
   - "build me an app"
   - "build a dashboard"
@@ -28,367 +28,164 @@ trigger_patterns:
 
 # Web App Builder
 
-Build and host local web applications that are immediately accessible in the user's browser at `localhost:50000/{app_name}/` — no extra port forwarding needed.
+Build and host local web applications accessible at `localhost:50000/{app_name}/`.
+No extra port forwarding needed. Apps persist across Docker rebuilds.
 
 ---
 
-## How It Works
-
-Agent Zero runs inside Docker. A reverse proxy built into the server intercepts any request to `localhost:50000/{app_name}/` and forwards it to the app's inner port (in the 9000–9099 range). You start the app, register it, and it's live.
+## How routing works
 
 ```
-User browser → localhost:50000/my_app/ → (proxy) → container:9000 → your app
+Browser → localhost:50000/{app_name}/... → (proxy inside container) → localhost:{PORT}/...
 ```
+
+The proxy is built into Agent Zero's server. You just start the app on any port in 9000–9099.
 
 ---
 
-## Directory Convention
+## Step 1 — Choose a template
 
-All apps live under `/a0/apps/{app_name}/`:
+**Always start from a template.** This saves setup time and ensures correct routing.
 
-```
-/a0/apps/
-└── my_app/
-    ├── app.py          # or server.js, index.html, etc.
-    ├── requirements.txt
-    ├── templates/
-    ├── static/
-    └── data/
-```
+Read `/a0/apps/_templates/_GUIDE.md` for full details. Quick decision:
+
+| Task | Template |
+|------|----------|
+| Charts, metrics, live data | `flask-dashboard` |
+| Web app with Python logic, forms, multiple pages | `flask-basic` |
+| Pure front-end visualisation, no Python needed | `static-html` |
 
 ---
 
-## Step-by-Step: Building a New App
-
-### Step 1 — Allocate a port
-
-```python
-import requests
-resp = requests.get("http://localhost/webapp?action=alloc_port")
-port = resp.json()["port"]
-print(f"Using port {port}")
-```
-
-Or via shell:
-```bash
-curl -s "http://localhost/webapp?action=alloc_port" | python3 -c "import sys,json; print(json.load(sys.stdin)['port'])"
-```
-
-### Step 2 — Create the app directory and write the app
+## Step 2 — Allocate a port
 
 ```bash
-mkdir -p /a0/apps/my_app
+PORT=$(curl -s "http://localhost/webapp?action=alloc_port" | python3 -c "import sys,json; print(json.load(sys.stdin)['port'])")
+echo "Port: $PORT"
 ```
 
-Write `app.py` (or whatever fits the stack). **The app must listen on the allocated port.** Use the `PORT` environment variable which is always set automatically:
+---
 
-```python
-import os
-port = int(os.environ.get("PORT", 9000))
-app.run(host="0.0.0.0", port=port)
+## Step 3 — Copy the template
+
+```bash
+cp -r /a0/apps/_templates/{CHOSEN_TEMPLATE} /a0/apps/{app_name}
 ```
 
-### Step 3 — Register and start the app
+Example:
+```bash
+cp -r /a0/apps/_templates/flask-dashboard /a0/apps/my_dashboard
+```
 
-```python
-import requests
+---
 
+## Step 4 — Customise the app
+
+Edit the copied files. The key things to change:
+
+**For `flask-dashboard`:**
+- `app.py` → replace the sample data in `/api/data` with real data (files, psutil, DB, etc.)
+- `templates/index.html` → change the title, add/remove metric cards or chart datasets
+
+**For `flask-basic`:**
+- `app.py` → add your routes and logic
+- `templates/index.html` → replace the content section
+
+**For `static-html`:**
+- `app.js` → replace `DATA` with real data or a fetch call
+- `index.html` → swap Chart.js CDN for D3/Plotly if needed
+
+**Rules that must not change:**
+- Always `host="0.0.0.0"` (not 127.0.0.1)
+- Always read port from env: `PORT = int(os.environ.get("PORT", 9000))`
+- Always read app name from env: `APP_NAME = os.environ.get("APP_NAME", "")`
+- Always use relative asset URLs (the `<base>` tag handles sub-path routing)
+
+---
+
+## Step 5 — Register and start
+
+```bash
 # Register
-requests.post("http://localhost/webapp", json={
-    "action": "register",
-    "name": "my_app",
-    "port": 9000,           # port from step 1
-    "cmd": "python app.py", # command to start the app
-    "cwd": "/a0/apps/my_app",
-    "description": "My dashboard"
-})
+curl -s -X POST http://localhost/webapp \
+  -H "Content-Type: application/json" \
+  -d "{\"action\":\"register\",\"name\":\"{app_name}\",\"port\":$PORT,\"cmd\":\"python app.py\",\"cwd\":\"/a0/apps/{app_name}\",\"description\":\"{short description}\"}"
 
 # Start
-requests.post("http://localhost/webapp", json={
-    "action": "start",
-    "name": "my_app"
-})
+curl -s -X POST http://localhost/webapp \
+  -H "Content-Type: application/json" \
+  -d "{\"action\":\"start\",\"name\":\"{app_name}\"}"
 ```
 
-The app is now accessible at **`localhost:50000/my_app/`**.
+For `static-html`, the start command is `python serve.py` instead of `python app.py`.
+
+The app is now live at **`localhost:50000/{app_name}/`**.
 
 ---
 
-## Management API (POST /webapp)
+## Management commands
 
-All management is done via `POST http://localhost/webapp` with a JSON body.
-
-| action | required fields | description |
-|--------|----------------|-------------|
-| `list` | — | List all registered apps |
-| `alloc_port` | — | Get next available port (9000–9099) |
-| `register` | `name`, `port`, `cmd`, `cwd` | Register an app |
-| `start` | `name` | Start a registered app |
-| `stop` | `name` | Stop a running app |
-| `restart` | `name` | Stop + start |
-| `status` | `name` | Get app info & status |
-| `remove` | `name` | Stop + unregister |
-| `autostart` | `name`, `enabled` | Enable/disable autostart on server boot |
-
-GET shortcuts: `GET /webapp?action=list` and `GET /webapp?action=status&name=my_app`
-
----
-
-## App Stack Recipes
-
-### Python / Flask
-
-```python
-# /a0/apps/my_app/app.py
-import os
-from flask import Flask
-app = Flask(__name__)
-
-@app.route("/")
-def index():
-    return "<h1>Hello from my_app</h1>"
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 9000))
-    app.run(host="0.0.0.0", port=port, debug=False)
-```
-
-Start command: `python app.py`
-Install deps first: `pip install flask` (or add to requirements.txt and run `pip install -r requirements.txt`)
-
-### Python / FastAPI
-
-```python
-# /a0/apps/my_app/app.py
-import os, uvicorn
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
-
-app = FastAPI()
-
-@app.get("/", response_class=HTMLResponse)
-def root():
-    return "<h1>FastAPI app</h1>"
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 9000))
-    uvicorn.run(app, host="0.0.0.0", port=port)
-```
-
-Start command: `python app.py`
-
-### Static HTML (via Python http.server)
+All via `POST http://localhost/webapp` with JSON body, or GET for reads.
 
 ```bash
-mkdir -p /a0/apps/my_app
-# write index.html ...
-```
+# List all apps
+curl -s "http://localhost/webapp?action=list"
 
-Register with cmd: `python -m http.server $PORT`
+# Stop
+curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
+  -d '{"action":"stop","name":"my_app"}'
 
-### Node.js / Express
+# Restart
+curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
+  -d '{"action":"restart","name":"my_app"}'
 
-```js
-// /a0/apps/my_app/server.js
-const express = require('express');
-const app = express();
-const port = process.env.PORT || 9000;
-app.get('/', (req, res) => res.send('<h1>Node app</h1>'));
-app.listen(port, '0.0.0.0', () => console.log(`Listening on ${port}`));
-```
+# Enable autostart (survives container restarts)
+curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
+  -d '{"action":"autostart","name":"my_app","enabled":true}'
 
-Start command: `node server.js`
-
----
-
-## Important: Path-Aware Apps
-
-Because the app is served under a sub-path (`/my_app/`), internal links and asset references need to be relative, or you need to configure the app's base path.
-
-**Flask example with correct base path:**
-
-```python
-from flask import Flask
-app = Flask(__name__)
-
-# Use url_for() for all internal links — Flask handles relative paths correctly
-# Avoid hardcoded absolute paths like href="/"
-```
-
-**FastAPI with root_path:**
-
-```python
-app = FastAPI(root_path="/my_app")
-```
-
-**Static assets:** use relative paths (`./style.css`) or the `<base>` HTML tag:
-```html
-<base href="/my_app/">
+# Remove
+curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
+  -d '{"action":"remove","name":"my_app"}'
 ```
 
 ---
 
-## Monitoring & Maintenance
-
-### Check status of all apps
-
-```python
-import requests, json
-apps = requests.get("http://localhost/webapp?action=list").json()["apps"]
-for a in apps:
-    print(f"{a['name']:20} {a['status']:10} port={a['port']}")
-```
-
-### Check if an app is alive (ping its port)
-
-```python
-import socket
-def is_port_open(port):
-    s = socket.socket()
-    s.settimeout(1)
-    try:
-        s.connect(("127.0.0.1", port))
-        s.close()
-        return True
-    except:
-        return False
-
-print(is_port_open(9000))
-```
-
-### Restart a crashed app
-
-```python
-import requests
-requests.post("http://localhost/webapp", json={"action": "restart", "name": "my_app"})
-```
-
-### View running processes
+## Monitoring
 
 ```bash
+# Check if port is responding
+python3 -c "import socket; s=socket.socket(); s.settimeout(1); print('UP' if not s.connect_ex(('127.0.0.1', PORT)) else 'DOWN'); s.close()"
+
+# View logs (if you registered with log redirect)
+tail -f /a0/apps/{app_name}/app.log
+
+# Running processes
 ps aux | grep python
-# or
-ps aux | grep node
 ```
 
-### View app logs
-
-If you want persistent logs, redirect stdout when registering:
-
-```python
-requests.post("http://localhost/webapp", json={
-    "action": "register",
-    "name": "my_app",
-    "port": 9000,
-    "cmd": "python app.py >> /a0/apps/my_app/app.log 2>&1",
-    "cwd": "/a0/apps/my_app",
-})
+To log output, register with:
 ```
-
-Then: `tail -f /a0/apps/my_app/app.log`
+"cmd": "python app.py >> /a0/apps/{app_name}/app.log 2>&1"
+```
 
 ---
 
-## Naming Rules
+## Naming rules
 
-- App names must be **URL-safe**: lowercase letters, digits, hyphens, underscores
-- **Avoid reserved names** (these are Agent Zero's own routes):
-  `login`, `logout`, `health`, `message`, `poll`, `upload`, `settings_get`, `settings_set`, `csrf_token`, `chat_create`, `mcp`, `a2a`, `webapp`, `socket.io`, `static`
-- Good names: `dashboard`, `sales_viz`, `monitor`, `my_app`, `data_explorer`
-
----
-
-## Full Example: Data Dashboard
-
-```python
-# Allocate port
-import requests
-port = requests.get("http://localhost/webapp?action=alloc_port").json()["port"]
-
-# Write the app
-import os
-app_dir = f"/a0/apps/dashboard"
-os.makedirs(app_dir, exist_ok=True)
-
-app_code = f'''
-import os, json
-from flask import Flask, jsonify
-import psutil
-
-app = Flask(__name__)
-
-@app.route("/")
-def index():
-    return """<html><body>
-    <h1>System Dashboard</h1>
-    <div id="data">Loading...</div>
-    <script>
-      fetch("/metrics").then(r=>r.json()).then(d=>{{
-        document.getElementById("data").innerHTML =
-          "<p>CPU: "+d.cpu+"%</p><p>RAM: "+d.ram+"%</p>";
-      }});
-      setInterval(()=>location.reload(), 5000);
-    </script></body></html>"""
-
-@app.route("/metrics")
-def metrics():
-    return jsonify(cpu=psutil.cpu_percent(), ram=psutil.virtual_memory().percent)
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", {port}))
-    app.run(host="0.0.0.0", port=port)
-'''
-
-with open(f"{app_dir}/app.py", "w") as f:
-    f.write(app_code)
-
-# Register
-requests.post("http://localhost/webapp", json={{
-    "action": "register",
-    "name": "dashboard",
-    "port": port,
-    "cmd": "python app.py",
-    "cwd": app_dir,
-    "description": "System resource dashboard"
-}})
-
-# Start
-requests.post("http://localhost/webapp", json={{"action": "start", "name": "dashboard"}})
-print(f"Dashboard live at: localhost:50000/dashboard/")
-```
+- Lowercase, digits, hyphens, underscores only
+- Do NOT use: `login`, `logout`, `health`, `message`, `poll`, `upload`,
+  `settings_get`, `settings_set`, `csrf_token`, `chat_create`, `mcp`, `a2a`,
+  `webapp`, `socket.io`, `static`
+- Good names: `dashboard`, `sales_viz`, `monitor`, `log_viewer`, `data_explorer`
 
 ---
 
 ## Troubleshooting
 
-| Problem | Fix |
+| Symptom | Fix |
 |---------|-----|
-| App shows "not running" page | Use `restart` action or check logs |
-| 502 Bad Gateway | App crashed or not listening on correct port yet; wait a second then retry |
-| Port conflict | Use `alloc_port` — it skips ports already in the registry |
-| Static files not loading | Use relative paths or `<base href="/{app_name}/">` |
-| App not reachable | Make sure `host="0.0.0.0"` (not `127.0.0.1`) in the app |
-
----
-
-## Quick Reference
-
-```bash
-# List all apps
-curl -s http://localhost/webapp?action=list | python3 -m json.tool
-
-# Allocate a port
-curl -s http://localhost/webapp?action=alloc_port
-
-# Start an app
-curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"start","name":"my_app"}'
-
-# Stop an app
-curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"stop","name":"my_app"}'
-
-# Remove an app
-curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"remove","name":"my_app"}'
-```
+| "not running" page | Use `restart` action; check logs |
+| 502 Bad Gateway | App not listening yet; wait 1–2s then retry |
+| Static assets 404 | Ensure `<base>` tag present; use relative paths |
+| App unreachable | Confirm `host="0.0.0.0"` in app code |
+| Port conflict | Use `alloc_port` — it skips used ports |

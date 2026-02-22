@@ -178,6 +178,7 @@ class AppManager:
             env = os.environ.copy()
             env.update(info.get("env", {}))
             env["PORT"] = str(info["port"])
+            env["APP_NAME"] = name  # used by templates for <base href="/APP_NAME/">
 
             proc = subprocess.Popen(
                 info["cmd"],

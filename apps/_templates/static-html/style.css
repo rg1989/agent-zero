@@ -1,0 +1,54 @@
+/* ── Reset & Variables ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:      #0a0a0a;
+  --surface: #141414;
+  --border:  #252525;
+  --text:    #e0e0e0;
+  --muted:   #666;
+  --accent:  #00f2fe;
+  --green:   #00ff9d;
+  --orange:  #ff9500;
+  --radius:  10px;
+  --font:    'Segoe UI', system-ui, sans-serif;
+  --mono:    'Cascadia Code', 'Fira Code', monospace;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; }
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.layout { display: flex; flex-direction: column; min-height: 100vh; }
+.main   { flex: 1; padding: 1.25rem; display: flex; flex-direction: column; gap: 1.1rem; }
+
+/* ── Topbar ─────────────────────────────────────────────────────────────── */
+.topbar       { display: flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.25rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+.topbar-icon  { color: var(--accent); font-size: 1.1rem; }
+.topbar-title { font-weight: 600; font-size: 0.95rem; }
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card        { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.1rem 1.25rem; }
+.card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+.card-title  { font-size: 0.82rem; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+
+/* ── Chart ──────────────────────────────────────────────────────────────── */
+.chart-wrap  { position: relative; height: 320px; }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.table-wrap  { overflow-x: auto; }
+.data-table  { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+.data-table th { text-align: left; padding: 0.5rem 0.75rem; color: var(--muted); font-weight: 600; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--border); }
+.data-table td { padding: 0.45rem 0.75rem; border-bottom: 1px solid var(--border); }
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: rgba(255,255,255,0.03); }
+
+/* ── Button ─────────────────────────────────────────────────────────────── */
+.btn     { padding: 0.4rem 0.85rem; border: 1px solid var(--border); background: transparent; color: var(--muted); border-radius: 7px; cursor: pointer; font-size: 0.82rem; font-family: var(--font); transition: all 0.18s; }
+.btn:hover { border-color: var(--accent); color: var(--accent); }
+.btn-sm  { padding: 0.28rem 0.65rem; font-size: 0.78rem; }
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .chart-wrap { height: 220px; }
+  .main       { padding: 0.75rem; }
+}

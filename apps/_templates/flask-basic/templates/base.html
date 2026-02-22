@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ title or 'App' }}{% endblock %}</title>
+  <!--
+    The <base> tag makes all relative URLs resolve under /{APP_NAME}/.
+    This is required for correct asset loading when served via the Agent Zero proxy.
+    Do not remove it.
+  -->
+  {% if app_name %}<base href="/{{ app_name }}/">{% endif %}
+  <link rel="stylesheet" href="static/style.css">
+  {% block head %}{% endblock %}
+</head>
+<body>
+  <div class="layout">
+
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="topbar-icon">◈</span>
+        <span class="topbar-title">{% block heading %}{{ title or 'App' }}{% endblock %}</span>
+      </div>
+      <nav class="topbar-nav">
+        {% block nav %}{% endblock %}
+      </nav>
+    </header>
+
+    <main class="main">
+      {% block content %}{% endblock %}
+    </main>
+
+  </div>
+
+  <script src="static/app.js"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

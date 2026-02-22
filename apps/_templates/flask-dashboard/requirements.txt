@@ -1,0 +1,5 @@
+# flask is pre-installed in the Agent Zero environment.
+# psutil is pre-installed and useful for system metrics.
+# Add extra dependencies below if needed.
+# flask>=3.0.0
+# psutil>=7.0.0

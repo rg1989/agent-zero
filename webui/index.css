@@ -444,7 +444,7 @@ div#right-panel::-webkit-scrollbar-thumb:hover {
   font-weight: 400;
   display: block;
   margin-top: 2px;
-  color: var(--color-highlight);
+  color: var(--color-primary);
   text-shadow: 0 0 5px rgba(191, 0, 255, 0.3);
 }
 

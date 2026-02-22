@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+
+{% block content %}
+
+  <section class="card">
+    <h2 class="card-title">Welcome</h2>
+    <p class="text-muted">This is your app. Replace this section with your content.</p>
+    <button class="btn" id="ping-btn">Ping API</button>
+    <pre class="output" id="output">—</pre>
+  </section>
+
+  <!--
+    Add more sections below. Common patterns:
+      <section class="card"> ... </section>
+      <div class="grid-2"> <section class="card">...</section> <section class="card">...</section> </div>
+  -->
+
+{% endblock %}

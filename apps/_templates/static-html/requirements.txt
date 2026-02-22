@@ -1,0 +1,2 @@
+# flask is pre-installed in the Agent Zero environment — no pip install needed.
+# Add CDN libraries directly in index.html (Chart.js, D3, Plotly, etc.)

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  {% if app_name %}<base href="/{{ app_name }}/">{% endif %}
+  <link rel="stylesheet" href="static/style.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <div class="layout">
+
+    <!-- Header -->
+    <header class="topbar">
+      <div class="topbar-brand">
+        <span class="topbar-icon">◈</span>
+        <span class="topbar-title">{{ title }}</span>
+      </div>
+      <div class="topbar-right">
+        <span class="status-dot" id="status-dot"></span>
+        <span class="text-muted" id="updated-at">—</span>
+        <button class="btn btn-sm" id="refresh-btn">Refresh</button>
+      </div>
+    </header>
+
+    <main class="main">
+
+      <!-- Metric cards row -->
+      <div class="metrics-grid" id="metrics-grid">
+        <!-- Populated by JS -->
+      </div>
+
+      <!-- Chart -->
+      <section class="card chart-card">
+        <div class="card-header">
+          <h2 class="card-title">Trend</h2>
+        </div>
+        <div class="chart-wrap">
+          <canvas id="main-chart"></canvas>
+        </div>
+      </section>
+
+      <!-- Extra content section — add tables, lists, etc. here -->
+      <section class="card" id="extra-section" style="display:none">
+        <h2 class="card-title">Details</h2>
+        <div id="extra-content"></div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="static/style.css" type="ignore"></script><!-- keep CSS ref for editor hints -->
+  <script>
+  // ── Config ──────────────────────────────────────────────────────────────────
+  const REFRESH_INTERVAL = 5000; // ms — set to 0 to disable auto-refresh
+
+  // ── Chart instance ──────────────────────────────────────────────────────────
+  let chartInstance = null;
+
+  // ── Fetch & render ──────────────────────────────────────────────────────────
+  async function loadData() {
+    const dot = document.getElementById("status-dot");
+    dot.className = "status-dot loading";
+    try {
+      const res  = await fetch("api/data");
+      const data = await res.json();
+      renderMetrics(data.metrics || []);
+      renderChart(data.chart   || {});
+      if (data.updated_at) {
+        document.getElementById("updated-at").textContent =
+          new Date(data.updated_at * 1000).toLocaleTimeString();
+      }
+      dot.className = "status-dot ok";
+    } catch (err) {
+      dot.className = "status-dot error";
+      console.error("Dashboard data error:", err);
+    }
+  }
+
+  function renderMetrics(metrics) {
+    const grid = document.getElementById("metrics-grid");
+    grid.innerHTML = metrics.map(m => `
+      <div class="metric-card">
+        <div class="metric-label">${m.label}</div>
+        <div class="metric-value" style="color:${m.color || '#00f2fe'}">${m.value}<span class="metric-unit">${m.unit || ''}</span></div>
+      </div>
+    `).join("");
+  }
+
+  function renderChart({ labels = [], datasets = [] }) {
+    const ctx = document.getElementById("main-chart").getContext("2d");
+    const chartData = {
+      labels,
+      datasets: datasets.map(ds => ({
+        label:           ds.label,
+        data:            ds.data,
+        borderColor:     ds.color || "#00f2fe",
+        backgroundColor: (ds.color || "#00f2fe") + "22",
+        borderWidth:     2,
+        pointRadius:     3,
+        tension:         0.35,
+        fill:            true,
+      })),
+    };
+    if (chartInstance) {
+      chartInstance.data = chartData;
+      chartInstance.update("none");
+    } else {
+      chartInstance = new Chart(ctx, {
+        type: "line",
+        data: chartData,
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          animation: { duration: 400 },
+          plugins: {
+            legend: { labels: { color: "#aaa", font: { size: 12 } } },
+          },
+          scales: {
+            x: { ticks: { color: "#666", maxRotation: 0 }, grid: { color: "#222" } },
+            y: { ticks: { color: "#666" },                  grid: { color: "#222" } },
+          },
+        },
+      });
+    }
+  }
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  document.getElementById("refresh-btn").addEventListener("click", loadData);
+  loadData();
+  if (REFRESH_INTERVAL > 0) setInterval(loadData, REFRESH_INTERVAL);
+  </script>
+
+</body>
+</html>
