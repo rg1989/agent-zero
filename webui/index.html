@@ -59,6 +59,7 @@
     <!-- Link the PWA manifest file -->
     <link rel="manifest" href="js/manifest.json">
 
+    {{dev_reload_script}}
     <script>
         // Expose git info for sidebar component
         globalThis.gitinfo = { version: "{{version_no}}", commit_time: "{{version_time}}" };

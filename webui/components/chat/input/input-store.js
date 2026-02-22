@@ -4,6 +4,21 @@ import { store as fileBrowserStore } from "/components/modals/file-browser/file-
 import { store as messageQueueStore } from "/components/chat/message-queue/message-queue-store.js";
 import { store as attachmentsStore } from "/components/chat/attachments/attachmentsStore.js";
 import { store as chatsStore } from "/components/sidebar/chats/chats-store.js";
+import { store as historyStore } from "/components/modals/history/history-store.js";
+import { store as contextStore } from "/components/modals/context/context-store.js";
+
+const BUILTIN_COMMANDS = [
+  { command: "/clear",     description: "Clear the current chat history" },
+  { command: "/compact",   description: "Ask agent to summarize and compact the conversation" },
+  { command: "/save",      description: "Save the current chat" },
+  { command: "/pause",     description: "Pause the agent" },
+  { command: "/resume",    description: "Resume the paused agent" },
+  { command: "/nudge",     description: "Nudge the agent to continue" },
+  { command: "/history",   description: "Open conversation history" },
+  { command: "/files",     description: "Open the file browser" },
+  { command: "/context",   description: "Open the context window" },
+  { command: "/knowledge", description: "Import knowledge files" },
+];
 
 const model = {
   paused: false,
@@ -13,7 +28,7 @@ const model = {
   showSuggestions: false,
   suggestions: [],
   activeSuggestion: -1,
-  _allCommands: [],
+  _allCommands: [...BUILTIN_COMMANDS],
   _commandsLoaded: false,
 
   _skillToCommand(name) {
@@ -27,10 +42,12 @@ const model = {
     try {
       const resp = await shortcuts.callJsonApi("/skills", { action: "list" });
       if (resp?.ok) {
-        this._allCommands = (resp.data || []).map(skill => ({
+        const skillCmds = (resp.data || []).map(skill => ({
           command: this._skillToCommand(skill.name),
           description: (skill.description || "").slice(0, 72),
         }));
+        // Built-ins always stay at the top; skills append after
+        this._allCommands = [...BUILTIN_COMMANDS, ...skillCmds];
         this._commandsLoaded = true;
       }
     } catch (e) {
@@ -42,10 +59,11 @@ const model = {
     this.adjustTextareaHeight();
     const val = this.message;
     if (val.startsWith("/")) {
+      // Show built-ins immediately (they're always in _allCommands)
+      this._filterCommands(val);
+      // Load skills in the background if not yet fetched, then re-filter
       if (!this._commandsLoaded) {
         this._loadCommands().then(() => this._filterCommands(val));
-      } else {
-        this._filterCommands(val);
       }
     } else {
       this._hideSuggestions();
@@ -56,7 +74,7 @@ const model = {
     const query = val.toLowerCase();
     this.suggestions = this._allCommands
       .filter(c => c.command.toLowerCase().startsWith(query))
-      .slice(0, 8);
+      .slice(0, 20);
     this.showSuggestions = this.suggestions.length > 0;
     this.activeSuggestion = this.suggestions.length > 0 ? 0 : -1;
   },
@@ -89,6 +107,45 @@ const model = {
     const cmd = this.suggestions[this.activeSuggestion];
     if (cmd) { this.selectSuggestion(cmd); return true; }
     return false;
+  },
+
+  async _handleBuiltinCommand(message) {
+    const [cmd] = message.trim().toLowerCase().split(/\s+/);
+    switch (cmd) {
+      case "/clear":
+        if (confirm("Clear the current chat?")) chatsStore.resetChat();
+        return true;
+      case "/save":
+        chatsStore.saveChat();
+        return true;
+      case "/pause":
+        await this.pauseAgent(true);
+        return true;
+      case "/resume":
+        await this.pauseAgent(false);
+        return true;
+      case "/nudge":
+        await this.nudge();
+        return true;
+      case "/history":
+        historyStore.open();
+        return true;
+      case "/files":
+        await this.browseFiles();
+        return true;
+      case "/context":
+        contextStore.open();
+        return true;
+      case "/knowledge":
+        await this.loadKnowledge();
+        return true;
+      case "/compact":
+        // Replace with a compact instruction and let it send normally
+        this.message = "Please compact our conversation: provide a brief summary of the key points, decisions made, and any ongoing tasks so we can continue efficiently.";
+        return false;
+      default:
+        return false;
+    }
   },
 
   _getSendState() {
@@ -138,6 +195,14 @@ const model = {
   },
 
   async sendMessage() {
+    const message = this.message.trim();
+    if (message.startsWith("/")) {
+      const handled = await this._handleBuiltinCommand(message);
+      if (handled) {
+        this.reset();
+        return;
+      }
+    }
     // Delegate to the global function
     if (globalThis.sendMessage) {
       await globalThis.sendMessage();

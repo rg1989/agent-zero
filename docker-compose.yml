@@ -1,6 +1,7 @@
 services:
   agent-zero:
     container_name: agent-zero
+    image: agent-zero
     build:
       context: .
       dockerfile: DockerfileLocal
@@ -8,9 +9,11 @@ services:
       - "${WEB_UI_PORT:-50000}:80"
     volumes:
       - agent-zero-data:/per
+      - ./webui:/a0/webui  # live-reload: host webui/ is served directly
     environment:
       - AUTH_LOGIN=${AUTH_LOGIN:-}
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+      - DEV_RELOAD=1  # enables /dev-ping + browser auto-reload on file changes
     restart: unless-stopped
 
 volumes:

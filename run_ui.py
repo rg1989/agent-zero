@@ -8,6 +8,7 @@ from functools import wraps
 import threading
 import asyncio
 
+import hashlib
 import urllib.request
 import urllib.error
 import uvicorn
@@ -225,6 +226,25 @@ async def serve_index():
             "version": "unknown",
             "commit_time": "unknown",
         }
+    dev_reload_script = ""
+    if os.environ.get("DEV_RELOAD"):
+        dev_reload_script = (
+            "<script>"
+            "(function(){"
+            "var _h=null;"
+            "var _t=setInterval(function(){"
+            "fetch('/dev-ping',{credentials:'include'})"
+            ".then(function(r){return r.ok?r.json():null;})"
+            ".then(function(d){"
+            "if(!d)return;"
+            "if(_h===null){_h=d.hash;return;}"
+            "if(d.hash!==_h){clearInterval(_t);location.reload();}"
+            "}).catch(function(){});"
+            "},1500);"
+            "})();"
+            "</script>"
+        )
+
     index = files.read_file("webui/index.html")
     index = files.replace_placeholders_text(
         _content=index,
@@ -233,8 +253,28 @@ async def serve_index():
         runtime_id=runtime.get_runtime_id(),
         runtime_is_development=("true" if runtime.is_development() else "false"),
         logged_in=("true" if login.get_credentials_hash() else "false"),
+        dev_reload_script=dev_reload_script,
     )
     return index
+
+
+@webapp.route("/dev-ping")
+@requires_auth
+async def dev_ping():
+    if not os.environ.get("DEV_RELOAD"):
+        return Response("Not found", 404)
+    webui_path = get_abs_path("./webui")
+    h = hashlib.md5()
+    for root, dirs, filenames in os.walk(webui_path):
+        dirs.sort()
+        for fname in sorted(filenames):
+            fp = os.path.join(root, fname)
+            try:
+                h.update(f"{fp}:{os.path.getmtime(fp)}".encode())
+            except OSError:
+                pass
+    from flask import jsonify
+    return jsonify({"hash": h.hexdigest()})
 
 
 def _build_websocket_handlers_by_namespace(
