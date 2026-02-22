@@ -29,6 +29,8 @@ tmp/**
 !tmp/**/
 usr/**
 !usr/**/
+!usr/skills/
+!usr/skills/**
 
 # Handle knowledge directory
 
