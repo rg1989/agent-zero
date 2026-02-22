@@ -9,6 +9,88 @@ const model = {
   paused: false,
   message: "",
 
+  // Slash command autocomplete state
+  showSuggestions: false,
+  suggestions: [],
+  activeSuggestion: -1,
+  _allCommands: [],
+  _commandsLoaded: false,
+
+  _skillToCommand(name) {
+    const gsdMatch = name.match(/^gsd-(.+)$/);
+    if (gsdMatch) return `/gsd:${gsdMatch[1]}`;
+    return `/${name}`;
+  },
+
+  async _loadCommands() {
+    if (this._commandsLoaded) return;
+    try {
+      const resp = await shortcuts.callJsonApi("/skills", { action: "list" });
+      if (resp?.ok) {
+        this._allCommands = (resp.data || []).map(skill => ({
+          command: this._skillToCommand(skill.name),
+          description: (skill.description || "").slice(0, 72),
+        }));
+        this._commandsLoaded = true;
+      }
+    } catch (e) {
+      console.warn("Could not load skills for autocomplete", e);
+    }
+  },
+
+  handleInput() {
+    this.adjustTextareaHeight();
+    const val = this.message;
+    if (val.startsWith("/")) {
+      if (!this._commandsLoaded) {
+        this._loadCommands().then(() => this._filterCommands(val));
+      } else {
+        this._filterCommands(val);
+      }
+    } else {
+      this._hideSuggestions();
+    }
+  },
+
+  _filterCommands(val) {
+    const query = val.toLowerCase();
+    this.suggestions = this._allCommands
+      .filter(c => c.command.toLowerCase().startsWith(query))
+      .slice(0, 8);
+    this.showSuggestions = this.suggestions.length > 0;
+    this.activeSuggestion = this.suggestions.length > 0 ? 0 : -1;
+  },
+
+  _hideSuggestions() {
+    this.showSuggestions = false;
+    this.suggestions = [];
+    this.activeSuggestion = -1;
+  },
+
+  navigateSuggestions(direction) {
+    if (!this.showSuggestions) return false;
+    const count = this.suggestions.length;
+    if (direction === "up") {
+      this.activeSuggestion = (this.activeSuggestion - 1 + count) % count;
+    } else {
+      this.activeSuggestion = (this.activeSuggestion + 1) % count;
+    }
+    return true;
+  },
+
+  selectSuggestion(cmd) {
+    this.message = cmd.command + " ";
+    this._hideSuggestions();
+    document.getElementById("chat-input")?.focus();
+  },
+
+  confirmSuggestion() {
+    if (!this.showSuggestions || this.activeSuggestion < 0) return false;
+    const cmd = this.suggestions[this.activeSuggestion];
+    if (cmd) { this.selectSuggestion(cmd); return true; }
+    return false;
+  },
+
   _getSendState() {
     const hasInput = this.message.trim() || attachmentsStore?.attachments?.length > 0;
     const hasQueue = !!messageQueueStore?.hasQueue;
@@ -51,7 +133,8 @@ const model = {
 
   init() {
     console.log("Input store initialized");
-    // Event listeners are now handled via Alpine directives in the component
+    // Pre-load commands in the background for fast autocomplete
+    this._loadCommands();
   },
 
   async sendMessage() {

@@ -1,0 +1,17 @@
+services:
+  agent-zero:
+    container_name: agent-zero
+    build:
+      context: .
+      dockerfile: DockerfileLocal
+    ports:
+      - "${WEB_UI_PORT:-50000}:80"
+    volumes:
+      - agent-zero-data:/per
+    environment:
+      - AUTH_LOGIN=${AUTH_LOGIN:-}
+      - AUTH_PASSWORD=${AUTH_PASSWORD:-}
+    restart: unless-stopped
+
+volumes:
+  agent-zero-data:

@@ -22,9 +22,25 @@
 
         <!-- Container for textarea and expand button -->
         <div id="chat-input-container" style="position: relative;">
+            <!-- Slash command suggestions dropdown -->
+            <div id="slash-suggestions" x-show="$store.chatInput.showSuggestions" x-transition.opacity.duration.100ms>
+                <template x-for="(cmd, i) in $store.chatInput.suggestions" :key="cmd.command">
+                    <div class="slash-suggestion-item"
+                         :class="{ 'active': i === $store.chatInput.activeSuggestion }"
+                         @mousedown.prevent="$store.chatInput.selectSuggestion(cmd)"
+                         @mouseenter="$store.chatInput.activeSuggestion = i">
+                        <span class="suggestion-command" x-text="cmd.command"></span>
+                        <span class="suggestion-desc" x-text="cmd.description"></span>
+                    </div>
+                </template>
+            </div>
             <textarea id="chat-input" :placeholder="$store.chatInput.inputPlaceholder" rows="1"
-                      @keydown.enter="if (!$event.shiftKey && !$event.isComposing && $event.keyCode !== 229) { $event.preventDefault(); $store.chatInput.sendMessage(); }"
-                      @input="$store.chatInput.adjustTextareaHeight()"
+                      @keydown.enter="if ($store.chatInput.confirmSuggestion()) { $event.preventDefault(); } else if (!$event.shiftKey && !$event.isComposing && $event.keyCode !== 229) { $event.preventDefault(); $store.chatInput.sendMessage(); }"
+                      @keydown.up.prevent="$store.chatInput.navigateSuggestions('up')"
+                      @keydown.down.prevent="$store.chatInput.navigateSuggestions('down')"
+                      @keydown.escape="$store.chatInput.showSuggestions && ($event.preventDefault(), $store.chatInput._hideSuggestions())"
+                      @keydown.tab="if ($store.chatInput.showSuggestions) { $event.preventDefault(); $store.chatInput.confirmSuggestion(); }"
+                      @input="$store.chatInput.handleInput()"
                       x-model="$store.chatInput.message"></textarea>
             <button id="expand-button" @click="$store.fullScreenInputModal.openModal()" aria-label="Expand input">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor">
@@ -101,6 +117,49 @@
     #chat-input::-webkit-scrollbar-thumb:hover { background-color: rgba(155,155,155,0.7); }
     #chat-input:focus { outline: 0.05rem solid rgba(155,155,155,0.5); font-size: 0.955rem; padding-top: 0.45rem; background-color: var(--color-input-focus); }
     #chat-input::placeholder { color: var(--color-text-muted); opacity: 0.7; }
+
+    /* Slash command suggestions */
+    #slash-suggestions {
+        position: absolute;
+        bottom: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: var(--color-input-focus, var(--color-input));
+        border: 1px solid var(--color-border);
+        border-radius: 8px;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.25);
+        overflow: hidden;
+        z-index: 100;
+        max-height: 18rem;
+        overflow-y: auto;
+    }
+    .slash-suggestion-item {
+        display: flex;
+        align-items: baseline;
+        gap: 0.75rem;
+        padding: 0.45rem 0.75rem;
+        cursor: pointer;
+        transition: background 0.1s;
+        border-bottom: 1px solid var(--color-border);
+    }
+    .slash-suggestion-item:last-child { border-bottom: none; }
+    .slash-suggestion-item:hover,
+    .slash-suggestion-item.active { background: rgba(66, 72, 241, 0.15); }
+    .suggestion-command {
+        font-family: "Roboto Mono", monospace;
+        font-size: 0.82rem;
+        color: #4248f1;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+    .suggestion-desc {
+        font-size: 0.78rem;
+        color: var(--color-text-muted);
+        opacity: 0.8;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
 
     #expand-button { position: absolute; top: 12px; right: 10px; background: transparent; border: none; cursor: pointer; font-size: 1.2rem; color: var(--color-text); opacity: 0.4; transition: opacity 0.2s; }
     #expand-button:hover { opacity: 0.7; }

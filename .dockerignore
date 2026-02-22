@@ -11,6 +11,7 @@ knowledge/custom/**
 logs/*
 tmp/*
 usr/*
+!usr/skills/**
 
 
 # Keep .gitkeep markers anywhere
