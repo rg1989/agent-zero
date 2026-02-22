@@ -13,59 +13,79 @@
                 <div class="welcome-content">
                     <!-- Action Cards -->
                     <div class="welcome-actions">
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('new-chat')">
-                            <span class="material-symbols-outlined welcome-action-icon">add_circle</span>
-                            <h3 class="welcome-action-title">New Chat</h3>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('new-chat')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">add_circle</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">New Chat</h3>
                         </div>
 
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('projects')">
-                            <span class="material-symbols-outlined welcome-action-icon">folder</span>
-                            <h3 class="welcome-action-title">Projects</h3>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('projects')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">folder</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Projects</h3>
                         </div>
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('memory')">
-                            <span class="material-symbols-outlined welcome-action-icon">memory</span>
-                            <h3 class="welcome-action-title">Memory</h3>
-                        </div>
-
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('scheduler')">
-                            <span class="material-symbols-outlined welcome-action-icon">schedule</span>
-                            <h3 class="welcome-action-title">Scheduler</h3>
-                        </div>
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('settings')">
-                            <span class="material-symbols-outlined welcome-action-icon">settings</span>
-                            <h3 class="welcome-action-title">Settings</h3>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('memory')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">memory</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Memory</h3>
                         </div>
 
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('files')">
-                            <span class="material-symbols-outlined welcome-action-icon">folder_open</span>
-                            <h3 class="welcome-action-title">Files</h3>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('scheduler')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">schedule</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Scheduler</h3>
                         </div>
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('website')">
-                            <span class="material-symbols-outlined welcome-action-icon">language</span>
-                            <h3 class="welcome-action-title">Visit Website</h3>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('settings')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">settings</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Settings</h3>
                         </div>
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('github')">
-                            <span class="material-symbols-outlined welcome-action-icon">code</span>
-                            <h3 class="welcome-action-title">Visit GitHub</h3>
+
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('files')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">folder_open</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Files</h3>
+                        </div>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('website')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">language</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Visit Website</h3>
+                        </div>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('github')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">code</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Visit GitHub</h3>
                         </div>
                     </div>
 
                     <div class="welcome-actions-footer">
                         <button type="button"
                                 class="welcome-refresh-button"
+                                x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                                :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40;` : ''"
                                 @click="$store.welcomeStore.refreshBanners(true)"
                                 :disabled="$store.welcomeStore.bannersLoading"
                                 title="Refresh banners">
-                            <span class="material-symbols-outlined" :class="{ 'welcome-spin': $store.welcomeStore.bannersLoading }">refresh</span>
+                            <span class="material-symbols-outlined" :class="{ 'welcome-spin': $store.welcomeStore.bannersLoading }" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">refresh</span>
                         </button>
 
                         <button type="button"
                                 class="welcome-refresh-button"
+                                x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                                :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40;` : ''"
                                 @click="$store.welcomeStore.undismissBanners()"
                                 x-show="$store.welcomeStore.hasDismissedBanners"
                                 :disabled="$store.welcomeStore.bannersLoading"
                                 title="Undismiss all banners">
-                            <span class="material-symbols-outlined">undo</span>
+                            <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">undo</span>
                         </button>
                     </div>
 
@@ -213,13 +233,14 @@
             background: transparent;
             border: 1px solid var(--color-border);
             border-radius: 10px;
-            color: var(--color-secondary);
+            color: var(--color-primary);
+            text-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .welcome-refresh-button:hover {
-            border-color: var(--color-primary);
+            /* background and border handled by dynamic hover styling if added, else fallback */
             background: var(--color-message-bg);
             color: var(--color-text);
         }
@@ -260,18 +281,41 @@
         }
 
         .welcome-action-card:hover {
-            border-color: var(--color-primary);
-            background: var(--color-message-bg);
+            /* Handled dynamically via inline styles on hover */
         }
 
         .welcome-action-icon {
             font-size: 2.1rem;
             margin-bottom: 0.25rem;
             color: var(--color-highlight-dark);
+            transition: all 0.3s ease;
         }
 
         .welcome-action-title {
             font-size: 0.9rem;
+            transition: all 0.3s ease;
+        }
+
+        /* Neon grid colors */
+        .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-title { color: var(--color-primary); text-shadow: 0 0 8px rgba(0, 242, 254, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-title { color: var(--color-accent); text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-title { color: var(--color-highlight); text-shadow: 0 0 8px rgba(191, 0, 255, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-title { color: var(--color-warning-text); text-shadow: 0 0 8px rgba(255, 184, 108, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-title { color: #00ff9d; text-shadow: 0 0 8px rgba(0, 255, 157, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-title { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-title { color: #3a86ff; text-shadow: 0 0 8px rgba(58, 134, 255, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-icon,
+        .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-title { color: var(--color-error-text); text-shadow: 0 0 8px rgba(255, 42, 95, 0.4); }
+
+        .welcome-actions > .welcome-action-card:hover {
+            /* hover effect handled dynamically */
         }
 
         /* Banner Styles */
@@ -357,7 +401,7 @@
 
         .welcome-banner-html {
             font-size: 0.85rem;
-            color: var(--color-secondary);
+            color: var(--color-text-muted);
             line-height: 1.5;
         }
 

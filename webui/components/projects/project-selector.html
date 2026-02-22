@@ -12,14 +12,18 @@
         <template x-if="$store.projects && $store.chats && $store.chats.selectedContext">
             <div>
                 <template x-if="$store.chats.selectedContext.project?.name">
-                    <button @click="open = !open" type="button" class="button project-dropdown-button">
+                    <button @click="open = !open" type="button" class="button project-dropdown-button"
+                            x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                            :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 15px ${hoverColor}40;` : ''">
                         <span class="project-color-ball" :style="$store.chats.selectedContext.project.color ? { backgroundColor: $store.chats.selectedContext.project.color } : { border: '1px solid var(--color-border)' }"></span>
                         <span x-text="$store.chats.selectedContext.project.title"></span>
                         <span class="icon material-symbols-outlined">arrow_drop_down</span>
                     </button>
                 </template>
                 <template x-if="!$store.chats.selectedContext.project?.name">
-                    <button @click="open = !open" type="button" class="button project-dropdown-button">
+                    <button @click="open = !open" type="button" class="button project-dropdown-button"
+                            x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                            :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 15px ${hoverColor}40; background: ${hoverColor}15;` : `border-color: var(--color-primary); color: var(--color-primary); box-shadow: 0 0 10px rgba(0, 242, 254, 0.2); background: rgba(0, 242, 254, 0.05);`">
                         No project
                         <span class="icon material-symbols-outlined">arrow_drop_down</span>
                     </button>

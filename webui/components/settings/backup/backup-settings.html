@@ -9,10 +9,14 @@
         <div>
           <nav>
             <ul>
-              <li>
-                <a href="#section-backup-restore">
-                  <img src="/public/backup_restore.svg" alt="Backup & Restore" />
-                  <span>Backup & Restore</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-backup-restore"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/backup_restore.svg" alt="Backup & Restore"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Backup & Restore</span>
                 </a>
               </li>
             </ul>

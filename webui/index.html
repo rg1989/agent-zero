@@ -28,6 +28,54 @@
         globalThis.safeCall = function (name, ...args) {
             if (window[name]) window[name](...args)
         }
+
+        globalThis.getRandomNeonColor = function() {
+            const neonColors = [
+                '#00f2fe', // Electric Cyan
+                '#ff007f', // Vivid Magenta
+                '#bf00ff', // Bright Purple
+                '#00ff9d', // Toxic Green
+                '#ffd700', // Neon Yellow
+                '#ffb86c', // Neon Orange
+                '#3a86ff'  // Bright Blue
+            ];
+            return neonColors[Math.floor(Math.random() * neonColors.length)];
+        }
+
+        // Pre-computed CSS filters to colorize white SVG icons to each neon color.
+        // Formula: brightness(0) invert(1) turns icon white, then sepia+saturate+hue-rotate colorizes it.
+        // Hue-rotate offset = target hue - ~40 (base hue of sepia-saturated white).
+        globalThis.getColorFilter = function(hex) {
+            const filterMap = {
+                '#00f2fe': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(145deg)',
+                '#ff007f': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(290deg)',
+                '#bf00ff': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(245deg)',
+                '#00ff9d': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(116deg)',
+                '#ffd700': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(11deg)',
+                '#ffb86c': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(348deg)',
+                '#3a86ff': 'brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(173deg)',
+            };
+            const base = filterMap[hex] || 'brightness(0) invert(1)';
+            return `${base} drop-shadow(0 0 8px ${hex})`;
+        }
+
+        // Global hover effect for standard buttons (NOT nav ul li a — those use Alpine.js directly)
+        document.addEventListener('mouseover', function(e) {
+            const btn = e.target.closest('button, .btn, .button, .btn-action, .btn-icon-action, .settings-tab');
+            if (btn && !btn.hasAttribute('x-data') && !btn.dataset.neonHover) {
+                const color = globalThis.getRandomNeonColor();
+                btn.style.setProperty('--hover-neon', color);
+                btn.style.setProperty('--hover-neon-bg', color + '20');
+                btn.style.setProperty('--hover-neon-shadow', color + '60');
+                btn.dataset.neonHover = 'true';
+            }
+        });
+        document.addEventListener('mouseout', function(e) {
+            const btn = e.target.closest('button, .btn, .button, .btn-action, .btn-icon-action, .settings-tab');
+            if (btn && btn.dataset.neonHover) {
+                btn.removeAttribute('data-neon-hover');
+            }
+        });
     </script>
 
     <script type="module" src="index.js"></script>

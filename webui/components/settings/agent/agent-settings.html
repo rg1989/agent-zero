@@ -9,52 +9,84 @@
         <div>
           <nav>
             <ul>
-              <li>
-                <a href="#section-agent-config">
-                  <img src="/public/agent.svg" alt="Agent Config" />
-                  <span>Agent Config</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-agent-config"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/agent.svg" alt="Agent Config"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Agent Config</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-chat-model">
-                  <img src="/public/chat_model.svg" alt="Chat Model" />
-                  <span>Chat Model</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-chat-model"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/chat_model.svg" alt="Chat Model"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Chat Model</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-util-model">
-                  <img src="/public/util_model.svg" alt="Utility Model" />
-                  <span>Utility Model</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-util-model"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/util_model.svg" alt="Utility Model"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Utility Model</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-browser-model">
-                  <img src="/public/browser_model.svg" alt="Browser Model" />
-                  <span>Browser Model</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-browser-model"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/browser_model.svg" alt="Browser Model"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Browser Model</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-embed-model">
-                  <img src="/public/embed_model.svg" alt="Embedding Model" />
-                  <span>Embedding Model</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-embed-model"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/embed_model.svg" alt="Embedding Model"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Embedding Model</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-memory">
-                  <img src="/public/memory.svg" alt="Memory" />
-                  <span>Memory</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-memory"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/memory.svg" alt="Memory"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Memory</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-speech">
-                  <img src="/public/speech.svg" alt="Speech" />
-                  <span>Speech</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-speech"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/speech.svg" alt="Speech"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Speech</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-workdir">
-                  <img src="/public/folder.svg" alt="Workdir" />
-                  <span>Workdir</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-workdir"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/folder.svg" alt="Workdir"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Workdir</span>
                 </a>
               </li>
             </ul>
@@ -63,38 +95,27 @@
           <div id="section-agent-config" class="section">
             <x-component path="settings/agent/agent.html"></x-component>
           </div>
-
-
           <div id="section-chat-model" class="section">
             <x-component path="settings/agent/chat_model.html"></x-component>
           </div>
-
           <div id="section-util-model" class="section">
             <x-component path="settings/agent/util_model.html"></x-component>
           </div>
-
           <div id="section-browser-model" class="section">
             <x-component path="settings/agent/browser_model.html"></x-component>
           </div>
-
           <div id="section-embed-model" class="section">
             <x-component path="settings/agent/embed_model.html"></x-component>
           </div>
-
           <div id="section-memory" class="section">
             <x-component path="settings/agent/memory.html"></x-component>
           </div>
-
           <div id="section-speech" class="section">
             <x-component path="settings/agent/speech.html"></x-component>
           </div>
-
           <div id="section-workdir" class="section">
             <x-component path="settings/agent/workdir.html"></x-component>
           </div>
-
-          
-
         </div>
       </template>
     </div>

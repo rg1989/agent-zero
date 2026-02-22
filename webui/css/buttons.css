@@ -3,14 +3,14 @@
   background: var(--color-panel);
   font-weight: 500;
   padding: 0.5rem 1.5rem;
-  border-radius: 6px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
   border: 1px solid var(--color-border);
   color: var(--color-text);
   font-size: 0.875rem;
-  font-family: "Rubik", Arial, Helvetica, sans-serif;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
-  min-height: 2em; /* Standard height */
+  font-family: var(--font-family-main);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 2.2em; /* Standard height */
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -18,25 +18,37 @@
 }
 
 .button.confirm {
-  background: var(--color-highlight);
-  color: #fff;
+  background: rgba(0, 242, 254, 0.1);
+  color: var(--color-highlight);
+  border: 1px solid var(--color-highlight);
 }
 
 .button.cancel {
-  background: var(--color-panel);
+  background: rgba(255, 0, 127, 0.1);
   color: var(--color-accent);
-  /* border: 1px solid var(--color-accent); */
+  border: 1px solid var(--color-accent);
 }
 
 .button:hover {
-  transform: scale(1.05);
-  filter: brightness(1.05);
+  transform: translateY(-2px);
+  background: var(--hover-neon-bg, rgba(123, 44, 191, 0.15));
+  border-color: var(--hover-neon, var(--color-primary));
+  box-shadow: 0 4px 12px var(--hover-neon-shadow, rgba(123, 44, 191, 0.3));
+  color: var(--hover-neon, var(--color-text));
+}
+
+.button.confirm:hover {
+  background: var(--hover-neon-bg, rgba(0, 242, 254, 0.2));
+  border-color: var(--hover-neon, var(--color-highlight));
+  color: #fff;
+  box-shadow: 0 4px 12px var(--hover-neon-shadow, rgba(0, 242, 254, 0.4));
 }
 
 .button.cancel:hover {
-  background: var(--color-panel);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  background: var(--hover-neon-bg, rgba(255, 0, 127, 0.2));
+  border-color: var(--hover-neon, var(--color-accent));
+  color: #fff;
+  box-shadow: 0 4px 12px var(--hover-neon-shadow, rgba(255, 0, 127, 0.4));
 }
 
 .buttons-container {
@@ -68,12 +80,12 @@
   display: flex;
   align-items: center;
   gap: 0.25rem;
-  background: var(--color-message-bg);
+  background: var(--color-panel);
   color: var(--color-text);
   border: 1px solid var(--color-border);
-  border-radius: 4px;
+  border-radius: var(--border-radius-sm);
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-action-header .material-symbols-outlined {
@@ -81,39 +93,39 @@
 }
 
 .btn-action-header:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--hover-neon, var(--color-primary));
+  color: var(--hover-neon, var(--color-primary));
+  box-shadow: 0 0 10px var(--hover-neon-shadow, rgba(123, 44, 191, 0.3));
+  background: var(--hover-neon-bg, transparent);
 }
 
 .btn-action-header.confirm:hover {
-  border-color: #4CAF50;
-  color: #4CAF50;
-  background: var(--color-background);
+  border-color: var(--hover-neon, var(--color-highlight));
+  color: var(--hover-neon, var(--color-highlight));
+  background: var(--hover-neon-bg, rgba(0, 242, 254, 0.1));
+  box-shadow: 0 0 10px var(--hover-neon-shadow, rgba(0, 242, 254, 0.3));
 }
 
-.btn-action-header.cancel:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
-  background: var(--color-background);
-}
-
+.btn-action-header.cancel:hover,
 .btn-action-header.delete:hover {
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  border-color: var(--hover-neon, var(--color-accent));
+  color: var(--hover-neon, var(--color-accent));
+  background: var(--hover-neon-bg, rgba(255, 0, 127, 0.1));
+  box-shadow: 0 0 10px var(--hover-neon-shadow, rgba(255, 0, 127, 0.3));
 }
 
 .btn-action-header.edit:hover,
 .btn-action-header.copy:hover,
 .btn-action-header.copy-all:hover,
 .btn-action-header.copy-content:hover {
-  border-color: var(--color-primary);
-  color: var(--color-primary);
+  border-color: var(--hover-neon, var(--color-primary));
+  color: var(--hover-neon, var(--color-primary));
 }
 
 /* Table/Row Action Buttons - for inline row actions (run, edit, delete, etc.) */
 .btn-action {
   background: none;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   padding: 0.25rem;
   color: var(--color-text);
   opacity: 0.7;
@@ -122,7 +134,7 @@
   justify-content: center;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-action .material-symbols-outlined {
@@ -131,35 +143,38 @@
 
 .btn-action:hover {
   opacity: 1;
-  background: var(--color-panel);
-  border-color: var(--color-primary);
-  color: var(--color-primary);
-  transform: translateY(-1px);
+  background: var(--hover-neon-bg, rgba(123, 44, 191, 0.1));
+  border-color: var(--hover-neon, var(--color-primary));
+  color: var(--hover-neon, var(--color-primary));
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px var(--hover-neon-shadow, rgba(123, 44, 191, 0.3));
 }
 
 .btn-action.delete:hover {
-  background: var(--color-panel);
-  border-color: var(--color-accent);
-  color: var(--color-accent);
+  background: var(--hover-neon-bg, rgba(255, 0, 127, 0.1));
+  border-color: var(--hover-neon, var(--color-accent));
+  color: var(--hover-neon, var(--color-accent));
+  box-shadow: 0 2px 8px var(--hover-neon-shadow, rgba(255, 0, 127, 0.3));
 }
 
 /* Icon Button - minimal padding for icon-only buttons */
 .btn-icon {
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   color: var(--color-text);
   padding: 0.25rem;
   display: flex;
   align-items: center;
   border-radius: 4px;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: all 0.2s ease;
 }
 
 .btn-icon:hover:not(:disabled) {
-  background: var(--color-panel);
-  border-color: var(--color-primary);
-  color: var(--color-text);
+  background: var(--hover-neon-bg, rgba(0, 242, 254, 0.1));
+  border-color: var(--hover-neon, var(--color-highlight));
+  color: var(--hover-neon, var(--color-highlight));
+  box-shadow: 0 0 10px var(--hover-neon-shadow, rgba(0, 242, 254, 0.3));
 }
 
 .btn-icon:disabled {
@@ -195,14 +210,14 @@
   align-items: center;
   justify-content: center;
   background: transparent;
-  border: 1px solid var(--color-border);
+  border: 1px solid transparent;
   border-radius: 0.25rem;
   color: var(--color-primary);
   cursor: pointer;
   padding: 0.25rem;
   width: 1.75rem;
   height: 1.75rem;
-  transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
 }
 
@@ -212,16 +227,21 @@
 }
 
 .btn-icon-action:hover {
-  border-color: var(--color-primary);
-  background-color: var(--color-background-hover);
+  border-color: var(--hover-neon, var(--color-primary));
+  background-color: var(--hover-neon-bg, rgba(123, 44, 191, 0.15));
+  box-shadow: 0 0 8px var(--hover-neon-shadow, rgba(123, 44, 191, 0.3));
+  color: var(--hover-neon, var(--color-primary));
+  transform: translateY(-1px);
 }
 
 .btn-icon-action:active {
-  background-color: var(--color-background-hover);
-  color: var(--color-primary);
+  background-color: var(--hover-neon-bg, rgba(123, 44, 191, 0.3));
+  color: var(--hover-neon, var(--color-primary));
 }
 
 .btn-icon-action.danger:hover {
-  border-color: #e57373;
-  color: #e57373;
+  border-color: var(--hover-neon, var(--color-accent));
+  color: var(--hover-neon, var(--color-accent));
+  background-color: var(--hover-neon-bg, rgba(255, 0, 127, 0.15));
+  box-shadow: 0 0 8px var(--hover-neon-shadow, rgba(255, 0, 127, 0.3));
 }

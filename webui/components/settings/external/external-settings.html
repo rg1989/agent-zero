@@ -9,46 +9,74 @@
         <div>
           <nav>
             <ul>
-              <li>
-                <a href="#section-api-keys">
-                  <img src="/public/api_keys.svg" alt="API Keys" />
-                  <span>API Keys</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-api-keys"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/api_keys.svg" alt="API Keys"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">API Keys</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-litellm">
-                  <img src="/public/litellm.svg" alt="LiteLLM Global Settings" />
-                  <span>LiteLLM Global Settings</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-litellm"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/litellm.svg" alt="LiteLLM Global Settings"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">LiteLLM Global Settings</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-secrets">
-                  <img src="/public/secrets.svg" alt="Secrets Management" />
-                  <span>Secrets Management</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-secrets"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/secrets.svg" alt="Secrets Management"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Secrets Management</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-auth">
-                  <img src="/public/auth.svg" alt="Authentication" />
-                  <span>Authentication</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-auth"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/auth.svg" alt="Authentication"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Authentication</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-external-api">
-                  <img src="/public/external_api.svg" alt="External API" />
-                  <span>External API</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-external-api"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/external_api.svg" alt="External API"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">External API</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-update-checker">
-                  <img src="/public/update_checker.svg" alt="Update Checker" />
-                  <span>Update Checker</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-update-checker"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/update_checker.svg" alt="Update Checker"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Update Checker</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-tunnel">
-                  <img src="/public/tunnel.svg" alt="Tunnel" />
-                  <span>Flare Tunnel</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-tunnel"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/tunnel.svg" alt="Tunnel"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Flare Tunnel</span>
                 </a>
               </li>
             </ul>

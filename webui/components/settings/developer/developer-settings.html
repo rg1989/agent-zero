@@ -9,10 +9,14 @@
         <div>
           <nav>
             <ul>
-              <li>
-                <a href="#section-dev">
-                  <img src="/public/dev.svg" alt="Development" />
-                  <span>Development</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-dev"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/dev.svg" alt="Development"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">Development</span>
                 </a>
               </li>
             </ul>

@@ -12,28 +12,38 @@
   <div class="wrapper" x-data="{ dropdownOpen: false }" @click.outside="dropdownOpen = false" @keydown.escape.window="dropdownOpen = false" x-init="$watch('dropdownOpen', v => v && $store.sidebar.updateDropdownPosition($el))">
     <div id="quick-actions">
       <!-- Dashboard -->
-      <button class="config-button" id="dashboard" @click="deselectChat()" title="Dashboard">
-        <span class="material-symbols-outlined">home</span>
+      <button class="config-button" id="dashboard" @click="deselectChat()" title="Dashboard"
+              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+              :style="hoverColor ? `background-color: var(--color-background-hover); z-index: 1; position: relative;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">home</span>
       </button>
 
       <!-- Memory -->
-      <button class="config-button" id="memory-dash" @click="openModal('modals/memory/memory-dashboard.html')" title="Memory">
-        <span class="material-symbols-outlined">psychology</span>
+      <button class="config-button" id="memory-dash" @click="openModal('modals/memory/memory-dashboard.html')" title="Memory"
+              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+              :style="hoverColor ? `background-color: var(--color-background-hover); z-index: 1; position: relative;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">psychology</span>
       </button>
 
       <!-- Scheduler -->
-      <button class="config-button" id="scheduler" @click="openModal('modals/scheduler/scheduler-modal.html')" title="Scheduler">
-        <span class="material-symbols-outlined">schedule</span>
+      <button class="config-button" id="scheduler" @click="openModal('modals/scheduler/scheduler-modal.html')" title="Scheduler"
+              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+              :style="hoverColor ? `background-color: var(--color-background-hover); z-index: 1; position: relative;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">schedule</span>
       </button>
 
       <!-- Settings -->
-      <button class="config-button" id="settings" @click="openModal('settings/settings.html')" title="Settings">
-        <span class="material-symbols-outlined">settings</span>
+      <button class="config-button" id="settings" @click="openModal('settings/settings.html')" title="Settings"
+              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+              :style="hoverColor ? `background-color: var(--color-background-hover); z-index: 1; position: relative;` : ''">
+        <span class="material-symbols-outlined" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">settings</span>
       </button>
 
       <!-- Dropdown Toggle -->
-      <button class="config-button dropdown-toggle" @click="dropdownOpen = !dropdownOpen" title="More options">
-        <span class="material-symbols-outlined" :class="dropdownOpen ? 'rotated' : ''">expand_more</span>
+      <button class="config-button dropdown-toggle" @click="dropdownOpen = !dropdownOpen" title="More options"
+              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+              :style="hoverColor ? `background-color: var(--color-background-hover); z-index: 1; position: relative;` : ''">
+        <span class="material-symbols-outlined" :class="dropdownOpen ? 'rotated' : ''" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">expand_more</span>
       </button>
     </div>
 

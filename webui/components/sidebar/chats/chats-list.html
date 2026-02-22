@@ -13,7 +13,9 @@
         <div class="section-header-row">
           <h3 class="section-header">Chats</h3>
           <!-- New Chat Button -->
-          <button id="newChat" class="btn-icon-action chat-list-action-btn" @click="$store.chats.newChat()" aria-label="New Chat" title="New Chat" data-bs-placement="top" data-bs-trigger="hover">
+          <button id="newChat" class="btn-icon-action chat-list-action-btn" @click="$store.chats.newChat()" aria-label="New Chat" title="New Chat" data-bs-placement="top" data-bs-trigger="hover"
+                  x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                  :style="hoverColor ? `background-color: ${hoverColor}20; box-shadow: 0 0 8px ${hoverColor}40; border-color: ${hoverColor}; color: ${hoverColor}; text-shadow: 0 0 5px ${hoverColor}80;` : ''">
             <span class="material-symbols-outlined">edit_square</span>
           </button>
         </div>
@@ -23,16 +25,21 @@
         <ul class="config-list chats-config-list no-scrollbar" x-show="$store.chats.contexts.length > 0">
           <template x-for="context in $store.chats.contexts" :key="context.id">
             <li>
-              <div :class="{'chat-container': true, 'chat-selected': context.id === $store.chats.selected}"
+              <div x-data="{ itemColor: globalThis.getRandomNeonColor(), isHovered: false }"
+                :class="{'chat-container': true, 'chat-selected': context.id === $store.chats.selected}"
+                @mouseenter="isHovered = true"
+                @mouseleave="isHovered = false"
+                :style="context.id === $store.chats.selected ? `background-color: ${itemColor}25;` : (isHovered ? `background-color: ${itemColor}15;` : '')"
                 @click="$store.chats.selectChat(context.id)">
                 <div class="chat-list-button">
                   <span :class="{'project-color-ball': true, 'heartbeat': context.running}"
-                    :style="context.project?.color ? { backgroundColor: context.project.color } : { border: '1px solid var(--color-border)' }"></span>
+                    :style="context.id === $store.chats.selected ? `background-color: ${itemColor}; box-shadow: 0 0 8px ${itemColor}; border: none;` : (isHovered ? `background-color: ${itemColor}; box-shadow: 0 0 8px ${itemColor}; border: none;` : (context.project?.color ? `background-color: ${context.project.color};` : `border: 1px solid var(--color-border);`))"></span>
                   <span class="chat-name"
+                    :style="context.id === $store.chats.selected ? `color: ${itemColor}; text-shadow: 0 0 5px ${itemColor}80;` : (isHovered ? `color: ${itemColor}; text-shadow: 0 0 5px ${itemColor}66;` : '')"
                     x-text="context.name ? context.name : 'Chat #' + context.no"></span>
                 </div>
                 <button class="btn-icon-action chat-list-action-btn" title="Close chat" @click.stop="$confirmClick($event, () => $store.chats.killChat(context.id))">
-                  <span class="material-symbols-outlined">close</span>
+                  <span class="material-symbols-outlined" :style="context.id === $store.chats.selected || isHovered ? `color: ${itemColor};` : ''">close</span>
                 </button>
               </div>
             </li>
@@ -59,6 +66,23 @@
 
     .chats-list-container .section-header {
       margin: 0;
+      color: var(--color-primary);
+      text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    #newChat {
+      color: var(--color-highlight);
+      text-shadow: 0 0 5px rgba(191, 0, 255, 0.4);
+    }
+
+    #newChat:hover {
+      background-color: rgba(191, 0, 255, 0.15);
+      box-shadow: 0 0 8px rgba(191, 0, 255, 0.3);
+      border-color: var(--color-highlight);
     }
 
     /* Chats list container and items */
@@ -85,9 +109,11 @@
       justify-content: space-between;
       width: 100%;
       min-height: 40px;
-      border-radius: 4px;
+      border-radius: 6px;
       overflow: hidden;
       cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 2px;
     }
 
     .chat-list-button {
@@ -106,6 +132,7 @@
       display: inline-block;
       box-sizing: border-box;
       flex-shrink: 0;
+      box-shadow: 0 0 5px currentColor;
     }
 
     .chat-name {
@@ -113,6 +140,7 @@
       overflow: hidden;
       text-overflow: ellipsis;
       font-size: var(--font-size-small);
+      transition: color 0.2s ease;
     }
 
     .chat-list-action-btn {
@@ -121,14 +149,14 @@
     }
 
     .chat-container:hover{
-      background-color: var(--color-background-hover);
+      /* Hover handled dynamically by Alpine.js */
     }
 
     .device-pointer .chat-container .chat-list-action-btn {
       opacity: 0;
       visibility: hidden;
       pointer-events: none;
-      transition: opacity 0s;
+      transition: opacity 0.2s;
     }
 
     .device-pointer .chat-container:hover .chat-list-action-btn {
@@ -159,9 +187,14 @@
     }
 
     /* Selected chat accent */
+    .chat-selected {
+      /* background-color: rgba(191, 0, 255, 0.12) !important; handled dynamically by Alpine.js */
+    }
+    
     .chat-selected .chat-name {
       font-size: var(--font-size-normal);
-      font-weight: bold;
+      font-weight: 600;
+      /* color and text-shadow handled dynamically by Alpine.js */
     }
 
     /* .chat-list-button.font-bold { position: relative; background-color: var(--color-border) 0.05; } */

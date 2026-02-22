@@ -162,33 +162,62 @@ nav ul li {
   font-weight: 500;
 }
 
+/* Specific colors applied generally to elements based on nth-child, both active and initial states */
+nav ul li:nth-child(7n+1) a { --base-neon: #00f2fe; --base-neon-shadow: rgba(0, 242, 254, 0.4); --neon-hue: 145deg; }
+nav ul li:nth-child(7n+2) a { --base-neon: #ff007f; --base-neon-shadow: rgba(255, 0, 127, 0.4); --neon-hue: 290deg; }
+nav ul li:nth-child(7n+3) a { --base-neon: #bf00ff; --base-neon-shadow: rgba(191, 0, 255, 0.4); --neon-hue: 245deg; }
+nav ul li:nth-child(7n+4) a { --base-neon: #00ff9d; --base-neon-shadow: rgba(0, 255, 157, 0.4); --neon-hue: 116deg; }
+nav ul li:nth-child(7n+5) a { --base-neon: #ffd700; --base-neon-shadow: rgba(255, 215, 0, 0.4); --neon-hue: 11deg; }
+nav ul li:nth-child(7n+6) a { --base-neon: #ffb86c; --base-neon-shadow: rgba(255, 184, 108, 0.4); --neon-hue: 348deg; }
+nav ul li:nth-child(7n+7) a { --base-neon: #3a86ff; --base-neon-shadow: rgba(58, 134, 255, 0.4); --neon-hue: 173deg; }
+
+/* Apply base neon colors natively to elements */
 nav ul li a {
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
   text-decoration: none;
-  color: var(--color-text);
+  color: var(--base-neon, var(--color-text));
   opacity: 0.8;
   background-color: var(--color-panel);
-  border: 1px solid var(--color-border);
+  border: 2px solid var(--base-neon, var(--color-border));
   border-radius: 8px;
   padding: 1rem;
   width: 100%;
   transition: all 0.2s ease-in-out;
+  box-shadow: 0 0 8px var(--base-neon-shadow, transparent);
 }
 
 nav ul li a:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  background-color: var(--color-secondary);
+  opacity: 1;
+  box-shadow: 0 0 18px var(--hover-neon-shadow, rgba(0, 0, 0, 0.1));
+  background-color: var(--color-message-bg);
+  border-color: var(--hover-neon, var(--base-neon, var(--color-border)));
+}
+
+nav ul li a:hover span {
+  color: var(--hover-neon, var(--base-neon, var(--color-text)));
+  text-shadow: 0 0 8px var(--hover-neon-shadow, transparent);
+}
+
+nav ul li a span {
+  color: var(--base-neon, var(--color-text));
+  text-shadow: 0 0 5px var(--base-neon-shadow, transparent);
+  transition: all 0.2s ease-in-out;
 }
 
 nav ul li a img {
   width: 50px;
   height: 50px;
   margin-bottom: 0.5rem;
-  filter: var(--svg-filter);
+  transition: filter 0.2s ease-in-out;
+  filter: brightness(0) invert(1) sepia(1) saturate(5000%) hue-rotate(var(--neon-hue, 0deg)) drop-shadow(0 0 5px var(--base-neon));
+}
+
+nav ul li a:hover img {
+  /* Handled by Alpine.js inline style via getColorFilter() */
 }
 
 .light-mode nav ul li a {
@@ -286,12 +315,19 @@ nav ul li a img {
   right: 0;
 }
 
+.settings-tab:nth-child(6n+1) { --base-neon: var(--color-primary); --base-neon-shadow: rgba(0, 242, 254, 0.4); }
+.settings-tab:nth-child(6n+2) { --base-neon: var(--color-accent); --base-neon-shadow: rgba(255, 0, 127, 0.4); }
+.settings-tab:nth-child(6n+3) { --base-neon: var(--color-highlight); --base-neon-shadow: rgba(191, 0, 255, 0.4); }
+.settings-tab:nth-child(6n+4) { --base-neon: var(--color-warning-text); --base-neon-shadow: rgba(255, 184, 108, 0.4); }
+.settings-tab:nth-child(6n+5) { --base-neon: #00ff9d; --base-neon-shadow: rgba(0, 255, 157, 0.4); }
+.settings-tab:nth-child(6n+6) { --base-neon: #ffd700; --base-neon-shadow: rgba(255, 215, 0, 0.4); }
+
 .settings-tab {
   padding: 8px 16px;
   cursor: pointer;
   position: relative;
-  color: var(--color-text);
-  border: 2px solid var(--color-border);
+  color: var(--base-neon, var(--color-text));
+  border: 2px solid var(--base-neon, var(--color-border));
   border-bottom: none;
   border-radius: 8px 8px 0 0;
   transition: all 0.3s ease;
@@ -304,24 +340,34 @@ nav ul li a img {
   text-overflow: ellipsis;
   white-space: nowrap;
   flex-shrink: 0;
+  text-shadow: 0 0 5px var(--base-neon-shadow, transparent);
 }
 
 .settings-tab:not(.active) {
-  opacity: 0.8;
+  opacity: 0.7;
   border-bottom: 3px solid var(--color-border);
   background-color: var(--color-background);
 }
 
 .settings-tab.active {
-  border-color: var(--color-border);
-  /* box-shadow:
-    0 -4px 8px -2px var(--color-border),
-    4px 0 8px -2px var(--color-border),
-    -4px 0 8px -2px var(--color-border); */
+  opacity: 1;
+  border-color: var(--base-neon);
   font-weight: bold;
-  background-color: var(--color-panel);
+  background-color: var(--color-message-bg);
   min-width: min-content;
   max-width: 150px;
+  color: var(--base-neon);
+  text-shadow: 0 0 8px var(--base-neon-shadow);
+  box-shadow: 0 -4px 15px var(--base-neon-shadow);
+}
+
+.settings-tab:hover {
+  opacity: 1;
+  color: var(--hover-neon, var(--base-neon, var(--color-text)));
+  text-shadow: 0 0 8px var(--hover-neon-shadow, var(--base-neon-shadow, transparent));
+  border-color: var(--hover-neon, var(--base-neon, var(--color-border))) !important;
+  background-color: var(--color-message-bg);
+  box-shadow: 0 -4px 15px var(--hover-neon-shadow, var(--base-neon-shadow, transparent));
 }
 
 

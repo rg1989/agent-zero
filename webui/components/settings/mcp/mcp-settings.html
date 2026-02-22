@@ -9,22 +9,34 @@
         <div>
           <nav>
             <ul>
-              <li>
-                <a href="#section-mcp-client">
-                  <img src="/public/mcp_client.svg" alt="External MCP Servers" />
-                  <span>External MCP Servers</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-mcp-client"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/mcp_client.svg" alt="External MCP Servers"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">External MCP Servers</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-mcp-server">
-                  <img src="/public/mcp_server.svg" alt="A0 MCP Server" />
-                  <span>A0 MCP Server</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-mcp-server"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/mcp_server.svg" alt="A0 MCP Server"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">A0 MCP Server</span>
                 </a>
               </li>
-              <li>
-                <a href="#section-a2a-server">
-                  <img src="/public/a2a_server.svg" alt="A0 A2A Server" />
-                  <span>A0 A2A Server</span>
+              <li x-data="{ hoverColor: '' }">
+                <a href="#section-a2a-server"
+                   @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                   @mouseleave="hoverColor = ''"
+                   :style="hoverColor ? `border-color: ${hoverColor}; color: ${hoverColor}; box-shadow: 0 0 18px ${hoverColor}40;` : ''">
+                  <img src="/public/a2a_server.svg" alt="A0 A2A Server"
+                       :style="hoverColor ? `filter: ${globalThis.getColorFilter(hoverColor)};` : ''" />
+                  <span :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor}80;` : ''">A0 A2A Server</span>
                 </a>
               </li>
             </ul>

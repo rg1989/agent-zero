@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Roboto+Mono:ital,wght@0,100..700;1,100..700&family=Rubik:ital,wght@0,300..900;1,300..900&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap");
 
 /* Add box-sizing globally for better cross-browser consistency */
 *,
@@ -8,24 +8,24 @@
 }
 
 :root {
-  /* Dark mode */
-  --color-background-dark: #131313;
+  /* Dark mode - Lighter Midnight Neon */
+  --color-background-dark: #0f111a;
   --color-text-dark: #ffffff;
-  --color-text-muted-dark: #d4d4d4e4;
-  --color-primary-dark: #737a81;
-  --color-secondary-dark: #656565;
-  --color-accent-dark: #cf6679;
-  --color-message-bg-dark: #2d2d2d;
-  --color-highlight-dark: #2b5ab9;
-  --color-message-text-dark: #e0e0e0;
-  --color-panel-dark: #1a1a1a;
-  --color-border-dark: #444444a8;
-  --color-input-dark: #131313;
-  --color-input-focus-dark: #101010;
-  --color-chat-background-dark: #212121;
-  --color-error-text-dark:#e72323;
-  --color-warning-text-dark:#e79c23;
-  --color-table-row-dark: #272727;
+  --color-text-muted-dark: #a0aec0;
+  --color-primary-dark: #00f2fe; /* Electric Cyan */
+  --color-secondary-dark: #718096; /* Lighter secondary for visibility */
+  --color-accent-dark: #ff007f; /* Vivid Magenta */
+  --color-message-bg-dark: rgba(30, 34, 51, 0.6);
+  --color-highlight-dark: #bf00ff; /* Bright Purple */
+  --color-message-text-dark: #f8fafc;
+  --color-panel-dark: rgba(20, 23, 38, 0.9); /* Lighter panel */
+  --color-border-dark: rgba(0, 242, 254, 0.25); /* Glowing borders */
+  --color-input-dark: rgba(0, 0, 0, 0.3);
+  --color-input-focus-dark: rgba(0, 242, 254, 0.08);
+  --color-chat-background-dark: radial-gradient(circle at center, #1a1d2d 0%, #0f111a 100%);
+  --color-error-text-dark: #ff2a5f;
+  --color-warning-text-dark: #ffb86c;
+  --color-table-row-dark: rgba(30, 34, 51, 0.6);
 
   /* Light mode */
   --color-background-light: #fafafa;
@@ -78,20 +78,19 @@
   --font-size-xs: 0.7rem;
   --font-size-small: 0.8rem;
   --font-size-smaller: 0.9rem;
-  --font-size-normal: 1rem;
-  --font-size-large: 1.2rem;
+  --font-size-normal: 0.95rem;
+  --font-size-large: 1.15rem;
 
   /* Font families */
-  --font-family-main: "Rubik", Arial, Helvetica, sans-serif;
-  --font-family-code: "Roboto Mono", monospace;
+  --font-family-main: "Inter", Arial, Helvetica, sans-serif;
+  --font-family-code: "JetBrains Mono", monospace;
 
   /* Other variables */
-  --border-radius: 1.125rem;
-  --border-radius-sm: 0.5rem;
+  --border-radius: 0.5rem;
+  --border-radius-sm: 0.3rem;
   --transition-speed: 0.3s;
   --svg-filter: brightness(0) saturate(100%) var(--color-primary-filter);
-  --color-primary-filter: invert(73%) sepia(17%) saturate(360%)
-    hue-rotate(177deg) brightness(87%) contrast(85%);
+  --color-primary-filter: invert(36%) sepia(85%) saturate(2395%) hue-rotate(256deg) brightness(81%) contrast(98%);
 }
 
 /* Light mode class */
@@ -119,7 +118,7 @@
 /* Reset and Base Styles */
 body,
 html {
-  background-color: var(--color-background);
+  background: var(--color-background);
   color: var(--color-text);
   font-family: var(--font-family-main);
   width: 100%;
@@ -400,6 +399,7 @@ img {
   flex-grow: 1;
   -webkit-transition: margin-left var(--transition-speed) ease-in-out;
   transition: margin-left var(--transition-speed) ease-in-out;
+  background: var(--color-chat-background);
 }
 
 /* Scrollbar styles for right panel */
@@ -431,17 +431,21 @@ div#right-panel::-webkit-scrollbar-thumb:hover {
 }
 
 #time-date {
-  color: var(--color-text);
+  color: var(--color-primary);
   text-align: right;
   line-height: 1.2;
+  text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+  font-weight: 500;
 }
 
 #user-date {
   font-size: 0.7rem;
-  opacity: 0.5;
+  opacity: 0.8;
   font-weight: 400;
   display: block;
   margin-top: 2px;
+  color: var(--color-highlight);
+  text-shadow: 0 0 5px rgba(191, 0, 255, 0.3);
 }
 
 /* Typography */
@@ -1582,28 +1586,29 @@ body * {
 }
 
 body *::-webkit-scrollbar {
-  width: 5px;
+  width: 4px;
 }
 
 body *::-webkit-scrollbar-track {
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
-  border-radius: 3px;
+  box-shadow: none;
+  border-radius: 4px;
+  background-color: transparent;
 }
 
 body *::-webkit-scrollbar-thumb {
-  border-radius: 3px;
-  box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.3);
-  background-color: #555;
+  border-radius: 4px;
+  box-shadow: none;
+  background-color: rgba(123, 44, 191, 0.3);
   -webkit-transition: background-color var(--transition-speed) ease-in-out;
   transition: background-color var(--transition-speed) ease-in-out;
 }
 
 body *::-webkit-scrollbar-thumb:hover {
-  background-color: #666;
+  background-color: rgba(0, 242, 254, 0.6);
 }
 
 body *::-webkit-scrollbar-thumb:active {
-  background-color: #888;
+  background-color: rgba(0, 242, 254, 0.8);
 }
 
 .light-mode * {

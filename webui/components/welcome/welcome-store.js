@@ -219,7 +219,7 @@ const model = {
         window.open("https://agent-zero.ai", "_blank");
         break;
       case "github":
-        window.open("https://github.com/agent0ai/agent-zero", "_blank");
+        window.open("https://github.com/rg1989/agent-zero", "_blank");
         break;
     }
   },
