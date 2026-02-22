@@ -67,7 +67,7 @@
     .chats-list-container .section-header {
       margin: 0;
       color: var(--color-primary);
-      text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+      text-shadow: var(--glow-text-primary);
       font-weight: 600;
       letter-spacing: 0.05em;
       text-transform: uppercase;
@@ -76,13 +76,18 @@
 
     #newChat {
       color: var(--color-highlight);
-      text-shadow: 0 0 5px rgba(191, 0, 255, 0.4);
+      text-shadow: var(--glow-text-accent);
     }
 
     #newChat:hover {
       background-color: rgba(191, 0, 255, 0.15);
       box-shadow: 0 0 8px rgba(191, 0, 255, 0.3);
       border-color: var(--color-highlight);
+    }
+
+    .light-mode #newChat:hover {
+      background-color: var(--color-background-hover);
+      box-shadow: none;
     }
 
     /* Chats list container and items */

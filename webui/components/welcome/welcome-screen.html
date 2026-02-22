@@ -234,7 +234,7 @@
             border: 1px solid var(--color-border);
             border-radius: 10px;
             color: var(--color-primary);
-            text-shadow: 0 0 5px rgba(0, 242, 254, 0.3);
+            text-shadow: var(--glow-text-primary);
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -298,11 +298,11 @@
 
         /* Neon grid colors */
         .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-title { color: var(--color-primary); text-shadow: 0 0 8px rgba(0, 242, 254, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-title { color: var(--color-primary); text-shadow: var(--glow-text-primary); }
         .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-icon,
         .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-title { color: var(--color-accent); text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); }
         .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-title { color: var(--color-highlight); text-shadow: 0 0 8px rgba(191, 0, 255, 0.4); }
+        .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-title { color: var(--color-highlight); text-shadow: var(--glow-text-accent); }
         .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-icon,
         .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-title { color: var(--color-warning-text); text-shadow: 0 0 8px rgba(255, 184, 108, 0.4); }
         .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-icon,
@@ -313,6 +313,32 @@
         .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-title { color: #3a86ff; text-shadow: 0 0 8px rgba(58, 134, 255, 0.4); }
         .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-icon,
         .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-title { color: var(--color-error-text); text-shadow: 0 0 8px rgba(255, 42, 95, 0.4); }
+
+        /* Light mode: remove all tile glows and fix low-contrast neon colors */
+        .light-mode .welcome-actions > .welcome-action-card .welcome-action-icon,
+        .light-mode .welcome-actions > .welcome-action-card .welcome-action-title { text-shadow: none; }
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-icon,
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-title { color: var(--color-accent); }
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-icon,
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-title { color: var(--color-warning-text); }
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-icon,
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-title { color: #007a47; }
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-icon,
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-title { color: #8a6800; }
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-icon,
+        .light-mode .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-title { color: var(--color-error-text); }
+        /* Light mode: remove sys resource bar glows */
+        .light-mode .sys-res-bar { box-shadow: none !important; }
+
+        /* Light mode: fix legacy banner text with hardcoded dark colors */
+        .light-mode .welcome-banner-html div[style*="color:#ffffff"],
+        .light-mode .welcome-banner-html div[style*="color: #ffffff"] {
+          color: var(--color-text) !important;
+        }
+        .light-mode .welcome-banner-html div[style*="color:#00f2fe"],
+        .light-mode .welcome-banner-html div[style*="color: #00f2fe"] {
+          color: var(--color-primary) !important;
+        }
 
         .welcome-actions > .welcome-action-card:hover {
             /* hover effect handled dynamically */

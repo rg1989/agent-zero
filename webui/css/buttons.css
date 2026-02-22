@@ -245,3 +245,30 @@
   background-color: var(--hover-neon-bg, rgba(255, 0, 127, 0.15));
   box-shadow: 0 0 8px var(--hover-neon-shadow, rgba(255, 0, 127, 0.3));
 }
+
+/* Light mode: remove neon glow effects */
+.light-mode .button:hover,
+.light-mode .button.confirm:hover,
+.light-mode .button.cancel:hover {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode .btn-action-header:hover,
+.light-mode .btn-action-header.confirm:hover,
+.light-mode .btn-action-header.cancel:hover,
+.light-mode .btn-action-header.delete:hover {
+  box-shadow: none;
+}
+
+.light-mode .btn-action:hover {
+  box-shadow: none;
+}
+
+.light-mode .btn-icon:hover:not(:disabled) {
+  box-shadow: none;
+}
+
+.light-mode .btn-icon-action:hover,
+.light-mode .btn-icon-action.danger:hover {
+  box-shadow: none;
+}

@@ -50,6 +50,40 @@ const model = {
     "#adb5bd", // Cool Gray
     "#6c757d", // Slate Gray
   ],
+  // Darker equivalents for light mode — same hue families, readable on light backgrounds
+  colorsLight: [
+    "#5b21b6", // Deep Purple
+    "#6d28d9", // Blue Violet
+    "#7c3aed", // Amethyst
+    "#4c1d95", // Indigo (replaces light Lavender)
+    "#1e3a8a", // Dark Navy
+    "#1d4ed8", // Azure
+    "#0369a1", // Steel Blue
+    "#0284c7", // Medium Blue (replaces light Bright Blue)
+    "#0ea5e9", // Sky Blue
+    "#1e40af", // Navy (replaces light Baby Blue)
+    "#0f766e", // Dark Teal (replaces neon)
+    "#0d9488", // Teal
+    "#15803d", // Forest Green
+    "#0d6e68", // Jungle Green
+    "#166534", // Dark Green (replaces light Mint)
+    "#4d7c0f", // Olive (replaces neon Lime)
+    "#b45309", // Amber
+    "#d97706", // Dark Amber (replaces bright Yellow)
+    "#92400e", // Dark Ochre (replaces Pale Yellow)
+    "#ea580c", // Orange
+    "#c2410c", // Burnt Orange
+    "#9a3412", // Dark Rust (replaces light Peach)
+    "#b91c1c", // Crimson
+    "#c2410c", // Burnt Sienna
+    "#dc2626", // Red
+    "#991b1b", // Dark Red (replaces light Coral)
+    "#be185d", // Pink
+    "#9d174d", // Magenta
+    "#831843", // Dark Rose (replaces light Carnation)
+    "#475569", // Slate
+    "#334155", // Dark Slate
+  ],
 
   _toFolderName(str) {
     if (!str) return "";

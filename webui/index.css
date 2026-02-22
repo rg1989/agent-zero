@@ -27,24 +27,30 @@
   --color-warning-text-dark: #ffb86c;
   --color-table-row-dark: rgba(30, 34, 51, 0.6);
 
+  /* Glow variables (disabled in light mode) */
+  --glow-text-primary: 0 0 5px rgba(0, 242, 254, 0.4);
+  --glow-text-accent: 0 0 5px rgba(191, 0, 255, 0.3);
+  --glow-box-primary: 0 0 5px var(--color-primary);
+  --color-progress-track: rgba(255, 255, 255, 0.08);
+
   /* Light mode */
-  --color-background-light: #fafafa;
+  --color-background-light: #e8edf2;
   --color-text-light: #333333;
   --color-text-muted-light: #333333e4;
-  --color-primary-light: #384653;
-  --color-secondary-light: #e8eaf6;
+  --color-primary-light: #2557a7;
+  --color-secondary-light: #d5dce6;
   --color-accent-light: #b00020;
-  --color-message-bg-light: #ffffff;
+  --color-message-bg-light: #f0f4f8;
   --color-highlight-light: #2563eb;
   --color-message-text-light: #333333;
-  --color-panel-light: #f0f0f0;
+  --color-panel-light: #dde3ea;
   --color-border-light: #bdbdbdcf;
-  --color-input-light: #e4e4e4;
-  --color-input-focus-light: #dadada;
-  --color-chat-background-light: #fafafa;
+  --color-input-light: #cdd4dc;
+  --color-input-focus-light: #c2cad4;
+  --color-chat-background-light: #e8edf2;
   --color-error-text-light:#920000;
   --color-warning-text-light:#936214;
-  --color-table-row-light: #edededf3;
+  --color-table-row-light: #e2e8ef;
 
 
   /* Default to dark mode */
@@ -112,7 +118,12 @@
   --color-error-text:var(--color-error-text-light);
   --color-warning-text:var(--color-warning-text-light);
   --color-table-row: var(--color-table-row-light);
-} 
+  /* Disable glows in light mode */
+  --glow-text-primary: none;
+  --glow-text-accent: none;
+  --glow-box-primary: none;
+  --color-progress-track: rgba(0, 0, 0, 0.08);
+}
 
 
 /* Reset and Base Styles */
@@ -434,7 +445,7 @@ div#right-panel::-webkit-scrollbar-thumb:hover {
   color: var(--color-primary);
   text-align: right;
   line-height: 1.2;
-  text-shadow: 0 0 5px rgba(0, 242, 254, 0.4);
+  text-shadow: var(--glow-text-primary);
   font-weight: 500;
 }
 
@@ -445,7 +456,7 @@ div#right-panel::-webkit-scrollbar-thumb:hover {
   display: block;
   margin-top: 2px;
   color: var(--color-primary);
-  text-shadow: 0 0 5px rgba(191, 0, 255, 0.3);
+  text-shadow: var(--glow-text-accent);
 }
 
 /* Typography */
@@ -1145,16 +1156,16 @@ a:active {
 }
 
 .light-mode .slider {
-  background-color: #f1f1f1;
-  border: 1px solid #dddddd;
+  background-color: #c8d8ec;
+  border: 1px solid #aec2da;
 }
 
 .light-mode .slider:before {
-  background-color: #838383;
+  background-color: #4e7aac;
 }
 
 .light-mode input:checked + .slider {
-  background-color: #e6e6e6;
+  background-color: #b8ceea;
 }
 
 .light-mode .extension {

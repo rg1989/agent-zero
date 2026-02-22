@@ -50,7 +50,7 @@
                             @click="$store.projects.selectedProject.color = ''">
                             <span class="projects-color-x">×</span>
                         </div>
-                        <template x-for="c in $store.projects.colors" :key="c">
+                        <template x-for="c in ($store.preferences?.darkMode !== false ? $store.projects.colors : $store.projects.colorsLight)" :key="c">
                             <div class="projects-color-ball" :style="`background:${c}`"
                                 :class="{'selected': $store.projects.selectedProject.color === c}"
                                 @click="$store.projects.selectedProject.color = c">

@@ -222,10 +222,24 @@ nav ul li a:hover img {
 
 .light-mode nav ul li a {
   background-color: var(--color-panel-light);
+  box-shadow: none;
 }
 
 .light-mode nav ul li a:hover {
   background-color: var(--color-secondary-light);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.light-mode nav ul li a span,
+.light-mode nav ul li a:hover span {
+  text-shadow: none;
+}
+
+.light-mode .settings-tab,
+.light-mode .settings-tab.active,
+.light-mode .settings-tab:hover {
+  text-shadow: none;
+  box-shadow: none;
 }
 
 /* Responsive Design */
