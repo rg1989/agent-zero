@@ -204,16 +204,24 @@ class AppProxy:
             await self._send_html(send, 502, err, content_type=b"text/plain")
             return
 
-        # Forward response, stripping hop-by-hop headers
+        # Forward response, stripping hop-by-hop headers.
+        # Also strip content-encoding and content-length: httpx automatically
+        # decompresses gzip/br/deflate responses, so the body in resp.content
+        # is already decoded.  Forwarding the original encoding header with the
+        # wrong length causes h11 to reject the response.  We set a fresh
+        # content-length that matches the actual (decoded) body below.
+        _strip_resp = {
+            "connection", "keep-alive", "transfer-encoding",
+            "te", "trailers", "upgrade",
+            "content-encoding", "content-length",
+        }
         resp_headers = [
             [k.lower().encode() if isinstance(k, str) else k.lower(),
              v.encode() if isinstance(v, str) else v]
             for k, v in resp.headers.items()
-            if k.lower() not in {
-                "connection", "keep-alive", "transfer-encoding",
-                "te", "trailers", "upgrade"
-            }
+            if k.lower() not in _strip_resp
         ]
+        resp_headers.append([b"content-length", str(len(resp.content)).encode()])
 
         await send(
             {

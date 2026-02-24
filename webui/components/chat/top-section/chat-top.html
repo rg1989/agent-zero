@@ -6,6 +6,7 @@
     <!-- Import the alpine store -->
     <script type="module">
         import { store } from "/components/chat/top-section/chat-top-store.js";
+        import { store as rightDrawerStore } from "/components/sidebar/right-drawer-store.js";
     </script>
 </head>
 
@@ -23,6 +24,20 @@
                 <x-component path="notifications/notification-icons.html"></x-component>
                 <!-- Project Selector -->
                 <x-component path="projects/project-selector.html"></x-component>
+                <!-- App Drawer Toggle: only visible when tabs are open -->
+                <button x-data="{ hoverColor: '' }"
+                        x-show="$store.rightDrawer && $store.rightDrawer.apps && $store.rightDrawer.apps.length > 0"
+                        x-cloak
+                        @mouseenter="hoverColor = globalThis.getRandomNeonColor()"
+                        @mouseleave="hoverColor = ''"
+                        :style="hoverColor ? `color:${hoverColor}; border-color:${hoverColor}; box-shadow:0 0 8px ${hoverColor}40;` : ''"
+                        @click="$store.rightDrawer.toggleDrawer()"
+                        :title="$store.rightDrawer && $store.rightDrawer.isOpen ? 'Close app drawer' : 'Open app drawer'"
+                        class="rd-topbar-toggle">
+                  <span class="material-symbols-outlined"
+                        x-text="$store.rightDrawer && $store.rightDrawer.isOpen ? 'chevron_right' : 'apps'">
+                  </span>
+                </button>
             </div>
 
         </template>

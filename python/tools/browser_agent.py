@@ -16,14 +16,40 @@ import uuid
 from python.helpers.dirty_json import DirtyJson
 
 
+SHARED_BROWSER_CDP = "http://localhost:9222"
+SHARED_BROWSER_CDP_PORT = 9222
+SHARED_BROWSER_CDP_TIMEOUT = 20  # seconds to wait for Chromium to start
+
+
+async def _wait_for_cdp(timeout: int = SHARED_BROWSER_CDP_TIMEOUT) -> bool:
+    """Poll the CDP port until Chromium is ready or timeout expires."""
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        try:
+            reader, writer = await asyncio.wait_for(
+                asyncio.open_connection("127.0.0.1", SHARED_BROWSER_CDP_PORT),
+                timeout=2,
+            )
+            writer.close()
+            try:
+                await writer.wait_closed()
+            except Exception:
+                pass
+            return True
+        except Exception:
+            await asyncio.sleep(1)
+    return False
+
+
 class State:
     @staticmethod
-    async def create(agent: Agent):
-        state = State(agent)
+    async def create(agent: Agent, use_shared: bool = False):
+        state = State(agent, use_shared=use_shared)
         return state
 
-    def __init__(self, agent: Agent):
+    def __init__(self, agent: Agent, use_shared: bool = False):
         self.agent = agent
+        self.use_shared = use_shared
         self.browser_session: Optional[browser_use.BrowserSession] = None
         self.task: Optional[defer.DeferredTask] = None
         self.use_agent: Optional[browser_use.Agent] = None
@@ -32,7 +58,8 @@ class State:
 
     def __del__(self):
         self.kill_task()
-        files.delete_dir(self.get_user_data_dir()) # cleanup user data dir
+        if not self.use_shared:
+            files.delete_dir(self.get_user_data_dir()) # cleanup user data dir
 
     def get_user_data_dir(self):
         return str(
@@ -45,34 +72,55 @@ class State:
 
     async def _initialize(self):
         if self.browser_session:
+            # Session exists from a previous task — ensure it is still connected.
+            # start() is idempotent: returns immediately if already connected,
+            # or reconnects if the CDP/Playwright link was lost.
+            await self.browser_session.start()
             return
 
-        # for some reason we need to provide exact path to headless shell, otherwise it looks for headed browser
-        pw_binary = ensure_playwright_binary()
-                
-        self.browser_session = browser_use.BrowserSession(
-            browser_profile=browser_use.BrowserProfile(
-                headless=True,
-                disable_security=True,
-                chromium_sandbox=False,
-                accept_downloads=True,
-                downloads_path=files.get_abs_path("usr/downloads"),
-                allowed_domains=["*", "http://*", "https://*"],
-                executable_path=pw_binary,
-                keep_alive=True,
-                minimum_wait_page_load_time=1.0,
-                wait_for_network_idle_page_load_time=2.0,
-                maximum_wait_page_load_time=10.0,
-                window_size={"width": 1024, "height": 2048},
-                screen={"width": 1024, "height": 2048},
-                viewport={"width": 1024, "height": 2048},
-                no_viewport=False,
-                args=["--headless=new"],
-                # Use a unique user data directory to avoid conflicts
-                user_data_dir=self.get_user_data_dir(),
-                extra_http_headers=self.agent.config.browser_http_headers or {},
+        if self.use_shared:
+            # Connect to the visible shared browser running in the side panel.
+            # Viewport matches the 420px drawer so sites render their native
+            # mobile/responsive layout rather than a scaled-down desktop view.
+            self.browser_session = browser_use.BrowserSession(
+                cdp_url=SHARED_BROWSER_CDP,
+                browser_profile=browser_use.BrowserProfile(
+                    accept_downloads=True,
+                    downloads_path=files.get_abs_path("usr/downloads"),
+                    keep_alive=True,
+                    minimum_wait_page_load_time=1.0,
+                    wait_for_network_idle_page_load_time=2.0,
+                    maximum_wait_page_load_time=10.0,
+                    viewport={"width": 420, "height": 800},
+                ),
+            )
+        else:
+            # for some reason we need to provide exact path to headless shell, otherwise it looks for headed browser
+            pw_binary = ensure_playwright_binary()
+
+            self.browser_session = browser_use.BrowserSession(
+                browser_profile=browser_use.BrowserProfile(
+                    headless=True,
+                    disable_security=True,
+                    chromium_sandbox=False,
+                    accept_downloads=True,
+                    downloads_path=files.get_abs_path("usr/downloads"),
+                    allowed_domains=["*", "http://*", "https://*"],
+                    executable_path=pw_binary,
+                    keep_alive=True,
+                    minimum_wait_page_load_time=1.0,
+                    wait_for_network_idle_page_load_time=2.0,
+                    maximum_wait_page_load_time=10.0,
+                    window_size={"width": 1024, "height": 2048},
+                    screen={"width": 1024, "height": 2048},
+                    viewport={"width": 1024, "height": 2048},
+                    no_viewport=False,
+                    args=["--headless=new"],
+                    # Use a unique user data directory to avoid conflicts
+                    user_data_dir=self.get_user_data_dir(),
+                    extra_http_headers=self.agent.config.browser_http_headers or {},
                 )
-        )
+            )
 
         await self.browser_session.start() if self.browser_session else None
         # self.override_hooks()
@@ -88,14 +136,17 @@ class State:
             try:
                 page = await self.browser_session.get_current_page()
                 if page:
-                    await page.set_viewport_size({"width": 1024, "height": 2048})
+                    # Shared browser matches the 420px drawer; headless uses a
+                    # tall viewport for scrolling/reading long pages.
+                    vp = {"width": 420, "height": 800} if self.use_shared else {"width": 1024, "height": 2048}
+                    await page.set_viewport_size(vp)
             except Exception as e:
                 PrintStyle().warning(f"Could not force set viewport size: {e}")
 
-        # --------------------------------------------------------------------------    
-        
-        # Add init script to the browser session
-        if self.browser_session and self.browser_session.browser_context:
+        # --------------------------------------------------------------------------
+
+        # Add init script to the browser session (skip for shared browser — context already live)
+        if not self.use_shared and self.browser_session and self.browser_session.browser_context:
             js_override = files.get_abs_path("lib/browser/init_override.js")
             await self.browser_session.browser_context.add_init_script(path=js_override) if self.browser_session else None
 
@@ -107,26 +158,65 @@ class State:
             thread_name="BrowserAgent" + self.agent.context.id
         )
         if self.agent.context.task:
-            self.agent.context.task.add_child_task(self.task, terminate_thread=True)
+            # Use terminate_thread=False so the browser event loop (and its
+            # Playwright global objects) survives between A0 message cycles.
+            # The event loop is a daemon thread and will be cleaned up on exit.
+            self.agent.context.task.add_child_task(self.task, terminate_thread=False)
         self.task.start_task(self._run_task, task) if self.task else None
         return self.task
 
     def kill_task(self):
-        if self.task:
-            self.task.kill(terminate_thread=True)
-            self.task = None
-        if self.browser_session:
+        # Signal the browser-use agent to stop gracefully before cancelling coroutines.
+        if self.use_agent:
             try:
-                import asyncio
+                self.use_agent.state.stopped = True
+            except Exception:
+                pass
 
+        if self.task:
+            loop = getattr(self.task.event_loop_thread, 'loop', None)
+            if loop and loop.is_running():
+                # Cancel running asyncio coroutines (browser_use tasks) WITHOUT
+                # terminating the event loop.  This keeps GLOBAL_PLAYWRIGHT_API_OBJECT
+                # valid so the next task doesn't need to spawn a new Playwright subprocess.
+                try:
+                    drain_future = asyncio.run_coroutine_threadsafe(
+                        defer.DeferredTask._drain_event_loop_tasks(), loop
+                    )
+                    drain_future.result(timeout=5.0)
+                except Exception:
+                    pass
+
+                # For non-shared mode: close the headless browser session while the
+                # event loop is still alive (avoids spawning a throwaway loop).
+                if not self.use_shared and self.browser_session:
+                    try:
+                        asyncio.run_coroutine_threadsafe(
+                            self.browser_session.close(), loop
+                        ).result(timeout=5.0)
+                    except Exception:
+                        pass
+                    self.browser_session = None
+
+            # Preserve the event loop (terminate_thread=False) so Playwright globals
+            # remain valid for the next browser_agent call in this context.
+            self.task.kill(terminate_thread=False)
+            self.task = None
+
+        # For shared mode: keep browser_session alive — keep_alive=True means
+        # close() is a no-op anyway, and the session can be reused as-is.
+        # For non-shared mode without a running loop: fall back to a new loop.
+        if not self.use_shared and self.browser_session:
+            try:
                 loop = asyncio.new_event_loop()
                 asyncio.set_event_loop(loop)
-                loop.run_until_complete(self.browser_session.close()) if self.browser_session else None
+                loop.run_until_complete(self.browser_session.close())
                 loop.close()
             except Exception as e:
                 PrintStyle().error(f"Error closing browser session: {e}")
             finally:
                 self.browser_session = None
+
         self.use_agent = None
         self.iter_no = 0
 
@@ -166,7 +256,6 @@ class State:
                 ),
                 controller=controller,
                 enable_memory=False,  # Disable memory to avoid state conflicts
-                llm_timeout=3000, # TODO rem
                 sensitive_data=cast(dict[str, str | dict[str, str]] | None, secrets_dict or {}),  # Pass secrets
             )
         except Exception as e:
@@ -212,10 +301,54 @@ class State:
 
 class BrowserAgent(Tool):
 
-    async def execute(self, message="", reset="", **kwargs):
+    async def execute(self, message="", reset="", use_shared="", **kwargs):
         self.guid = self.agent.context.generate_id() # short random id
         reset = str(reset).lower().strip() == "true"
-        await self.prepare_state(reset=reset)
+        use_shared_bool = str(use_shared).lower().strip() == "true"
+
+        if use_shared_bool:
+            # Auto-start the shared browser app only if Chromium CDP is not reachable.
+            # We check the actual CDP port rather than AppManager status, because the
+            # status can be stale (e.g. if the tracked PID differs from the real Flask
+            # process after a restart).  Restarting when Chromium is already running
+            # would kill the live browser that the user sees in the drawer.
+            import urllib.request as _ureq
+            _cdp_alive = False
+            try:
+                with _ureq.urlopen("http://localhost:9222/json", timeout=2) as _r:
+                    _cdp_alive = bool(_r.read())
+            except Exception:
+                pass
+
+            if not _cdp_alive:
+                from python.helpers.app_manager import AppManager
+                mgr = AppManager.get_instance()
+                app_info = mgr.get_app("shared-browser")
+                if app_info:
+                    PrintStyle().info("Shared browser CDP not reachable — starting it now...")
+                    try:
+                        mgr.start_app("shared-browser")
+                        # Also open the drawer so the user can see it
+                        existing = mgr.get_drawer_state()
+                        apps = list(existing.get("apps") or [])
+                        if "shared-browser" not in apps:
+                            apps.append("shared-browser")
+                        mgr.set_drawer_state(open=True, apps=apps, active="shared-browser")
+                    except Exception as e:
+                        PrintStyle().warning(f"Could not start shared-browser: {e}")
+
+            # Wait for Chromium CDP to be ready before handing off to browser-use
+            if not await _wait_for_cdp():
+                return Response(
+                    message=(
+                        "The shared browser CDP endpoint (localhost:9222) is not available. "
+                        "The browser may still be starting. Please call open_app with "
+                        "app='shared-browser' first, wait a moment, and then try again."
+                    ),
+                    break_loop=False,
+                )
+
+        await self.prepare_state(reset=reset, use_shared=use_shared_bool)
         message = get_secrets_manager(self.agent.context).mask_values(message, placeholder="<secret>{key}</secret>") # mask any potential passwords passed from A0 to browser-use to browser-use format
         task = self.state.start_task(message) if self.state else None
 
@@ -339,47 +472,46 @@ class BrowserAgent(Tool):
         )
 
     async def get_update(self):
-        await self.prepare_state()
-
         result = {}
         agent = self.agent
         ua = self.state.use_agent if self.state else None
-        page = await self.state.get_page() if self.state else None
 
-        if ua and page:
+        if ua and self.state and self.state.task and not self.state.task.is_ready():
             try:
 
                 async def _get_update():
-
-                    # await agent.wait_if_paused() # no need here
-
                     # Build short activity log
                     result["log"] = get_use_agent_log(ua)
 
-                    path = files.get_abs_path(
-                        persist_chat.get_chat_folder_path(agent.context.id),
-                        "browser",
-                        "screenshots",
-                        f"{self.guid}.png",
-                    )
-                    files.make_dirs(path)
-                    await page.screenshot(path=path, full_page=False, timeout=3000)
-                    result["screenshot"] = f"img://{path}&t={str(time.time())}"
+                    # Get page and take screenshot entirely inside the DeferredTask's
+                    # event loop to avoid cross-event-loop Playwright conflicts.
+                    page = await self.state.get_page() if self.state else None
+                    if page:
+                        path = files.get_abs_path(
+                            persist_chat.get_chat_folder_path(agent.context.id),
+                            "browser",
+                            "screenshots",
+                            f"{self.guid}.png",
+                        )
+                        files.make_dirs(path)
+                        await page.screenshot(path=path, full_page=False, timeout=3000)
+                        result["screenshot"] = f"img://{path}&t={str(time.time())}"
 
-                if self.state and self.state.task and not self.state.task.is_ready():
-                    await self.state.task.execute_inside(_get_update)
+                await self.state.task.execute_inside(_get_update)
 
             except Exception:
                 pass
 
         return result
 
-    async def prepare_state(self, reset=False):
+    async def prepare_state(self, reset=False, use_shared=False):
         self.state = self.agent.get_data("_browser_agent_state")
-        if reset and self.state:
+        # Reset if mode changed (shared vs headless) or explicitly requested
+        mode_changed = self.state and self.state.use_shared != use_shared
+        if (reset or mode_changed) and self.state:
             self.state.kill_task()
-        if not self.state or reset:
-            self.state = await State.create(self.agent)
+        if not self.state or reset or mode_changed:
+            self.state = await State.create(self.agent, use_shared=use_shared)
         self.agent.set_data("_browser_agent_state", self.state)
 
     def update_progress(self, text):

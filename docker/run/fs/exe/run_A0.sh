@@ -7,6 +7,7 @@ python /a0/prepare.py --dockerized=true
 
 # Seed built-in apps into the registry (idempotent — safe to run every boot)
 python /a0/apps/shared-browser/register.py 2>&1 || true
+python /a0/apps/shared-terminal/register.py 2>&1 || true
 # python /a0/preload.py --dockerized=true # no need to run preload if it's done during container build
 
 echo "Starting A0..."

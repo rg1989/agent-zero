@@ -140,4 +140,14 @@ class WebappHandler(ApiHandler):
             except KeyError as e:
                 return {"error": str(e)}
 
+        if action == "drawer_state":
+            return {"drawer": mgr.get_drawer_state()}
+
+        if action == "set_drawer":
+            open_state = bool(input.get("open", False))
+            apps = input.get("apps") or []
+            active = input.get("active") or None
+            state = mgr.set_drawer_state(open=open_state, apps=apps, active=active)
+            return {"drawer": state}
+
         return {"error": f"Unknown action: {action}"}

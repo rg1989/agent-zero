@@ -239,7 +239,7 @@ class AppManager:
             if name not in self._registry:
                 return False
             info = self._registry[name]
-            if info.get("core", False) or name == "shared-browser":
+            if info.get("core", False) or name in self._CORE_APPS:
                 raise ValueError(f"Cannot remove core app '{name}': it is vital for core functionality")
             try:
                 self.stop_app(name)
@@ -259,10 +259,12 @@ class AppManager:
     # Query
     # ──────────────────────────────────────────────
 
+    _CORE_APPS = frozenset({"shared-browser", "shared-terminal"})
+
     def _normalize_app_info(self, info: dict) -> dict:
         """Ensure core is set for known built-in core apps (backward compat)."""
         out = dict(info)
-        if info.get("name") == "shared-browser" and not out.get("core"):
+        if info.get("name") in self._CORE_APPS and not out.get("core"):
             out["core"] = True
         out.setdefault("core", False)
         return out
@@ -287,3 +289,20 @@ class AppManager:
 
     def apps_dir(self) -> str:
         return APPS_DIR
+
+    # ──────────────────────────────────────────────
+    # Drawer state (in-memory, resets on restart)
+    # ──────────────────────────────────────────────
+
+    def get_drawer_state(self) -> dict:
+        with _lock:
+            return dict(getattr(self, "_drawer_state", {"open": False, "apps": [], "active": None}))
+
+    def set_drawer_state(self, open: bool, apps: list | None = None, active: str | None = None) -> dict:
+        with _lock:
+            self._drawer_state = {
+                "open": open,
+                "apps": list(apps) if apps is not None else [],
+                "active": active,
+            }
+            return dict(self._drawer_state)

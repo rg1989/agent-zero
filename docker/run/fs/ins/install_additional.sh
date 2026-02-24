@@ -20,6 +20,28 @@ apt-get clean
 rm -rf /var/lib/apt/lists/*
 echo "Shared-browser system dependencies installed."
 
+# ── Shared Terminal system dependencies ───────────────────────────────────
+echo "Installing shared-terminal system dependencies..."
+apt-get update
+apt-get install -y --no-install-recommends tmux
+apt-get clean
+rm -rf /var/lib/apt/lists/*
+
+# ttyd is not in Kali repos on all architectures — download the pre-built binary
+# from GitHub releases instead.  Supports x86_64, aarch64 (Apple/AWS ARM), and armv7.
+ARCH=$(uname -m)
+case "$ARCH" in
+  x86_64)  TTYD_ARCH="x86_64" ;;
+  aarch64) TTYD_ARCH="aarch64" ;;
+  armv7l)  TTYD_ARCH="arm" ;;
+  *)       TTYD_ARCH="x86_64"; echo "Warning: unknown arch $ARCH, falling back to x86_64 ttyd" ;;
+esac
+echo "Downloading ttyd for $TTYD_ARCH..."
+curl -fsSL -o /usr/local/bin/ttyd \
+    "https://github.com/tsl0922/ttyd/releases/latest/download/ttyd.${TTYD_ARCH}"
+chmod +x /usr/local/bin/ttyd
+echo "Shared-terminal system dependencies installed (ttyd $(ttyd --version 2>&1 || echo '?'))."
+
 # ── Shared Browser: bake noVNC into the image ──────────────────────────────
 # This clone ends up at /git/agent-zero/apps/shared-browser/static/noVNC.
 # startup.sh copies from here on first run so no internet access is needed.
