@@ -27,7 +27,7 @@
 - [x] **Phase 6: CDP Startup Health-Check** - Replace fragile `sleep 2` with a polling loop that confirms Chromium CDP is ready before any agent connects
 - [x] **Phase 7: Browser Navigate-with-Verification** - Rewrite shared-browser skill with mandatory Observe-Act-Verify workflow and CDP navigate-wait-verify pattern (completed 2026-02-25)
 - [x] **Phase 8: Claude CLI Single-Turn + Env Fix** - Validate `env -u CLAUDECODE` fix and `claude --print` single-turn pattern with ANSI stripping and clean completion detection (completed 2026-02-25)
-- [ ] **Phase 9: Claude CLI Multi-Turn Sessions** - Validate persistent PTY/tmux multi-turn sessions with idle-timeout + prompt-pattern completion detection
+- [ ] **Phase 9: Claude CLI Multi-Turn Sessions** - Implement `--resume UUID` multi-turn sessions using repeated `subprocess.run` calls; each turn returns a complete response, session UUID is tracked automatically, and dead sessions are detected and recovered
 - [ ] **Phase 10: Claude CLI Skill Documentation** - Write `usr/skills/claude-cli/SKILL.md` capturing all validated invocation patterns
 
 ## Phase Details
@@ -74,13 +74,14 @@ Plans:
 - [ ] 08-01-PLAN.md — Create python/helpers/claude_cli.py with validated single-turn pattern and end-to-end verification
 
 ### Phase 9: Claude CLI Multi-Turn Sessions
-**Goal**: Agent Zero can conduct a multi-turn conversation with claude CLI using a persistent PTY session, sending follow-up prompts and reliably detecting when each response is complete
+**Goal**: Agent Zero can conduct a multi-turn conversation with claude CLI using repeated `subprocess.run` calls with `--print --resume UUID`, where each turn returns a complete, non-truncated response and session continuity is maintained automatically across turns
 **Depends on**: Phase 8
 **Requirements**: CLAUDE-04
 **Success Criteria** (what must be TRUE):
-  1. Agent Zero opens a persistent `code_execution_tool` PTY session for claude and sends a sequence of at least two prompts, receiving a coherent response to each
-  2. Agent Zero detects claude response completion using combined idle-timeout and prompt-pattern detection — not idle-timeout alone — avoiding false "done" signals during claude's internal pauses
-  3. If the claude session exits unexpectedly (crash, timeout), Agent Zero detects the dead session and can restart it rather than hanging
+  1. Agent Zero sends a sequence of at least two prompts to claude CLI and each response reflects memory of prior turns — session continuity is confirmed (e.g., claude recalls a value stated in turn 1 when asked in turn 2)
+  2. Each turn returns a complete, non-truncated response within the timeout period — process `returncode` is the completion signal, eliminating idle-timeout and prompt-pattern detection
+  3. If the session UUID is expired or invalid, Agent Zero detects the dead session (returncode 1 + "No conversation found") and restarts cleanly with a fresh session rather than hanging or crashing
+  4. The `ClaudeSession` class tracks session UUID automatically so callers never manage UUIDs manually
 **Plans**: 1 plan
 
 Plans:
@@ -91,7 +92,7 @@ Plans:
 **Depends on**: Phase 9
 **Requirements**: CLAUDE-05
 **Success Criteria** (what must be TRUE):
-  1. `usr/skills/claude-cli/SKILL.md` exists and documents the single-turn pattern (`env -u CLAUDECODE claude --print --output-format json`), multi-turn PTY pattern, ANSI stripping, and completion detection — all patterns validated in Phases 8-9
+  1. `usr/skills/claude-cli/SKILL.md` exists and documents the single-turn pattern (`env -u CLAUDECODE claude --print --output-format json`), multi-turn `--resume UUID` pattern, ANSI stripping, and completion detection — all patterns validated in Phases 8-9
   2. The skill documents the `--session-id` / `--resume UUID` options for multi-agent session coordination
   3. The skill includes security notes covering API key handling and subprocess scope of the env var fix
 **Plans**: TBD
