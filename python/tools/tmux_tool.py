@@ -6,7 +6,7 @@ _TMUX_SESSION = "shared"
 
 # Pre-established project ANSI strip regex (STATE.md, claude_cli.py)
 # Covers: 2-char ESC sequences, CSI color/cursor, OSC title sequences
-ANSI_RE = re.compile(r'\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*\x07)')
+ANSI_RE = re.compile(r'\x1b(?:\][^\x07]*\x07|[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
 
 class TmuxTool(Tool):
