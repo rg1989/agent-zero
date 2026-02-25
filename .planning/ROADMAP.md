@@ -137,7 +137,7 @@ Phases 11 → 12 → 13 → 14 → 15 (strictly sequential — each phase depend
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 10. Claude CLI Skill Documentation | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 11. tmux Primitive Infrastructure | 2/2 | Complete    | 2026-02-25 | 2026-02-25 |
-| 12. Readiness Detection | 1/1 | Complete   | 2026-02-25 | - |
+| 12. Readiness Detection | 1/1 | Complete    | 2026-02-25 | - |
 | 13. Interactive CLI Session Lifecycle | v1.2 | 0/2 | Not started | - |
 | 14. OpenCode Session Wrapper | v1.2 | 0/1 | Not started | - |
 | 15. CLI Orchestration Skill Documentation | v1.2 | 0/1 | Not started | - |
