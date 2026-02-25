@@ -55,7 +55,10 @@ Plans:
   2. Agent Zero takes a screenshot via CDP before every browser action, so the agent always sees current state before acting
   3. After navigation completes, Agent Zero reads the current URL and page title via CDP `Runtime.evaluate` and can confirm the expected page was reached
   4. The shared-browser skill documents and enforces a named Observe-Act-Verify workflow as the primary interaction pattern — all browser interactions follow this sequence
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 07-01-PLAN.md — Add websocket-client to requirements.txt and rewrite SKILL.md with navigate_and_wait, verify_navigation, and full Observe-Act-Verify
 
 ### Phase 8: Claude CLI Single-Turn + Env Fix
 **Goal**: Agent Zero can invoke the `claude` CLI from within its own environment and receive a clean, parseable response to a single-turn prompt
@@ -100,7 +103,7 @@ Phases 6 → 7 (browser stream). Phases 8 → 9 → 10 (claude stream, independe
 | 4. Neon UI + UX | v1.0 | - | Complete | 2026-02-25 |
 | 5. Scaffolding + Skills | v1.0 | - | Complete | 2026-02-25 |
 | 6. CDP Startup Health-Check | v1.1 | 1/1 | Complete | 2026-02-25 |
-| 7. Browser Navigate-with-Verification | v1.1 | 0/TBD | Not started | - |
+| 7. Browser Navigate-with-Verification | v1.1 | 0/1 | Not started | - |
 | 8. Claude CLI Single-Turn + Env Fix | v1.1 | 0/TBD | Not started | - |
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 0/TBD | Not started | - |
 | 10. Claude CLI Skill Documentation | v1.1 | 0/TBD | Not started | - |
