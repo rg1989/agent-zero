@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 12 — Readiness Detection (v1.2)
+**Current focus:** Phase 13 — Interactive CLI Session Lifecycle (v1.2)
 
 ## Current Position
 
-Phase: 12 of 15 (Readiness Detection)
-Plan: 1 of 1 in current phase
-Status: Phase 12 complete (plan 01) — ready for Phase 13
-Last activity: 2026-02-25 — Phase 12 Plan 01 executed; wait_ready action added to TmuxTool; TERM-05 satisfied
+Phase: 13 of 15 (Interactive CLI Session Lifecycle)
+Plan: 1 of 2 in current phase complete — ready for Plan 13-02
+Status: Phase 13 Plan 01 complete — OpenCode TUI observed, prompt_pattern derived
+Last activity: 2026-02-25 — Phase 13 Plan 01 executed; OBSERVATION.md created; CLI-01..04 requirements addressed
 
-Progress: [████████████░░░░░░░░] 60% (12/15 phases complete across all milestones; 3/5 v1.2 plans)
+Progress: [████████████░░░░░░░░] 62% (12.5/15 phases — 13-01 complete, 13-02 pending)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3 (v1.2)
-- Average duration: 5 min
-- Total execution time: 16 min
+- Total plans completed: 4 (v1.2)
+- Average duration: 6 min
+- Total execution time: 29 min
 
 **By Phase:**
 
@@ -29,6 +29,7 @@ Progress: [████████████░░░░░░░░] 60% (12
 |-------|-------|-------|----------|
 | 11-tmux-primitive-infrastructure | 2 | 14 min | 7 min |
 | 12-readiness-detection | 1 | 2 min | 2 min |
+| 13-interactive-cli-session-lifecycle | 1 (of 2) | 13 min | 13 min |
 
 *Updated after each plan completion*
 
@@ -40,13 +41,13 @@ Progress: [████████████░░░░░░░░] 60% (12
 - Prompt detection strategy: prompt pattern first, idle timeout fallback (10s minimum for AI CLI response times)
 - No sentinel injection: shared terminal is user-visible; only stability polling + prompt matching are allowed
 - ANSI stripping required before any capture-pane parsing: `re.sub(r'\x1b(?:\][^\x07]*\x07|[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)` — OSC branch must come FIRST (2-char branch range includes `]`)
-- Phase 13 is empirical-first: must observe installed OpenCode binary before writing any detection regex
-- OpenCode hang regression risk: v0.15+ confirmed to hang on process exit; must check `opencode --version` at Phase 13 start
 - [Phase 11]: ANSI_RE OSC branch must precede 2-char branch: ] (0x5D) falls in \-_ range so ordering matters
 - [Phase 11-02]: Docker live-reload pattern: bind mount ./python:/a0/python and ./prompts:/a0/prompts so tool/prompt changes reach container without rebuild; copy_A0.sh uses cp -ru (update-newer) without presence-check guard
 - [Phase 12-readiness-detection]: wait_ready initial 0.3s delay before first capture prevents stale-prompt false positive at send/wait boundary
 - [Phase 12-readiness-detection]: wait_ready uses -S -50 lines (not -100): only last prompt line needed; smaller capture faster in tight poll loop
 - [Phase 12-readiness-detection]: Default prompt_pattern r'[$#>%]\s*$' matches bash/zsh/sh/node prompts; does NOT match Continue? [y/N] sub-prompts
+- [Phase 13-01]: OpenCode ready state has TWO forms: (1) initial startup = status bar '/a0  ...  1.2.14'; (2) post-response = hints bar 'ctrl+t variants  tab agents'; combined prompt_pattern uses negative lookahead to exclude 'esc interrupt' (busy state indicator)
+- [Phase 13-01]: OpenCode v1.2.14 installed in Docker at /root/.opencode/bin/opencode; /exit exits cleanly in 1-2s (no hang regression); startup ~1.5s; prompt_pattern: r'^(?:\s*/a0\s+\d+\.\d+\.\d+\s*$|(?!.*esc interrupt).*ctrl\+t variants\s+tab agents)'
 
 ### Carried from v1.1
 
@@ -60,11 +61,10 @@ None yet.
 
 ### Blockers/Concerns
 
-- Phase 13: OpenCode installed version unknown — hang regression (v0.15+) may require fallback to `opencode serve` HTTP mode; assess at planning time with `opencode --version`
-- Phase 13: Run `/gsd:research-phase` before planning (flagged HIGH in SUMMARY.md)
+None — Phase 13-01 resolved the OpenCode installation and hang regression concerns from previous STATE.md.
 
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 12-01-PLAN.md — wait_ready action added to TmuxTool, TERM-05 satisfied, ready for Phase 13
+Stopped at: Completed 13-01-PLAN.md — OpenCode TUI observed, prompt_pattern derived, OBSERVATION.md created, ready for Plan 13-02
 Resume file: None
