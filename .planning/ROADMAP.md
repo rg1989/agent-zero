@@ -72,10 +72,10 @@ Plans:
   3. When a prompt pattern is present (e.g., `$ ` at the end of stable output), `wait_ready` returns promptly without waiting for the full idle timeout
   4. When no prompt pattern is present after a configurable idle timeout (default 10 seconds minimum for AI CLI response times), `wait_ready` returns anyway rather than hanging indefinitely
   5. A false-positive stress test confirms that CLI sub-prompts (e.g., `Continue? [y/N]`) do not trigger a false "ready" signal when the agent has not yet responded
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
-- [ ] 12-01-PLAN.md — Add ANSI stripping utility and wait_ready action to tmux_tool.py; validate dual-strategy detection against real pane output
+- [ ] 12-01-PLAN.md — Add _wait_ready() to TmuxTool with dual-strategy detection (prompt pattern + stability) and update agent prompt doc
 
 ### Phase 13: Interactive CLI Session Lifecycle
 **Goal**: Agent Zero can start an interactive CLI in the shared terminal, send it prompts, read its responses, and exit cleanly — with all behavior derived from empirical observation of the actual OpenCode binary in Docker, not from documentation
