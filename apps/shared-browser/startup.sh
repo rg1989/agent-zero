@@ -39,7 +39,25 @@ chromium \
     --remote-allow-origins=* \
     https://www.google.com &
 CHROMIUM_PID=$!
-sleep 2
+
+# Wait for Chromium CDP to be ready (replaces sleep 2)
+echo "Waiting for Chromium CDP on :9222..."
+MAX_ATTEMPTS=20
+ATTEMPT=0
+until curl -sf http://localhost:9222/json > /dev/null 2>&1; do
+    ATTEMPT=$((ATTEMPT + 1))
+    if [ "$ATTEMPT" -ge "$MAX_ATTEMPTS" ]; then
+        echo "ERROR: Chromium CDP on :9222 not ready after ${MAX_ATTEMPTS} attempts (10s timeout)." >&2
+        echo "  Chromium PID: $CHROMIUM_PID  alive: $(kill -0 $CHROMIUM_PID 2>/dev/null && echo yes || echo NO)" >&2
+        exit 1
+    fi
+    if ! kill -0 "$CHROMIUM_PID" 2>/dev/null; then
+        echo "ERROR: Chromium (PID $CHROMIUM_PID) exited during startup." >&2
+        exit 1
+    fi
+    sleep 0.5
+done
+echo "Chromium CDP ready (attempt $((ATTEMPT + 1)), ~$((ATTEMPT * 500))ms)"
 
 echo "All services started"
 echo "   Chromium:  PID $CHROMIUM_PID (CDP on :9222)"
