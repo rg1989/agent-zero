@@ -3,13 +3,13 @@
 ## Metadata
 - name: shared-browser
 - version: 4.3
-- description: Control and observe the shared Chromium browser on Xvfb :99 via CDP WebSocket and xdotool — with navigate-with-verification and Observe-Act-Verify workflow
-- tags: browser, chromium, cdp, xdotool, automation, shared
+- description: Control and observe the shared headless Chromium browser via CDP WebSocket — with navigate-with-verification and Observe-Act-Verify workflow
+- tags: browser, chromium, cdp, automation, shared
 - author: agent-zero
 
 ## Overview
-A shared Chromium browser runs on virtual display Xvfb :99, visible to the user via noVNC.
-Both user and agent can interact simultaneously.
+A shared Chromium browser runs in headless mode (`--headless=new`) with CDP enabled on port 9222.
+Both user and agent interact with the browser exclusively via CDP WebSocket.
 
 ## DEFAULT BROWSER RULE ⭐
 **This shared browser is the DEFAULT browser for ALL user requests.**
@@ -24,13 +24,8 @@ Both user and agent can interact simultaneously.
 ## Stack
 | Component | Detail |
 |---|---|
-| Virtual Display | Xvfb :99 (1280x720) |
-| Browser | Chromium on display :99 |
-| VNC Server | x11vnc port 5900 |
-| WebSocket bridge | websockify port 6081 |
+| Browser | Chromium (`--headless=new`, `--remote-allow-origins=*`) |
 | CDP debug API | HTTP + WebSocket port 9222 |
-| Screenshot | scrot |
-| UI control | xdotool |
 
 ## Prerequisites
 Chromium MUST be started with `--remote-allow-origins=*` for CDP WebSocket access.
@@ -39,16 +34,7 @@ If CDP returns 403: kill Chromium and restart with that flag.
 
 ---
 
-## Method 1: Screenshot (Observe)
-
-```bash
-DISPLAY=:99 scrot /tmp/shared_browser.png -o
-```
-Load with vision_load to see current state before acting.
-
----
-
-## Method 2: CDP WebSocket (Programmatic — FAST, No UI)
+## Method: CDP WebSocket (Programmatic)
 
 ### CDP Helper Functions (REQUIRED — use these in every CDP session)
 
@@ -133,7 +119,7 @@ def eval_js(ws, code, return_value=True):
     return result
 
 def type_text(ws, text):
-    """Type text into focused element via CDP (alternative to xdotool)."""
+    """Type text into focused element via CDP Input events."""
     for char in text:
         send(ws, 'Input.dispatchKeyEvent', {'type': 'keyDown', 'text': char})
         send(ws, 'Input.dispatchKeyEvent', {'type': 'keyUp', 'text': char})
@@ -322,7 +308,7 @@ send(ws, 'Runtime.evaluate', {'expression': 'document.querySelector("a.some-link
 send(ws, 'Target.createTarget', {'url': 'https://example.com'})
 ```
 
-### CDP Screenshot (no scrot needed)
+### CDP Screenshot
 ```python
 import base64
 result = send(ws, 'Page.captureScreenshot', {'format': 'png'})
@@ -337,63 +323,9 @@ ws.close()
 
 ---
 
-## Method 3: xdotool (UI Keyboard/Mouse)
+## Decision Guide: CDP Methods
 
-### Get window ID first
-```bash
-WIN=$(DISPLAY=:99 xdotool search --class chromium | head -1)
-DISPLAY=:99 xdotool windowfocus $WIN
-```
-
-### Navigate
-```bash
-DISPLAY=:99 xdotool key ctrl+l
-DISPLAY=:99 xdotool type 'https://example.com'
-DISPLAY=:99 xdotool key Return
-
-# Back / Forward
-DISPLAY=:99 xdotool key alt+Left
-DISPLAY=:99 xdotool key alt+Right
-
-# Reload
-DISPLAY=:99 xdotool key ctrl+r
-```
-
-### Tab Management (by position number, NOT by URL)
-```bash
-DISPLAY=:99 xdotool key ctrl+1    # Switch to tab 1
-DISPLAY=:99 xdotool key ctrl+2    # Switch to tab 2
-DISPLAY=:99 xdotool key ctrl+t    # New tab
-DISPLAY=:99 xdotool key ctrl+w    # Close current tab
-```
-
-### Scrolling
-```bash
-DISPLAY=:99 xdotool key Page_Down
-DISPLAY=:99 xdotool key Page_Up
-
-# Mouse wheel
-DISPLAY=:99 xdotool mousemove 640 400
-DISPLAY=:99 xdotool click 5    # scroll down
-DISPLAY=:99 xdotool click 4    # scroll up
-```
-
-### Click at Coordinates
-```bash
-DISPLAY=:99 xdotool mousemove 500 300 click 1
-```
-
-### DevTools
-```bash
-DISPLAY=:99 xdotool key F12              # Elements
-DISPLAY=:99 xdotool key ctrl+shift+j    # Console
-```
-
----
-
-## Decision Guide: CDP vs xdotool
-
-| Task | Best Method |
+| Task | Method |
 |---|---|
 | Navigate to URL | CDP `navigate_and_wait()` |
 | Wait for element (SPA) | CDP `wait_for_selector()` |
@@ -402,16 +334,15 @@ DISPLAY=:99 xdotool key ctrl+shift+j    # Console
 | Get page resources | CDP `Runtime.evaluate` + Performance API |
 | Run JavaScript | CDP `eval_js()` |
 | Click by selector | CDP `click_selector()` (uses Input events — works with trusted handlers) |
-| Click by coordinates | Either (CDP `Input.*` or xdotool) |
-| Scroll | xdotool `Page_Down` or `click 4/5` |
-| Switch tabs | xdotool `ctrl+NUMBER` |
-| Type text | CDP `type_text()` or xdotool `type` |
+| Click by coordinates | CDP `Input.dispatchMouseEvent` |
+| Scroll | CDP `eval_js(ws, 'window.scrollBy(0, 500)')` |
+| Switch tabs | CDP `Target.activateTarget` |
+| Type text | CDP `type_text()` |
 | Session/cookies | CDP `get_cookies()` / `set_cookies()` |
 | Spoof user agent | CDP `set_user_agent()` |
 | Console messages (with stack) | CDP `on_console_message()` |
 | Performance metrics | CDP `get_performance_metrics()` |
 | Full DOM snapshot | CDP `capture_dom_snapshot()` |
-| Open DevTools | xdotool `ctrl+shift+j` |
 
 ---
 
@@ -427,19 +358,15 @@ This is not optional. The screenshot is how the agent sees current state.
 take_screenshot(ws)       # CDP screenshot
 # vision_load('/tmp/shared_browser.png')   # Load into vision — see state
 ```
-or via scrot (no CDP connection needed):
-```bash
-DISPLAY=:99 scrot /tmp/shared_browser.png -o
-```
 
 **2. ACT**
 Choose the appropriate action:
 - Navigate: `navigate_and_wait(ws, url)` — NEVER `Page.navigate` + `time.sleep()`
 - Click by selector: `click_selector(ws, 'selector')` — uses CDP Input events (works with trusted handlers)
-- Click by coordinates: `send(ws, 'Input.dispatchMouseEvent', ...)` or `xdotool mousemove X Y click 1`
-- Type text: `type_text(ws, 'text')` (CDP) or `xdotool type 'text'`
+- Click by coordinates: `send(ws, 'Input.dispatchMouseEvent', ...)`
+- Type text: `type_text(ws, 'text')`
 - Run JavaScript: `eval_js(ws, 'code')`
-- Scroll: `xdotool key Page_Down`
+- Scroll: `eval_js(ws, 'window.scrollBy(0, 500)')`
 
 **3. VERIFY**
 After every action:
@@ -493,7 +420,6 @@ finally:
 | Problem | Fix |
 |---|---|
 | CDP WebSocket 403 | Restart Chromium with `--remote-allow-origins=*` |
-| xdotool no effect | Run `windowfocus` first |
 | Loader stuck in Agent Zero UI | `pkill -f playwright` to kill orphaned Playwright sessions |
 | Tab switch wrong | Use `ctrl+NUMBER` by tab position, not URL |
 | Link opens new tab instead of navigating | It had `target="_blank"` — use `ctrl+2` to switch to the new tab |

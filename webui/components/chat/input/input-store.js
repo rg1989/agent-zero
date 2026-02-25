@@ -11,6 +11,7 @@ const BUILTIN_COMMANDS = [
   { command: "/clear",     description: "Clear the current chat history" },
   { command: "/compact",   description: "Ask agent to summarize and compact the conversation" },
   { command: "/save",      description: "Save the current chat" },
+  { command: "/stop",      description: "Stop the agent immediately" },
   { command: "/pause",     description: "Pause the agent" },
   { command: "/resume",    description: "Resume the paused agent" },
   { command: "/nudge",     description: "Nudge the agent to continue" },
@@ -118,6 +119,9 @@ const model = {
       case "/save":
         chatsStore.saveChat();
         return true;
+      case "/stop":
+        await this.stopAgent();
+        return true;
       case "/pause":
         await this.pauseAgent(true);
         return true;
@@ -214,6 +218,22 @@ const model = {
     if (chatInput) {
       chatInput.style.height = "auto";
       chatInput.style.height = chatInput.scrollHeight + "px";
+    }
+  },
+
+  async stopAgent() {
+    try {
+      const context = globalThis.getContext?.();
+      if (!globalThis.sendJsonData)
+        throw new Error("sendJsonData not available");
+      await globalThis.sendJsonData("/stop", { context });
+      if (globalThis.toast) {
+        globalThis.toast("Agent stopped", "info", 1500);
+      }
+    } catch (e) {
+      if (globalThis.toastFetchError) {
+        globalThis.toastFetchError("Error stopping agent", e);
+      }
     }
   },
 

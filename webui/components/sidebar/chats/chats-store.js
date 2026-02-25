@@ -163,6 +163,13 @@ const model = {
 
       if (response.ok) {
         this.selectChat(response.ctxid);
+        // Focus the chat input after a short delay to allow the UI to update
+        setTimeout(() => {
+          const chatInput = document.getElementById("chat-input");
+          if (chatInput) {
+            chatInput.focus();
+          }
+        }, 100);
         return;
       }
 
