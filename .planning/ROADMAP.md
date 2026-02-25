@@ -26,7 +26,7 @@
 
 - [x] **Phase 6: CDP Startup Health-Check** - Replace fragile `sleep 2` with a polling loop that confirms Chromium CDP is ready before any agent connects
 - [x] **Phase 7: Browser Navigate-with-Verification** - Rewrite shared-browser skill with mandatory Observe-Act-Verify workflow and CDP navigate-wait-verify pattern (completed 2026-02-25)
-- [ ] **Phase 8: Claude CLI Single-Turn + Env Fix** - Validate `env -u CLAUDECODE` fix and `claude --print` single-turn pattern with ANSI stripping and clean completion detection
+- [x] **Phase 8: Claude CLI Single-Turn + Env Fix** - Validate `env -u CLAUDECODE` fix and `claude --print` single-turn pattern with ANSI stripping and clean completion detection (completed 2026-02-25)
 - [ ] **Phase 9: Claude CLI Multi-Turn Sessions** - Validate persistent PTY/tmux multi-turn sessions with idle-timeout + prompt-pattern completion detection
 - [ ] **Phase 10: Claude CLI Skill Documentation** - Write `usr/skills/claude-cli/SKILL.md` capturing all validated invocation patterns
 
@@ -107,6 +107,6 @@ Phases 6 → 7 (browser stream). Phases 8 → 9 → 10 (claude stream, independe
 | 5. Scaffolding + Skills | v1.0 | - | Complete | 2026-02-25 |
 | 6. CDP Startup Health-Check | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 7. Browser Navigate-with-Verification | 1/1 | Complete   | 2026-02-25 | - |
-| 8. Claude CLI Single-Turn + Env Fix | v1.1 | 0/1 | Not started | - |
+| 8. Claude CLI Single-Turn + Env Fix | 1/1 | Complete   | 2026-02-25 | - |
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 0/TBD | Not started | - |
 | 10. Claude CLI Skill Documentation | v1.1 | 0/TBD | Not started | - |

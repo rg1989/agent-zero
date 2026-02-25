@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 7 — Browser Navigate-with-Verification (complete) → Phase 8 next
+**Current focus:** Phase 8 — Claude CLI Single-Turn + Env Fix (complete) → Phase 9 next
 
 ## Current Position
 
-Phase: 7 of 10 (Browser Navigate-with-Verification)
+Phase: 8 of 10 (Claude CLI Single-Turn + Env Fix)
 Plan: 1 of 1 in current phase (complete)
-Status: Phase 7 complete — ready for Phase 8
-Last activity: 2026-02-25 — Completed 07-01 (browser navigate-with-verification SKILL.md rewrite)
+Status: Phase 8 complete — ready for Phase 9
+Last activity: 2026-02-25 — Completed 08-01 (claude_cli.py single-turn helper with CLAUDECODE env fix)
 
-Progress: [████░░░░░░] 33% (v1.0 complete; Phases 6-7 complete; v1.1 phases 8-10 remaining)
+Progress: [█████░░░░░] 40% (v1.0 complete; Phases 6-8 complete; v1.1 phases 9-10 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2 (v1.1)
-- Average duration: 1.5 min
-- Total execution time: 3 min
+- Total plans completed: 3 (v1.1)
+- Average duration: 5.7 min
+- Total execution time: 17 min
 
 **By Phase:**
 
@@ -29,7 +29,8 @@ Progress: [████░░░░░░] 33% (v1.0 complete; Phases 6-7 comple
 |-------|-------|-------|----------|
 | 06-cdp-startup-health-check | 1 | 1min | 1min |
 | 07-browser-navigate-with-verification | 1 | 2min | 2min |
-| v1.1 phases 8-10 | TBD | - | - |
+| 08-claude-cli-single-turn-env-fix | 1 | 14min | 14min |
+| v1.1 phases 9-10 | TBD | - | - |
 
 *Updated after each plan completion*
 
@@ -48,6 +49,7 @@ Progress: [████░░░░░░] 33% (v1.0 complete; Phases 6-7 comple
 - [Phase 7] navigate_and_wait uses time.sleep(0.1) after Page.navigate to prevent false-positive from old page readyState
 - [Phase 7] send() signature updated to send(ws, method, params) with explicit ws arg to enable try/finally cleanup pattern
 - [Phase 7] Bare Page.navigate + time.sleep(2) pattern fully eliminated from SKILL.md — replaced with navigate_and_wait() everywhere
+- [Phase 08-claude-cli-single-turn-env-fix]: Use subprocess.run capture_output=True (not PTY) for clean stdout; per-call env_clean dict for CLAUDECODE fix; claude_single_turn() with --output-format json; claude_single_turn_text() with --output-format text
 
 ### Pending Todos
 
@@ -55,12 +57,12 @@ None yet.
 
 ### Blockers/Concerns
 
-- [Phase 8] Claude CLI prompt marker string must be confirmed empirically (MEDIUM confidence) — run `claude` in PTY and inspect raw bytes with `repr()` or `xxd` before writing completion detection regex
+- [RESOLVED - Phase 8] claude_single_turn() uses subprocess.run capture_output=True — avoids PTY entirely; prompt marker irrelevant for single-turn; ANSI stripping confirmed defensive only
 - [Phase 9] Idle-timeout calibration for multi-turn requires profiling claude's natural pause durations (1-2s thinking pauses can trigger false "done" signals)
 - [RESOLVED - Phase 7] `websocket-client>=1.9.0` added to requirements.txt — will be installed on Docker image rebuild
 
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 07-01-PLAN.md (browser navigate-with-verification)
+Stopped at: Completed 08-01-PLAN.md (claude CLI single-turn helper)
 Resume file: None
