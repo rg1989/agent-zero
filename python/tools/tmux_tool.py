@@ -1,4 +1,6 @@
+import asyncio
 import subprocess
+import time
 import re
 from python.helpers.tool import Tool, Response
 
@@ -13,10 +15,11 @@ class TmuxTool(Tool):
     """
     Primitive interface to the shared tmux session.
 
-    Provides three actions:
-      - send:  Type literal text + Enter into the pane (TERM-01)
-      - keys:  Send tmux key names without Enter (TERM-02, TERM-03)
-      - read:  Capture current pane content as clean plain text (TERM-04)
+    Provides four actions:
+      - send:       Type literal text + Enter into the pane (TERM-01)
+      - keys:       Send tmux key names without Enter (TERM-02, TERM-03)
+      - read:       Capture current pane content as clean plain text (TERM-04)
+      - wait_ready: Poll until prompt detected or timeout expires (TERM-05)
 
     Coexists with terminal_agent.py (sentinel pattern). This tool is sentinel-free.
     Sentinel-free: no injected echo sequences, no $? probing, no subshell. Only subprocess list-form calls.
@@ -24,11 +27,16 @@ class TmuxTool(Tool):
 
     async def execute(self, **kwargs):
         action = self.args.get("action", "").strip().lower()
-        dispatch = {"send": self._send, "keys": self._keys, "read": self._read}
+        dispatch = {
+            "send": self._send,
+            "keys": self._keys,
+            "read": self._read,
+            "wait_ready": self._wait_ready,
+        }
         handler = dispatch.get(action)
         if not handler:
             return Response(
-                message=f"Unknown action '{action}'. Valid actions: send, keys, read.",
+                message=f"Unknown action '{action}'. Valid actions: send, keys, read, wait_ready.",
                 break_loop=False,
             )
         return await handler()
@@ -109,3 +117,76 @@ class TmuxTool(Tool):
 
         clean = ANSI_RE.sub("", result.stdout).rstrip()
         return Response(message=clean or "(pane is empty)", break_loop=False)
+
+    async def _wait_ready(self):
+        """
+        TERM-05: Poll pane until prompt pattern matches or idle timeout expires.
+
+        Two detection strategies:
+        1. Prompt pattern: last non-blank ANSI-stripped line matches a shell prompt regex
+        2. Stability fallback: consecutive captures are identical (pane stopped changing)
+
+        Falls back to timeout return — never hangs indefinitely.
+        """
+        pane = self.args.get("pane", _TMUX_SESSION)
+        try:
+            timeout = float(self.args.get("timeout", 10.0))
+        except (ValueError, TypeError):
+            timeout = 10.0
+        pattern_str = self.args.get("prompt_pattern", r"[$#>%]\s*$")
+        try:
+            prompt_re = re.compile(pattern_str)
+        except re.error as e:
+            return Response(
+                message=f"Invalid prompt_pattern: {e}",
+                break_loop=False,
+            )
+
+        deadline = time.time() + timeout
+        prev_content = None
+
+        # Brief initial delay to let the command start executing before first check
+        await asyncio.sleep(0.3)
+
+        while time.time() < deadline:
+            result = subprocess.run(
+                ["tmux", "capture-pane", "-t", pane, "-p", "-S", "-50"],
+                capture_output=True,
+                text=True,
+            )
+            if result.returncode != 0:
+                return Response(
+                    message=f"capture-pane failed: {result.stderr.strip()} — Is shared-terminal running?",
+                    break_loop=False,
+                )
+
+            clean = ANSI_RE.sub("", result.stdout).rstrip()
+
+            # Strategy 1: prompt pattern on last non-blank line (primary signal)
+            lines = [l for l in clean.splitlines() if l.strip()]
+            if lines and prompt_re.search(lines[-1]):
+                return Response(
+                    message=f"ready (prompt matched)\n{clean}",
+                    break_loop=False,
+                )
+
+            # Strategy 2: content stability — pane stopped changing (secondary signal)
+            if prev_content is not None and clean == prev_content:
+                return Response(
+                    message=f"ready (stable)\n{clean}",
+                    break_loop=False,
+                )
+
+            prev_content = clean
+            await asyncio.sleep(0.5)
+
+        # Timeout fallback
+        result = subprocess.run(
+            ["tmux", "capture-pane", "-t", pane, "-p", "-S", "-50"],
+            capture_output=True, text=True,
+        )
+        content = ANSI_RE.sub("", result.stdout).rstrip() if result.returncode == 0 else "(capture failed)"
+        return Response(
+            message=f"wait_ready timed out after {timeout}s\n{content}",
+            break_loop=False,
+        )
