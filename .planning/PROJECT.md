@@ -31,7 +31,16 @@ Agent Zero can build, run, and persist web applications directly within its own 
 
 <!-- Current scope. Building toward these. -->
 
-(To be defined in new milestone)
+- [ ] BROWSER-01: Agent Zero navigates to URLs via CDP Page.navigate (not visual address bar)
+- [ ] BROWSER-02: Agent Zero observes browser state with screenshot before every browser action
+- [ ] BROWSER-03: Agent Zero verifies navigation succeeded (URL/title check)
+- [ ] BROWSER-04: Shared browser Chromium always starts with CDP remote origins enabled
+- [ ] BROWSER-05: Agent Zero follows Observe → Act → Verify for all browser interactions
+- [ ] CLAUDE-01: Agent Zero can launch `claude` CLI in shared terminal or as a subprocess
+- [ ] CLAUDE-02: Agent Zero can send a prompt to a running claude session and receive a response
+- [ ] CLAUDE-03: Agent Zero can detect when claude has finished responding
+- [ ] CLAUDE-04: Agent Zero can run a complete multi-turn session with claude
+- [ ] CLAUDE-05: Dedicated skill documents the complete claude CLI interaction pattern
 
 ### Out of Scope
 
@@ -66,6 +75,14 @@ Agent Zero can build, run, and persist web applications directly within its own 
 | noVNC for shared browser | Zero install, browser-based VNC client | ✓ Good |
 | Registry in JSON file | Simple, survives restarts, no DB dependency | ✓ Good |
 | SKILL.md standard for GSD skills | Compatible with Claude Code, Cursor, Codex | ✓ Good |
+
+## Current Milestone: v1.1 Reliability
+
+**Goal:** Make browser control and Claude Code CLI work reliably as intended
+
+**Target features:**
+- Browser: CDP-based navigation, observe-act-verify workflow, Chromium CDP startup fix
+- Claude Code CLI: launch, interactive control, multi-turn sessions, dedicated skill
 
 ---
 *Last updated: 2026-02-25 after GSD initialization (new-milestone)*
