@@ -56,10 +56,11 @@
   3. Agent Zero sends special keys (Ctrl+C, Ctrl+D, Tab, Escape, arrow keys) to the shared tmux pane and the terminal responds correctly — interrupts, completions, and cursor movements work as a human keyboard would produce them
   4. Agent Zero captures the current pane screen content and the returned text contains the visible terminal output, free of tmux internal artifacts
   5. No sentinel text (`echo MARKER:$?` or similar) is ever written into the shared session — capture-pane and stability polling are the only observation mechanisms
-**Plans:** 1/1 plans complete
+**Plans:** 2 plans (1 original + 1 gap closure)
 
 Plans:
-- [ ] 11-01-PLAN.md — Create python/tools/tmux_tool.py with send/keys/read actions and prompts/agent.system.tool.tmux.md for auto-registration
+- [x] 11-01-PLAN.md — Create python/tools/tmux_tool.py with send/keys/read actions and prompts/agent.system.tool.tmux.md for auto-registration
+- [ ] 11-02-PLAN.md — Fix Docker deployment gap: add python/ and prompts/ bind mounts to docker-compose.yml; fix copy_A0.sh sync-newer logic
 
 ### Phase 12: Readiness Detection
 **Goal**: Agent Zero can reliably determine when the terminal is ready for the next input — preventing blind injection while a command is still running — using prompt pattern matching with idle timeout fallback
@@ -135,7 +136,7 @@ Phases 11 → 12 → 13 → 14 → 15 (strictly sequential — each phase depend
 | 8. Claude CLI Single-Turn + Env Fix | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 10. Claude CLI Skill Documentation | v1.1 | 1/1 | Complete | 2026-02-25 |
-| 11. tmux Primitive Infrastructure | 1/1 | Complete    | 2026-02-25 | - |
+| 11. tmux Primitive Infrastructure | v1.2 | 1/2 | Gap closure in progress | 2026-02-25 |
 | 12. Readiness Detection | v1.2 | 0/1 | Not started | - |
 | 13. Interactive CLI Session Lifecycle | v1.2 | 0/2 | Not started | - |
 | 14. OpenCode Session Wrapper | v1.2 | 0/1 | Not started | - |
