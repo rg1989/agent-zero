@@ -42,9 +42,19 @@
     padding: 0;
 }
 
-/* Default icon color (neon magenta) - hover overrides via Alpine */
+/* Default icon color - uses text color, neon mode overrides below */
 .notification-toggle .notification-icon .material-symbols-outlined {
+    color: var(--color-text);
+}
+
+/* Neon mode: magenta bell */
+.neon-mode .notification-toggle .notification-icon .material-symbols-outlined {
     color: #ff007f;
+}
+
+/* Dark mode: muted accent color */
+.dark-mode .notification-toggle .notification-icon .material-symbols-outlined {
+    color: var(--color-primary);
 }
 
 .notification-toggle.has-unread {

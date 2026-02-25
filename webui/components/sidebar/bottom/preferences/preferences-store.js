@@ -15,14 +15,25 @@ const model = {
   },
   _autoScroll: true,
 
+  get themeMode() {
+    return this._themeMode;
+  },
+  set themeMode(value) {
+    this._themeMode = value;
+    this._applyThemeMode(value);
+  },
+  _themeMode: "neon",
+
+  themeModeOptions: [
+    { label: "Light", value: "light" },
+    { label: "Dark", value: "dark" },
+    { label: "Neon", value: "neon" },
+  ],
+
+  // Backwards compatibility getter
   get darkMode() {
-    return this._darkMode;
+    return this._themeMode !== "light";
   },
-  set darkMode(value) {
-    this._darkMode = value;
-    this._applyDarkMode(value);
-  },
-  _darkMode: true,
 
   get speech() {
     return this._speech;
@@ -83,10 +94,22 @@ const model = {
     try {
       // Load persisted preferences with safe fallbacks
       try {
-        const storedDarkMode = localStorage.getItem("darkMode");
-        this._darkMode = storedDarkMode !== "false";
+        const storedThemeMode = localStorage.getItem("themeMode");
+        // Migration: if old darkMode key exists but themeMode doesn't, migrate
+        if (!storedThemeMode) {
+          const storedDarkMode = localStorage.getItem("darkMode");
+          if (storedDarkMode === "false") {
+            this._themeMode = "light";
+          } else {
+            this._themeMode = "neon"; // Default to neon (preserves current behavior)
+          }
+        } else if (this.themeModeOptions.some(opt => opt.value === storedThemeMode)) {
+          this._themeMode = storedThemeMode;
+        } else {
+          this._themeMode = "neon"; // Default
+        }
       } catch {
-        this._darkMode = true; // Default to dark mode if localStorage is unavailable
+        this._themeMode = "neon"; // Default to neon mode if localStorage is unavailable
       }
 
       try {
@@ -125,7 +148,7 @@ const model = {
       }
 
       // Apply all preferences
-      this._applyDarkMode(this._darkMode);
+      this._applyThemeMode(this._themeMode);
       this._applyAutoScroll(this._autoScroll);
       this._applySpeech(this._speech);
       this._applyShowUtils(this._showUtils);
@@ -140,15 +163,10 @@ const model = {
     // nothing for now
   },
 
-  _applyDarkMode(value) {
-    if (value) {
-      document.body.classList.remove("light-mode");
-      document.body.classList.add("dark-mode");
-    } else {
-      document.body.classList.remove("dark-mode");
-      document.body.classList.add("light-mode");
-    }
-    localStorage.setItem("darkMode", value);
+  _applyThemeMode(value) {
+    document.body.classList.remove("light-mode", "dark-mode", "neon-mode");
+    document.body.classList.add(`${value}-mode`);
+    localStorage.setItem("themeMode", value);
   },
 
   _applySpeech(value) {

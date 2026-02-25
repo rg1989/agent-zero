@@ -720,7 +720,8 @@
 }
 
 /* shades */
-.dark-mode .message {
+.dark-mode .message,
+.neon-mode .message {
   box-shadow: none;
 }
 

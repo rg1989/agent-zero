@@ -221,25 +221,86 @@ nav ul li a:hover img {
 }
 
 .light-mode nav ul li a {
+  --base-neon: var(--color-text);
+  --base-neon-shadow: transparent;
   background-color: var(--color-panel-light);
   box-shadow: none;
+  border-color: var(--color-border);
+  color: var(--color-text);
 }
 
 .light-mode nav ul li a:hover {
   background-color: var(--color-secondary-light);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-color: var(--color-border);
 }
 
 .light-mode nav ul li a span,
 .light-mode nav ul li a:hover span {
+  color: var(--color-text);
   text-shadow: none;
+}
+
+.light-mode nav ul li a img {
+  filter: var(--svg-filter);
 }
 
 .light-mode .settings-tab,
 .light-mode .settings-tab.active,
 .light-mode .settings-tab:hover {
+  --base-neon: var(--color-text);
+  --base-neon-shadow: transparent;
   text-shadow: none;
   box-shadow: none;
+  border-color: var(--color-border);
+}
+
+.light-mode .settings-tab.active {
+  color: var(--color-text);
+  border-color: var(--color-border);
+  background-color: var(--color-panel);
+}
+
+/* Dark mode: remove neon glow effects */
+.dark-mode nav ul li a {
+  --base-neon: var(--color-text);
+  --base-neon-shadow: transparent;
+  background-color: var(--color-panel);
+  box-shadow: none;
+  border-color: var(--color-border);
+  color: var(--color-text);
+}
+
+.dark-mode nav ul li a:hover {
+  background-color: var(--color-secondary);
+  box-shadow: none;
+  border-color: var(--color-border);
+}
+
+.dark-mode nav ul li a span,
+.dark-mode nav ul li a:hover span {
+  color: var(--color-text);
+  text-shadow: none;
+}
+
+.dark-mode nav ul li a img {
+  filter: var(--svg-filter);
+}
+
+.dark-mode .settings-tab,
+.dark-mode .settings-tab.active,
+.dark-mode .settings-tab:hover {
+  --base-neon: var(--color-text);
+  --base-neon-shadow: transparent;
+  text-shadow: none;
+  box-shadow: none;
+  border-color: var(--color-border);
+}
+
+.dark-mode .settings-tab.active {
+  color: var(--color-text);
+  border-color: var(--color-border);
+  background-color: var(--color-panel);
 }
 
 /* Responsive Design */

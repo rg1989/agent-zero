@@ -8,70 +8,88 @@
 }
 
 :root {
-  /* Dark mode - Lighter Midnight Neon */
-  --color-background-dark: #0f111a;
-  --color-text-dark: #ffffff;
-  --color-text-muted-dark: #a0aec0;
-  --color-primary-dark: #00f2fe; /* Electric Cyan */
-  --color-secondary-dark: #718096; /* Lighter secondary for visibility */
-  --color-accent-dark: #ff007f; /* Vivid Magenta */
-  --color-message-bg-dark: rgba(30, 34, 51, 0.6);
-  --color-highlight-dark: #bf00ff; /* Bright Purple */
-  --color-message-text-dark: #f8fafc;
-  --color-panel-dark: rgba(20, 23, 38, 0.9); /* Lighter panel */
-  --color-border-dark: rgba(0, 242, 254, 0.25); /* Glowing borders */
-  --color-input-dark: rgba(0, 0, 0, 0.3);
-  --color-input-focus-dark: rgba(0, 242, 254, 0.08);
-  --color-chat-background-dark: radial-gradient(circle at center, #1a1d2d 0%, #0f111a 100%);
-  --color-error-text-dark: #ff2a5f;
-  --color-warning-text-dark: #ffb86c;
-  --color-table-row-dark: rgba(30, 34, 51, 0.6);
+  /* Neon mode - Electric Cyan/Magenta theme (current dark mode) */
+  --color-background-neon: #0f111a;
+  --color-text-neon: #ffffff;
+  --color-text-muted-neon: #a0aec0;
+  --color-primary-neon: #00f2fe; /* Electric Cyan */
+  --color-secondary-neon: #718096; /* Lighter secondary for visibility */
+  --color-accent-neon: #ff007f; /* Vivid Magenta */
+  --color-message-bg-neon: rgba(30, 34, 51, 0.6);
+  --color-highlight-neon: #bf00ff; /* Bright Purple */
+  --color-message-text-neon: #f8fafc;
+  --color-panel-neon: rgba(20, 23, 38, 0.9); /* Lighter panel */
+  --color-border-neon: rgba(0, 242, 254, 0.25); /* Glowing borders */
+  --color-input-neon: rgba(0, 0, 0, 0.3);
+  --color-input-focus-neon: rgba(0, 242, 254, 0.08);
+  --color-chat-background-neon: radial-gradient(circle at center, #1a1d2d 0%, #0f111a 100%);
+  --color-error-text-neon: #ff2a5f;
+  --color-warning-text-neon: #ffb86c;
+  --color-table-row-neon: rgba(30, 34, 51, 0.6);
 
-  /* Glow variables (disabled in light mode) */
+  /* Dark mode - Original muted dark theme */
+  --color-background-dark: #131313;
+  --color-text-dark: #ffffff;
+  --color-text-muted-dark: #d4d4d4e4;
+  --color-primary-dark: #737a81;
+  --color-secondary-dark: #656565;
+  --color-accent-dark: #cf6679;
+  --color-message-bg-dark: #2d2d2d;
+  --color-highlight-dark: #2b5ab9;
+  --color-message-text-dark: #e0e0e0;
+  --color-panel-dark: #1a1a1a;
+  --color-border-dark: #444444a8;
+  --color-input-dark: #131313;
+  --color-input-focus-dark: #101010;
+  --color-chat-background-dark: #212121;
+  --color-error-text-dark: #e72323;
+  --color-warning-text-dark: #e79c23;
+  --color-table-row-dark: #272727;
+
+  /* Glow variables (enabled in neon mode, disabled in light/dark mode) */
   --glow-text-primary: 0 0 5px rgba(0, 242, 254, 0.4);
   --glow-text-accent: 0 0 5px rgba(191, 0, 255, 0.3);
   --glow-box-primary: 0 0 5px var(--color-primary);
   --color-progress-track: rgba(255, 255, 255, 0.08);
 
-  /* Light mode */
-  --color-background-light: #e8edf2;
+  /* Light mode - Original light theme */
+  --color-background-light: #fafafa;
   --color-text-light: #333333;
   --color-text-muted-light: #333333e4;
-  --color-primary-light: #2557a7;
-  --color-secondary-light: #d5dce6;
+  --color-primary-light: #384653;
+  --color-secondary-light: #e8eaf6;
   --color-accent-light: #b00020;
-  --color-message-bg-light: #f0f4f8;
+  --color-message-bg-light: #ffffff;
   --color-highlight-light: #2563eb;
   --color-message-text-light: #333333;
-  --color-panel-light: #dde3ea;
+  --color-panel-light: #f0f0f0;
   --color-border-light: #bdbdbdcf;
-  --color-input-light: #cdd4dc;
-  --color-input-focus-light: #c2cad4;
-  --color-chat-background-light: #e8edf2;
-  --color-error-text-light:#920000;
-  --color-warning-text-light:#936214;
-  --color-table-row-light: #e2e8ef;
+  --color-input-light: #e4e4e4;
+  --color-input-focus-light: #dadada;
+  --color-chat-background-light: #fafafa;
+  --color-error-text-light: #920000;
+  --color-warning-text-light: #936214;
+  --color-table-row-light: #edededf3;
 
-
-  /* Default to dark mode */
-  --color-background: var(--color-background-dark);
-  --color-text: var(--color-text-dark);
-  --color-text-muted: var(--color-text-muted-dark);
-  --color-primary: var(--color-primary-dark);
-  --color-secondary: var(--color-secondary-dark);
-  --color-accent: var(--color-accent-dark);
-  --color-message-bg: var(--color-message-bg-dark);
-  --color-highlight: var(--color-highlight-dark);
-  --color-message-text: var(--color-message-text-dark);
-  --color-panel: var(--color-panel-dark);
-  --color-border: var(--color-border-dark);
-  --color-input: var(--color-input-dark);
-  --color-input-focus: var(--color-input-focus-dark);
+  /* Default to neon mode */
+  --color-background: var(--color-background-neon);
+  --color-text: var(--color-text-neon);
+  --color-text-muted: var(--color-text-muted-neon);
+  --color-primary: var(--color-primary-neon);
+  --color-secondary: var(--color-secondary-neon);
+  --color-accent: var(--color-accent-neon);
+  --color-message-bg: var(--color-message-bg-neon);
+  --color-highlight: var(--color-highlight-neon);
+  --color-message-text: var(--color-message-text-neon);
+  --color-panel: var(--color-panel-neon);
+  --color-border: var(--color-border-neon);
+  --color-input: var(--color-input-neon);
+  --color-input-focus: var(--color-input-focus-neon);
   --color-background-hover: color-mix(in srgb, var(--color-border) 50%, transparent);
-  --color-chat-background: var(--color-chat-background-dark);
-  --color-error-text:var(--color-error-text-dark);
-  --color-warning-text:var(--color-warning-text-dark);
-  --color-table-row: var(--color-table-row-dark);
+  --color-chat-background: var(--color-chat-background-neon);
+  --color-error-text: var(--color-error-text-neon);
+  --color-warning-text: var(--color-warning-text-neon);
+  --color-table-row: var(--color-table-row-neon);
 
   /* Spacing variables */
   --spacing-xxs: 0.15rem;
@@ -115,14 +133,65 @@
   --color-input-focus: var(--color-input-focus-light);
   --color-background-hover: color-mix(in srgb, var(--color-border) 50%, transparent);
   --color-chat-background: var(--color-chat-background-light);
-  --color-error-text:var(--color-error-text-light);
-  --color-warning-text:var(--color-warning-text-light);
+  --color-error-text: var(--color-error-text-light);
+  --color-warning-text: var(--color-warning-text-light);
   --color-table-row: var(--color-table-row-light);
-  /* Disable glows in light mode */
   --glow-text-primary: none;
   --glow-text-accent: none;
   --glow-box-primary: none;
   --color-progress-track: rgba(0, 0, 0, 0.08);
+  --color-primary-filter: invert(73%) sepia(17%) saturate(360%) hue-rotate(177deg) brightness(87%) contrast(85%);
+}
+
+/* Dark mode class */
+.dark-mode {
+  --color-background: var(--color-background-dark);
+  --color-text: var(--color-text-dark);
+  --color-text-muted: var(--color-text-muted-dark);
+  --color-primary: var(--color-primary-dark);
+  --color-secondary: var(--color-secondary-dark);
+  --color-accent: var(--color-accent-dark);
+  --color-message-bg: var(--color-message-bg-dark);
+  --color-message-text: var(--color-message-text-dark);
+  --color-panel: var(--color-panel-dark);
+  --color-border: var(--color-border-dark);
+  --color-input: var(--color-input-dark);
+  --color-input-focus: var(--color-input-focus-dark);
+  --color-background-hover: color-mix(in srgb, var(--color-border) 50%, transparent);
+  --color-chat-background: var(--color-chat-background-dark);
+  --color-error-text: var(--color-error-text-dark);
+  --color-warning-text: var(--color-warning-text-dark);
+  --color-table-row: var(--color-table-row-dark);
+  --glow-text-primary: none;
+  --glow-text-accent: none;
+  --glow-box-primary: none;
+  --color-progress-track: rgba(255, 255, 255, 0.08);
+  --color-primary-filter: invert(73%) sepia(17%) saturate(360%) hue-rotate(177deg) brightness(87%) contrast(85%);
+}
+
+/* Neon mode class */
+.neon-mode {
+  --color-background: var(--color-background-neon);
+  --color-text: var(--color-text-neon);
+  --color-text-muted: var(--color-text-muted-neon);
+  --color-primary: var(--color-primary-neon);
+  --color-secondary: var(--color-secondary-neon);
+  --color-accent: var(--color-accent-neon);
+  --color-message-bg: var(--color-message-bg-neon);
+  --color-message-text: var(--color-message-text-neon);
+  --color-panel: var(--color-panel-neon);
+  --color-border: var(--color-border-neon);
+  --color-input: var(--color-input-neon);
+  --color-input-focus: var(--color-input-focus-neon);
+  --color-background-hover: color-mix(in srgb, var(--color-border) 50%, transparent);
+  --color-chat-background: var(--color-chat-background-neon);
+  --color-error-text: var(--color-error-text-neon);
+  --color-warning-text: var(--color-warning-text-neon);
+  --color-table-row: var(--color-table-row-neon);
+  --glow-text-primary: 0 0 5px rgba(0, 242, 254, 0.4);
+  --glow-text-accent: 0 0 5px rgba(191, 0, 255, 0.3);
+  --glow-box-primary: 0 0 5px var(--color-primary);
+  --color-progress-track: rgba(255, 255, 255, 0.08);
 }
 
 
@@ -1201,6 +1270,34 @@ a:active {
   opacity: 0.7;
 }
 
+/* Dark mode specific styles */
+.dark-mode .slider {
+  background-color: #272727;
+  border: 1px solid #535353;
+}
+
+.dark-mode .slider:before {
+  background-color: #b6b6b6;
+}
+
+.dark-mode input:checked + .slider {
+  background-color: #3a3a3a;
+}
+
+/* Neon mode specific styles */
+.neon-mode .slider {
+  background-color: #1a1d2d;
+  border: 1px solid rgba(0, 242, 254, 0.3);
+}
+
+.neon-mode .slider:before {
+  background-color: #00f2fe;
+}
+
+.neon-mode input:checked + .slider {
+  background-color: #252840;
+}
+
 .dragdrop-overlay {
   position: fixed;
   top: 0;
@@ -1636,17 +1733,17 @@ body *::-webkit-scrollbar-track {
 body *::-webkit-scrollbar-thumb {
   border-radius: 4px;
   box-shadow: none;
-  background-color: rgba(123, 44, 191, 0.3);
+  background-color: #555;
   -webkit-transition: background-color var(--transition-speed) ease-in-out;
   transition: background-color var(--transition-speed) ease-in-out;
 }
 
 body *::-webkit-scrollbar-thumb:hover {
-  background-color: rgba(0, 242, 254, 0.6);
+  background-color: #777;
 }
 
 body *::-webkit-scrollbar-thumb:active {
-  background-color: rgba(0, 242, 254, 0.8);
+  background-color: #888;
 }
 
 .light-mode * {
@@ -1668,4 +1765,20 @@ body *::-webkit-scrollbar-thumb:active {
 
 .light-mode *::-webkit-scrollbar-thumb:active {
   background-color: #8a8a8a;
+}
+
+.neon-mode * {
+  scrollbar-color: rgba(123, 44, 191, 0.3) transparent;
+}
+
+.neon-mode *::-webkit-scrollbar-thumb {
+  background-color: rgba(123, 44, 191, 0.3);
+}
+
+.neon-mode *::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 242, 254, 0.6);
+}
+
+.neon-mode *::-webkit-scrollbar-thumb:active {
+  background-color: rgba(0, 242, 254, 0.8);
 }

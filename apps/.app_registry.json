@@ -7,11 +7,11 @@
     "description": "Shared Browser \u2014 Collaborative browser instance",
     "env": {},
     "autostart": true,
-    "status": "running",
-    "pid": 113,
+    "status": "stopped",
+    "pid": null,
     "created_at": "2026-02-22T17:43:17Z",
     "url": "/shared-browser/",
-    "started_at": "2026-02-25T00:10:57Z",
+    "started_at": "2026-02-25T02:54:04Z",
     "core": true
   },
   "shared-terminal": {
@@ -27,7 +27,7 @@
     "pid": 114,
     "created_at": "2026-02-24T21:17:41Z",
     "url": "/shared-terminal/",
-    "started_at": "2026-02-25T00:10:57Z"
+    "started_at": "2026-02-25T02:44:37Z"
   },
   "claude-demo-app": {
     "name": "claude-demo-app",
@@ -42,6 +42,21 @@
     "pid": 115,
     "created_at": "2026-02-24T23:47:17Z",
     "url": "/claude-demo-app/",
-    "started_at": "2026-02-25T00:10:57Z"
+    "started_at": "2026-02-25T02:44:37Z"
+  },
+  "bg-remover": {
+    "name": "bg-remover",
+    "port": 9000,
+    "cmd": "/opt/venv/bin/python app.py",
+    "cwd": "/a0/apps/bg-remover",
+    "description": "AI-powered background removal tool",
+    "env": {},
+    "autostart": true,
+    "core": false,
+    "status": "running",
+    "pid": 5298,
+    "created_at": "2026-02-25T02:59:00Z",
+    "url": "/bg-remover/",
+    "started_at": "2026-02-25T02:59:08Z"
   }
 }

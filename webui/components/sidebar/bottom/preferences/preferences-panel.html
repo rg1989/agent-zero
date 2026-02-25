@@ -9,7 +9,7 @@
     <template x-if="$store.preferences">
       <div class="pref-section">
         <span>
-          <h3 class="pref-header" style="color: var(--color-highlight); text-shadow: 0 0 5px rgba(191, 0, 255, 0.4); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;"
+          <h3 class="pref-header"
               data-bs-toggle="collapse"
               @click="$store.sidebar.toggleSection('preferences')"
               x-effect="!$store.sidebar.isSectionOpen('preferences') ? $el.classList.add('collapsed') : $el.classList.remove('collapsed')">
@@ -20,12 +20,20 @@
           </h3>
           <ul class="config-list collapse" id="preferences-collapse"
               x-effect="(() => { const c = bootstrap.Collapse.getOrCreateInstance($el, { toggle: false }); $store.sidebar.isSectionOpen('preferences') ? c.show() : c.hide(); })()">
-            <li x-data>
-              <span class="switch-label">Dark mode</span>
-              <label class="switch">
-                <input type="checkbox" x-model="$store.preferences.darkMode">
-                <span class="slider"></span>
-              </label>
+            <li x-data class="theme-mode-setting">
+              <span class="theme-label">Theme</span>
+              <div class="theme-buttons">
+                <template x-for="(opt, idx) in $store.preferences.themeModeOptions" :key="opt.value">
+                  <span class="theme-btn-wrapper">
+                    <button type="button" 
+                            class="theme-btn"
+                            :class="{ 'active': $store.preferences.themeMode === opt.value }"
+                            @click="$store.preferences.themeMode = opt.value"
+                            x-text="opt.label"></button>
+                    <span class="theme-sep" x-show="idx < $store.preferences.themeModeOptions.length - 1">·</span>
+                  </span>
+                </template>
+              </div>
             </li>
             <li x-data class="chat-width-setting">
               <span class="width-label">Width</span>
@@ -206,8 +214,64 @@
       opacity: 0.5;
     }
 
-    .light-mode .pref-header {
-      text-shadow: none !important;
+    .pref-header {
+      color: var(--color-primary);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    .neon-mode .pref-header {
+      color: var(--color-highlight);
+      text-shadow: 0 0 5px rgba(191, 0, 255, 0.4);
+    }
+
+    .light-mode .pref-header,
+    .dark-mode .pref-header {
+      text-shadow: none;
+    }
+
+    /* Theme mode button bar */
+    .theme-mode-setting {
+      gap: 0.25rem;
+    }
+    .theme-mode-setting .theme-label {
+      flex: 1;
+    }
+    .theme-buttons {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+    .theme-btn-wrapper {
+      display: flex;
+      align-items: center;
+    }
+    .theme-btn {
+      background: none;
+      border: none;
+      color: var(--color-primary);
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      padding: 0.15rem 0.1rem;
+      cursor: pointer;
+      opacity: 0.7;
+      transition: opacity 0.15s ease, color 0.15s ease;
+    }
+    .theme-btn:hover {
+      opacity: 0.85;
+    }
+    .theme-btn.active {
+      opacity: 1;
+      color: var(--color-text);
+    }
+    .theme-sep {
+      color: var(--color-text-secondary, #666);
+      font-size: 0.6rem;
+      margin: 0 0.1rem;
+      opacity: 0.5;
     }
   </style>
 </body>

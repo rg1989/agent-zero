@@ -276,7 +276,7 @@
         .welcome-action-icon {
             font-size: 2.1rem;
             margin-bottom: 0.25rem;
-            color: var(--color-highlight-dark);
+            color: var(--color-highlight);
             transition: all 0.3s ease;
         }
 
@@ -285,23 +285,30 @@
             transition: all 0.3s ease;
         }
 
-        /* Neon grid colors */
-        .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-title { color: var(--color-primary); text-shadow: var(--glow-text-primary); }
-        .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-title { color: var(--color-accent); text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); }
-        .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-title { color: var(--color-highlight); text-shadow: var(--glow-text-accent); }
-        .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-title { color: var(--color-warning-text); text-shadow: 0 0 8px rgba(255, 184, 108, 0.4); }
-        .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-title { color: #00ff9d; text-shadow: 0 0 8px rgba(0, 255, 157, 0.4); }
-        .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-title { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
-        .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-title { color: #3a86ff; text-shadow: 0 0 8px rgba(58, 134, 255, 0.4); }
-        .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-icon,
-        .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-title { color: var(--color-error-text); text-shadow: 0 0 8px rgba(255, 42, 95, 0.4); }
+        /* Neon grid colors (neon mode only) */
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(1) .welcome-action-title { color: var(--color-primary); text-shadow: var(--glow-text-primary); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(2) .welcome-action-title { color: var(--color-accent); text-shadow: 0 0 8px rgba(255, 0, 127, 0.4); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(3) .welcome-action-title { color: var(--color-highlight); text-shadow: var(--glow-text-accent); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(4) .welcome-action-title { color: var(--color-warning-text); text-shadow: 0 0 8px rgba(255, 184, 108, 0.4); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(5) .welcome-action-title { color: #00ff9d; text-shadow: 0 0 8px rgba(0, 255, 157, 0.4); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(6) .welcome-action-title { color: #ffd700; text-shadow: 0 0 8px rgba(255, 215, 0, 0.4); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(7) .welcome-action-title { color: #3a86ff; text-shadow: 0 0 8px rgba(58, 134, 255, 0.4); }
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-icon,
+        .neon-mode .welcome-actions > .welcome-action-card:nth-child(8) .welcome-action-title { color: var(--color-error-text); text-shadow: 0 0 8px rgba(255, 42, 95, 0.4); }
+
+        /* Dark mode: muted colors matching original app */
+        .dark-mode .welcome-actions > .welcome-action-card .welcome-action-icon,
+        .dark-mode .welcome-actions > .welcome-action-card .welcome-action-title { 
+            color: var(--color-highlight); 
+            text-shadow: none; 
+        }
 
         /* Light mode: remove all tile glows and fix low-contrast neon colors */
         .light-mode .welcome-actions > .welcome-action-card .welcome-action-icon,

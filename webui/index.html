@@ -30,6 +30,8 @@
         }
 
         globalThis.getRandomNeonColor = function() {
+            // Only return neon colors in neon mode
+            if (!document.body.classList.contains('neon-mode')) return '';
             const neonColors = [
                 '#00f2fe', // Electric Cyan
                 '#ff007f', // Vivid Magenta
@@ -59,8 +61,9 @@
             return `${base} drop-shadow(0 0 8px ${hex})`;
         }
 
-        // Global hover effect for standard buttons (NOT nav ul li a — those use Alpine.js directly)
+        // Global hover effect for standard buttons - ONLY in neon mode
         document.addEventListener('mouseover', function(e) {
+            if (!document.body.classList.contains('neon-mode')) return;
             const btn = e.target.closest('button, .btn, .button, .btn-action, .btn-icon-action, .settings-tab');
             if (btn && !btn.hasAttribute('x-data') && !btn.dataset.neonHover) {
                 const color = globalThis.getRandomNeonColor();
@@ -74,6 +77,9 @@
             const btn = e.target.closest('button, .btn, .button, .btn-action, .btn-icon-action, .settings-tab');
             if (btn && btn.dataset.neonHover) {
                 btn.removeAttribute('data-neon-hover');
+                btn.style.removeProperty('--hover-neon');
+                btn.style.removeProperty('--hover-neon-bg');
+                btn.style.removeProperty('--hover-neon-shadow');
             }
         });
     </script>
@@ -122,7 +128,7 @@
     </script>
 </head>
 
-<body class="dark-mode device-pointer" x-data>
+<body class="neon-mode device-pointer" x-data>
     <div class="container">
         <!-- Sidebar Overlay -->
         <div id="sidebar-overlay" x-data>

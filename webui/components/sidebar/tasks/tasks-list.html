@@ -8,7 +8,7 @@
   <div class="tasks-list-root">
     <template x-if="$store.tasks">
       <div x-data class="tasks-list-inner">
-        <h3 class="section-header section-header-collapsible" style="color: var(--color-accent); text-shadow: 0 0 5px rgba(255, 0, 127, 0.4); font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; font-size: 0.85rem;"
+        <h3 class="section-header section-header-collapsible"
             data-bs-toggle="collapse"
             @click="$store.sidebar.toggleSection('tasks')"
             x-effect="!$store.sidebar.isSectionOpen('tasks') ? $el.classList.add('collapsed') : $el.classList.remove('collapsed')">
@@ -177,10 +177,30 @@
     .light-mode .scheduler-status-running { background-color: rgba(67, 97, 238, 0.1); color: #2540b3; }
     .light-mode .scheduler-status-disabled { background-color: rgba(108, 117, 125, 0.1); color: #495057; }
     .light-mode .scheduler-status-error { background-color: rgba(230, 57, 70, 0.1); color: #c5283d; }
-    .light-mode .tasks-list-inner .section-header { text-shadow: none !important; }
+    .tasks-list-inner .section-header {
+      color: var(--color-primary);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+    }
+
+    .neon-mode .tasks-list-inner .section-header {
+      color: var(--color-accent);
+      text-shadow: 0 0 5px rgba(255, 0, 127, 0.4);
+    }
+
+    .light-mode .tasks-list-inner .section-header,
+    .dark-mode .tasks-list-inner .section-header {
+      text-shadow: none;
+    }
   
     .empty-list-message { display: flex; justify-content: center; align-items: center; height: 100px; color: var(--color-secondary); text-align: center; opacity: 0.7; font-style: italic; }
     .light-mode .empty-list-message { color: var(--color-secondary-light); }
+
+    /* Dark mode: disable neon effects */
+    .dark-mode .project-color-ball { box-shadow: none; }
+    .light-mode .project-color-ball { box-shadow: none; }
   </style>
 </body>
 </html>

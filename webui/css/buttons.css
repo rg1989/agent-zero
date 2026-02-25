@@ -246,29 +246,132 @@
   box-shadow: 0 0 8px var(--hover-neon-shadow, rgba(255, 0, 127, 0.3));
 }
 
-/* Light mode: remove neon glow effects */
+/* Light mode: remove neon glow effects, use original hover styles */
 .light-mode .button:hover,
 .light-mode .button.confirm:hover,
 .light-mode .button.cancel:hover {
+  background: var(--color-panel);
+  border-color: var(--color-border);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transform: scale(1.05);
+  filter: brightness(1.05);
 }
 
-.light-mode .btn-action-header:hover,
-.light-mode .btn-action-header.confirm:hover,
+.light-mode .btn-action-header:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-panel);
+  box-shadow: none;
+}
+
+.light-mode .btn-action-header.confirm:hover {
+  border-color: #4CAF50;
+  color: #4CAF50;
+  background: var(--color-background);
+  box-shadow: none;
+}
+
 .light-mode .btn-action-header.cancel:hover,
 .light-mode .btn-action-header.delete:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-background);
   box-shadow: none;
 }
 
 .light-mode .btn-action:hover {
+  background: var(--color-panel);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
   box-shadow: none;
+}
+
+.light-mode .btn-action.delete:hover {
+  background: var(--color-panel);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
 }
 
 .light-mode .btn-icon:hover:not(:disabled) {
+  background: var(--color-panel);
+  border-color: var(--color-primary);
+  color: var(--color-text);
   box-shadow: none;
 }
 
-.light-mode .btn-icon-action:hover,
+.light-mode .btn-icon-action:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-background-hover);
+  box-shadow: none;
+}
+
 .light-mode .btn-icon-action.danger:hover {
+  border-color: #e57373;
+  color: #e57373;
+  box-shadow: none;
+}
+
+/* Dark mode: remove neon glow effects, use original hover styles */
+.dark-mode .button:hover,
+.dark-mode .button.confirm:hover,
+.dark-mode .button.cancel:hover {
+  background: var(--color-panel);
+  border-color: var(--color-border);
+  box-shadow: none;
+  transform: scale(1.05);
+  filter: brightness(1.05);
+}
+
+.dark-mode .btn-action-header:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-panel);
+  box-shadow: none;
+}
+
+.dark-mode .btn-action-header.confirm:hover {
+  border-color: #4CAF50;
+  color: #4CAF50;
+  background: var(--color-background);
+  box-shadow: none;
+}
+
+.dark-mode .btn-action-header.cancel:hover,
+.dark-mode .btn-action-header.delete:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+  background: var(--color-background);
+  box-shadow: none;
+}
+
+.dark-mode .btn-action:hover {
+  background: var(--color-panel);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+.dark-mode .btn-action.delete:hover {
+  background: var(--color-panel);
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.dark-mode .btn-icon:hover:not(:disabled) {
+  background: var(--color-panel);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  box-shadow: none;
+}
+
+.dark-mode .btn-icon-action:hover {
+  border-color: var(--color-primary);
+  background-color: var(--color-background-hover);
+  box-shadow: none;
+}
+
+.dark-mode .btn-icon-action.danger:hover {
+  border-color: #e57373;
+  color: #e57373;
   box-shadow: none;
 }

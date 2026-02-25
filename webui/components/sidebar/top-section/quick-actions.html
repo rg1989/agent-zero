@@ -241,19 +241,6 @@
     font-size: 18px;
   }
 
-  /* Dropdown items: distinct default colors (dark mode) */
-  .dd-dashboard .material-symbols-outlined, .dd-dashboard > span:last-child { color: #00f2fe; }
-  .dd-projects .material-symbols-outlined, .dd-projects > span:last-child { color: #3a86ff; }
-  .dd-memories .material-symbols-outlined, .dd-memories > span:last-child { color: #bf00ff; }
-  .dd-scheduler .material-symbols-outlined, .dd-scheduler > span:last-child { color: #ffb86c; }
-  .dd-settings .material-symbols-outlined, .dd-settings > span:last-child { color: #00ff9d; }
-  .dd-new-chat .material-symbols-outlined, .dd-new-chat > span:last-child { color: #00f2fe; }
-  .dd-load-chat .material-symbols-outlined, .dd-load-chat > span:last-child { color: #3a86ff; }
-  .dd-save-chat .material-symbols-outlined, .dd-save-chat > span:last-child { color: #00ff9d; }
-  .dd-clear-chat .material-symbols-outlined, .dd-clear-chat > span:last-child { color: #ff007f; }
-  .dd-logout .material-symbols-outlined, .dd-logout > span:last-child { color: #ff007f; }
-  .dd-restart .material-symbols-outlined, .dd-restart > span:last-child { color: #ffb86c; }
-
   /* New Chat Button */
   #newChat {
   display: flex;
@@ -282,12 +269,36 @@
   .light-mode .config-button:hover { background-color: var(--color-background-hover); }
   .light-mode .config-button:active { background-color: var(--color-background-hover); }
 
-  /* Dark mode: give each icon its own neon color */
-  #dashboard .material-symbols-outlined { color: #00f2fe; }
-  #memory-dash .material-symbols-outlined { color: #bf00ff; }
-  #scheduler .material-symbols-outlined { color: #ffb86c; }
-  #settings .material-symbols-outlined { color: #00ff9d; }
-  .dropdown-toggle .material-symbols-outlined { color: #3a86ff; }
+  /* Neon mode: give each icon its own neon color */
+  .neon-mode #dashboard .material-symbols-outlined { color: #00f2fe; }
+  .neon-mode #memory-dash .material-symbols-outlined { color: #bf00ff; }
+  .neon-mode #scheduler .material-symbols-outlined { color: #ffb86c; }
+  .neon-mode #settings .material-symbols-outlined { color: #00ff9d; }
+  .neon-mode .dropdown-toggle .material-symbols-outlined { color: #3a86ff; }
+
+  /* Neon mode: dropdown items get neon colors */
+  .neon-mode .dd-dashboard .material-symbols-outlined, .neon-mode .dd-dashboard > span:last-child { color: #00f2fe; }
+  .neon-mode .dd-projects .material-symbols-outlined, .neon-mode .dd-projects > span:last-child { color: #3a86ff; }
+  .neon-mode .dd-memories .material-symbols-outlined, .neon-mode .dd-memories > span:last-child { color: #bf00ff; }
+  .neon-mode .dd-scheduler .material-symbols-outlined, .neon-mode .dd-scheduler > span:last-child { color: #ffb86c; }
+  .neon-mode .dd-settings .material-symbols-outlined, .neon-mode .dd-settings > span:last-child { color: #00ff9d; }
+  .neon-mode .dd-new-chat .material-symbols-outlined, .neon-mode .dd-new-chat > span:last-child { color: #00f2fe; }
+  .neon-mode .dd-load-chat .material-symbols-outlined, .neon-mode .dd-load-chat > span:last-child { color: #3a86ff; }
+  .neon-mode .dd-save-chat .material-symbols-outlined, .neon-mode .dd-save-chat > span:last-child { color: #00ff9d; }
+  .neon-mode .dd-clear-chat .material-symbols-outlined, .neon-mode .dd-clear-chat > span:last-child { color: #ff007f; }
+  .neon-mode .dd-logout .material-symbols-outlined, .neon-mode .dd-logout > span:last-child { color: #ff007f; }
+  .neon-mode .dd-restart .material-symbols-outlined, .neon-mode .dd-restart > span:last-child { color: #ffb86c; }
+
+  /* Dark mode: use primary color for all icons */
+  .dark-mode #dashboard .material-symbols-outlined,
+  .dark-mode #memory-dash .material-symbols-outlined,
+  .dark-mode #scheduler .material-symbols-outlined,
+  .dark-mode #settings .material-symbols-outlined,
+  .dark-mode .dropdown-toggle .material-symbols-outlined { color: var(--color-primary); }
+
+  /* Dark mode: dropdown items use text color */
+  .dark-mode .dropdown-item .material-symbols-outlined,
+  .dark-mode .dropdown-item > span:last-child { color: var(--color-text); }
 
   /* Light mode: give each icon its own default color */
   .light-mode #dashboard .material-symbols-outlined { color: #1565c0; }
@@ -295,6 +306,10 @@
   .light-mode #scheduler .material-symbols-outlined { color: #e65100; }
   .light-mode #settings .material-symbols-outlined { color: #2e7d32; }
   .light-mode .dropdown-toggle .material-symbols-outlined { color: #546e7a; }
+
+  /* Light mode: dropdown items use text color */
+  .light-mode .dropdown-item .material-symbols-outlined,
+  .light-mode .dropdown-item > span:last-child { color: var(--color-text); }
 
   /* Transition helpers */
   .-translate-y-1 { transform: translateY(-0.25rem); }

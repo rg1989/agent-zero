@@ -75,6 +75,11 @@
       font-size: 0.85rem;
     }
 
+    .dark-mode .chats-list-container .section-header,
+    .light-mode .chats-list-container .section-header {
+      text-shadow: none;
+    }
+
     /* New chat icon: distinct from menu items (neon yellow) */
     #newChat,
     #newChat .material-symbols-outlined {
@@ -215,6 +220,34 @@
 
     .light-mode .empty-list-message {
       color: var(--color-secondary-light);
+    }
+
+    /* Dark mode: remove neon effects */
+    .dark-mode #newChat,
+    .dark-mode #newChat .material-symbols-outlined {
+      color: var(--color-primary);
+    }
+
+    .dark-mode #newChat:hover {
+      background-color: var(--color-background-hover);
+      box-shadow: none;
+      border-color: var(--color-primary);
+    }
+
+    .dark-mode .project-color-ball {
+      box-shadow: none;
+    }
+
+    .dark-mode .section-header {
+      text-shadow: none;
+    }
+
+    .light-mode .project-color-ball {
+      box-shadow: none;
+    }
+
+    .light-mode .section-header {
+      text-shadow: none;
     }
 
     /* Selected chat accent */
