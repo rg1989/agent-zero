@@ -86,11 +86,11 @@ Plans:
   2. Agent Zero sends a multi-turn prompt sequence to a running interactive CLI session; each response is captured completely and reflects the CLI's processing of the prior input
   3. Agent Zero detects when an interactive CLI has finished responding and the terminal is ready for next input — the detection uses empirically observed prompt patterns from the actual installed binary, not assumed patterns
   4. Agent Zero exits an interactive CLI cleanly using the appropriate exit sequence (`/quit`, Ctrl+C, Ctrl+D, or tool-specific exit command), and the shared terminal returns to a normal shell prompt without orphaned processes
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 13-01-PLAN.md — Empirical observation session: run OpenCode in Docker to capture exact prompt bytes, startup time, response boundary behavior, and exit sequences; document version check for hang regression
-- [ ] 13-02-PLAN.md — Implement CLI-01..04 using tmux_tool primitives and empirically verified patterns
+- [ ] 13-01-PLAN.md — Install OpenCode in Docker, configure Ollama connectivity, run structured observation session to capture exact TUI prompt patterns, startup time, exit sequence; produce 13-01-OBSERVATION.md
+- [ ] 13-02-PLAN.md — Encode empirical findings: OPENCODE_PROMPT_PATTERN constant in tmux_tool.py, permanent install in install_additional.sh, lifecycle doc in agent prompt, end-to-end CLI-01..04 validation
 
 ### Phase 14: OpenCode Session Wrapper
 **Goal**: Agent Zero can use a pre-built `OpenCodeSession` class with a clean `.start()` / `.send(prompt)` / `.exit()` interface — hiding tmux plumbing from skill code and mirroring the `ClaudeSession` pattern from v1.1
