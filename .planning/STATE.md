@@ -10,24 +10,24 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 11 of 15 (tmux Primitive Infrastructure)
-Plan: 0 of 1 in current phase
-Status: Ready to plan
-Last activity: 2026-02-25 — v1.2 roadmap created; phases 11-15 defined
+Plan: 1 of 1 in current phase
+Status: Phase 11 complete — ready for Phase 12
+Last activity: 2026-02-25 — Phase 11 Plan 01 executed; TmuxTool created
 
-Progress: [██████████░░░░░░░░░░] 50% (10/15 phases complete across all milestones; 0/5 v1.2 phases)
+Progress: [██████████░░░░░░░░░░] 53% (11/15 phases complete across all milestones; 1/5 v1.2 phases)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v1.2)
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 1 (v1.2)
+- Average duration: 4 min
+- Total execution time: 4 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| — | — | — | — |
+| 11-tmux-primitive-infrastructure | 1 | 4 min | 4 min |
 
 *Updated after each plan completion*
 
@@ -38,9 +38,10 @@ Progress: [██████████░░░░░░░░░░] 50% (10
 - v1.2 architecture: New `tmux_tool` Python class for shared terminal interaction; `code_execution_tool` and `terminal_agent.py` left untouched
 - Prompt detection strategy: prompt pattern first, idle timeout fallback (10s minimum for AI CLI response times)
 - No sentinel injection: shared terminal is user-visible; only stability polling + prompt matching are allowed
-- ANSI stripping required before any capture-pane parsing: `re.sub(r'\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*\x07)', '', text)`
+- ANSI stripping required before any capture-pane parsing: `re.sub(r'\x1b(?:\][^\x07]*\x07|[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)` — OSC branch must come FIRST (2-char branch range includes `]`)
 - Phase 13 is empirical-first: must observe installed OpenCode binary before writing any detection regex
 - OpenCode hang regression risk: v0.15+ confirmed to hang on process exit; must check `opencode --version` at Phase 13 start
+- [Phase 11]: ANSI_RE OSC branch must precede 2-char branch: ] (0x5D) falls in \-_ range so ordering matters
 
 ### Carried from v1.1
 
@@ -60,5 +61,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: v1.2 roadmap created — ready to plan Phase 11
+Stopped at: Completed 11-01-PLAN.md — Phase 11 done, ready to plan Phase 12
 Resume file: None

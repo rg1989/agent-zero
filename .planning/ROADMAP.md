@@ -38,7 +38,7 @@
 
 **Milestone Goal:** Agent Zero can interact with the shared terminal and interactive CLIs as a human would — type, read screen, send special keys, detect readiness — enabling orchestration of any CLI agent (starting with OpenCode).
 
-- [ ] **Phase 11: tmux Primitive Infrastructure** - New `tmux_tool` Python Tool with `send`, `keys`, `read`, and `wait_ready` actions targeting the shared tmux session
+- [x] **Phase 11: tmux Primitive Infrastructure** - New `tmux_tool` Python Tool with `send`, `keys`, `read`, and `wait_ready` actions targeting the shared tmux session (completed 2026-02-25)
 - [ ] **Phase 12: Readiness Detection** - ANSI stripping utility and dual-strategy `wait_ready` (prompt pattern + idle timeout) validated against real pane output
 - [ ] **Phase 13: Interactive CLI Session Lifecycle** - Empirical observation of OpenCode in Docker; CLI-01..04 implemented with verified prompt patterns and exit sequences
 - [ ] **Phase 14: OpenCode Session Wrapper** - `OpenCodeSession` class in `python/helpers/opencode_cli.py` with clean `.start()` / `.send(prompt)` / `.exit()` interface
@@ -56,7 +56,7 @@
   3. Agent Zero sends special keys (Ctrl+C, Ctrl+D, Tab, Escape, arrow keys) to the shared tmux pane and the terminal responds correctly — interrupts, completions, and cursor movements work as a human keyboard would produce them
   4. Agent Zero captures the current pane screen content and the returned text contains the visible terminal output, free of tmux internal artifacts
   5. No sentinel text (`echo MARKER:$?` or similar) is ever written into the shared session — capture-pane and stability polling are the only observation mechanisms
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 11-01-PLAN.md — Create python/tools/tmux_tool.py with send/keys/read actions and prompts/agent.system.tool.tmux.md for auto-registration
@@ -135,7 +135,7 @@ Phases 11 → 12 → 13 → 14 → 15 (strictly sequential — each phase depend
 | 8. Claude CLI Single-Turn + Env Fix | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 10. Claude CLI Skill Documentation | v1.1 | 1/1 | Complete | 2026-02-25 |
-| 11. tmux Primitive Infrastructure | v1.2 | 0/1 | Not started | - |
+| 11. tmux Primitive Infrastructure | 1/1 | Complete   | 2026-02-25 | - |
 | 12. Readiness Detection | v1.2 | 0/1 | Not started | - |
 | 13. Interactive CLI Session Lifecycle | v1.2 | 0/2 | Not started | - |
 | 14. OpenCode Session Wrapper | v1.2 | 0/1 | Not started | - |
