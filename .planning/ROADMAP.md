@@ -41,7 +41,10 @@
   2. A CDP WebSocket connection attempt from Agent Zero succeeds immediately after the shared browser app reports ready — no 403, no connection refused
   3. If Chromium fails to start or CDP is unreachable within the timeout, the startup log contains a diagnostic message identifying the failure, not a silent hang
   4. The fragile `sleep 2` guard is gone from `startup.sh` and replaced by a polling loop
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 06-01-PLAN.md — Replace sleep 2 with CDP readiness poll in startup.sh
 
 ### Phase 7: Browser Navigate-with-Verification
 **Goal**: Agent Zero can navigate the shared browser to any URL and confirm the page loaded correctly using a documented, repeatable Observe-Act-Verify workflow
