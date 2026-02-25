@@ -48,6 +48,11 @@ curl -fsSL https://opencode.ai/install | bash
 echo 'export PATH=/root/.opencode/bin:$PATH' >> /root/.bashrc
 echo "OpenCode installed ($(/root/.opencode/bin/opencode --version 2>&1 || echo 'version unknown'))."
 
+# ── Claude Code CLI ───────────────────────────────────────────────────────
+echo "Installing Claude Code CLI..."
+npm install -g @anthropic-ai/claude-code
+echo "Claude Code installed ($(claude --version 2>&1 || echo 'version unknown'))."
+
 # ── Shared Browser: bake noVNC into the image ──────────────────────────────
 # This clone ends up at /git/agent-zero/apps/shared-browser/static/noVNC.
 # startup.sh copies from here on first run so no internet access is needed.

@@ -1,7 +1,7 @@
 ### tmux_tool:
 
 Interact directly with the shared tmux terminal session (the same terminal visible to the user in the drawer).
-Use this tool to orchestrate interactive CLI sessions — NOT for simple shell commands (use `terminal_agent` for those).
+Use this tool for ALL shared terminal interactions — shell commands, interactive CLIs, and AI CLI tools.
 
 **REQUIRED STEP BEFORE USE**: call `open_app` first:
 `{ "action": "open", "app": "shared-terminal" }`
@@ -9,7 +9,6 @@ Use this tool to orchestrate interactive CLI sessions — NOT for simple shell c
 !!! The shared tmux session is named `shared` — all actions target it by default
 !!! `send` types text + Enter; `keys` sends key sequences WITHOUT Enter; `read` captures what is on screen
 !!! No sentinel markers are ever injected — screen capture is the only observation mechanism
-!!! Both `terminal_agent` and `tmux_tool` share the same `shared` session — coordinate use
 !!! Always call `wait_ready` after `send` before injecting the next input
 !!! Default timeout is 10s — use timeout: 120 when waiting for AI CLI responses (OpenCode, claude)
 !!! `wait_ready` returns current pane content in its response (same as `read`)
@@ -32,9 +31,9 @@ Use this tool to orchestrate interactive CLI sessions — NOT for simple shell c
 - `send` — for literal text that needs Enter appended: running commands, submitting prompts, typing a path. The text is passed as a single literal string; tmux will not interpret words like "Tab" as key names.
 - `keys` — for special keys and partial input that must NOT have Enter appended: Ctrl+C to interrupt, Tab for completion, `y` or `n` to answer an inline y/N prompt, arrow keys for menu navigation.
 
-#### tmux_tool vs terminal_agent distinction:
-- Use `terminal_agent` for simple shell commands with known exit codes (it uses sentinels internally for exit-code detection).
-- Use `tmux_tool` for interactive CLIs where you need to observe prompts and respond: package managers asking y/N, pagers, REPLs, interactive installers, AI CLI tools.
+#### Checking exit codes:
+Use a separate `send` to run `echo $?` after the command if you need the exit code explicitly.
+For most cases, success vs failure is visible in the output text (e.g. `npm ERR!`, `command not found`).
 
 #### Usage: run a command (send + Enter)
 ```json
@@ -86,8 +85,10 @@ OPENCODE_START_TIMEOUT  = 15 (seconds)
 ```
 
 ### CLI-01: Start OpenCode and wait for ready state
+!!! Always include the PATH export — tmux background sessions may not source .bashrc
+!!! Wait at least 0.5s after `send` before calling `wait_ready` to avoid a stale-prompt false positive
 ```json
-{"tool_name": "tmux_tool", "tool_args": {"action": "send", "text": "opencode /a0"}}
+{"tool_name": "tmux_tool", "tool_args": {"action": "send", "text": "export PATH=/root/.opencode/bin:$PATH && opencode /a0"}}
 {"tool_name": "tmux_tool", "tool_args": {"action": "wait_ready", "timeout": 15, "prompt_pattern": "^(?:\\s*/a0\\s+\\d+\\.\\d+\\.\\d+\\s*$|(?!.*esc interrupt).*ctrl\\+t variants\\s+tab agents)"}}
 ```
 
