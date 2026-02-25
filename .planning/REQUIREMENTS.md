@@ -14,7 +14,7 @@ Requirements for the Terminal Orchestration milestone. Each maps to roadmap phas
 - [x] **TERM-02**: Agent Zero can send text without Enter to a named tmux pane (partial input for inline prompts like `y/N`)
 - [x] **TERM-03**: Agent Zero can send special keys to a named tmux pane (Ctrl+C, Ctrl+D, Tab, Escape, arrow keys)
 - [x] **TERM-04**: Agent Zero can capture and read current terminal screen content from a tmux pane
-- [ ] **TERM-05**: Agent Zero can detect when a terminal pane is ready for input using prompt pattern matching with idle timeout fallback
+- [x] **TERM-05**: Agent Zero can detect when a terminal pane is ready for input using prompt pattern matching with idle timeout fallback
 
 ### CLI Orchestration
 
@@ -68,7 +68,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | TERM-02 | Phase 11 | Complete |
 | TERM-03 | Phase 11 | Complete |
 | TERM-04 | Phase 11 | Complete |
-| TERM-05 | Phase 12 | Pending |
+| TERM-05 | Phase 12 | Complete |
 | CLI-01 | Phase 13 | Pending |
 | CLI-02 | Phase 13 | Pending |
 | CLI-03 | Phase 13 | Pending |

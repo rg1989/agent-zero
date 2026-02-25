@@ -9,25 +9,26 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 
 ## Current Position
 
-Phase: 11 of 15 (tmux Primitive Infrastructure)
-Plan: 2 of 2 in current phase
-Status: Phase 11 complete (both plans) — ready for Phase 12
-Last activity: 2026-02-25 — Phase 11 Plan 02 executed; Docker deployment gap closed; TmuxTool verified end-to-end
+Phase: 12 of 15 (Readiness Detection)
+Plan: 1 of 1 in current phase
+Status: Phase 12 complete (plan 01) — ready for Phase 13
+Last activity: 2026-02-25 — Phase 12 Plan 01 executed; wait_ready action added to TmuxTool; TERM-05 satisfied
 
-Progress: [██████████░░░░░░░░░░] 53% (11/15 phases complete across all milestones; 2/5 v1.2 plans)
+Progress: [████████████░░░░░░░░] 60% (12/15 phases complete across all milestones; 3/5 v1.2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2 (v1.2)
-- Average duration: 7 min
-- Total execution time: 14 min
+- Total plans completed: 3 (v1.2)
+- Average duration: 5 min
+- Total execution time: 16 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 11-tmux-primitive-infrastructure | 2 | 14 min | 7 min |
+| 12-readiness-detection | 1 | 2 min | 2 min |
 
 *Updated after each plan completion*
 
@@ -43,6 +44,9 @@ Progress: [██████████░░░░░░░░░░] 53% (11
 - OpenCode hang regression risk: v0.15+ confirmed to hang on process exit; must check `opencode --version` at Phase 13 start
 - [Phase 11]: ANSI_RE OSC branch must precede 2-char branch: ] (0x5D) falls in \-_ range so ordering matters
 - [Phase 11-02]: Docker live-reload pattern: bind mount ./python:/a0/python and ./prompts:/a0/prompts so tool/prompt changes reach container without rebuild; copy_A0.sh uses cp -ru (update-newer) without presence-check guard
+- [Phase 12-readiness-detection]: wait_ready initial 0.3s delay before first capture prevents stale-prompt false positive at send/wait boundary
+- [Phase 12-readiness-detection]: wait_ready uses -S -50 lines (not -100): only last prompt line needed; smaller capture faster in tight poll loop
+- [Phase 12-readiness-detection]: Default prompt_pattern r'[$#>%]\s*$' matches bash/zsh/sh/node prompts; does NOT match Continue? [y/N] sub-prompts
 
 ### Carried from v1.1
 
@@ -62,5 +66,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 11-02-PLAN.md — Phase 11 fully done (gap closure verified), ready for Phase 12
+Stopped at: Completed 12-01-PLAN.md — wait_ready action added to TmuxTool, TERM-05 satisfied, ready for Phase 13
 Resume file: None

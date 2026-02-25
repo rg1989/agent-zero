@@ -39,7 +39,7 @@
 **Milestone Goal:** Agent Zero can interact with the shared terminal and interactive CLIs as a human would — type, read screen, send special keys, detect readiness — enabling orchestration of any CLI agent (starting with OpenCode).
 
 - [x] **Phase 11: tmux Primitive Infrastructure** - New `tmux_tool` Python Tool with `send`, `keys`, `read`, and `wait_ready` actions targeting the shared tmux session; Docker bind mounts and copy_A0.sh fixed for live-reload deployment (completed 2026-02-25)
-- [ ] **Phase 12: Readiness Detection** - ANSI stripping utility and dual-strategy `wait_ready` (prompt pattern + idle timeout) validated against real pane output
+- [x] **Phase 12: Readiness Detection** - ANSI stripping utility and dual-strategy `wait_ready` (prompt pattern + idle timeout) validated against real pane output (completed 2026-02-25)
 - [ ] **Phase 13: Interactive CLI Session Lifecycle** - Empirical observation of OpenCode in Docker; CLI-01..04 implemented with verified prompt patterns and exit sequences
 - [ ] **Phase 14: OpenCode Session Wrapper** - `OpenCodeSession` class in `python/helpers/opencode_cli.py` with clean `.start()` / `.send(prompt)` / `.exit()` interface
 - [ ] **Phase 15: CLI Orchestration Skill Documentation** - `usr/skills/cli-orchestration/SKILL.md` documenting the Read-Detect-Write-Verify cycle and all confirmed patterns
@@ -72,7 +72,7 @@ Plans:
   3. When a prompt pattern is present (e.g., `$ ` at the end of stable output), `wait_ready` returns promptly without waiting for the full idle timeout
   4. When no prompt pattern is present after a configurable idle timeout (default 10 seconds minimum for AI CLI response times), `wait_ready` returns anyway rather than hanging indefinitely
   5. A false-positive stress test confirms that CLI sub-prompts (e.g., `Continue? [y/N]`) do not trigger a false "ready" signal when the agent has not yet responded
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 12-01-PLAN.md — Add _wait_ready() to TmuxTool with dual-strategy detection (prompt pattern + stability) and update agent prompt doc
@@ -137,7 +137,7 @@ Phases 11 → 12 → 13 → 14 → 15 (strictly sequential — each phase depend
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 10. Claude CLI Skill Documentation | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 11. tmux Primitive Infrastructure | 2/2 | Complete    | 2026-02-25 | 2026-02-25 |
-| 12. Readiness Detection | v1.2 | 0/1 | Not started | - |
+| 12. Readiness Detection | 1/1 | Complete   | 2026-02-25 | - |
 | 13. Interactive CLI Session Lifecycle | v1.2 | 0/2 | Not started | - |
 | 14. OpenCode Session Wrapper | v1.2 | 0/1 | Not started | - |
 | 15. CLI Orchestration Skill Documentation | v1.2 | 0/1 | Not started | - |
