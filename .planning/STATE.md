@@ -10,24 +10,25 @@ See: .planning/PROJECT.md (updated 2026-02-25)
 ## Current Position
 
 Phase: 6 of 10 (CDP Startup Health-Check)
-Plan: 0 of TBD in current phase
-Status: Ready to plan
-Last activity: 2026-02-25 — Roadmap created for v1.1 Reliability (phases 6-10)
+Plan: 1 of 1 in current phase (complete)
+Status: Phase 6 complete — ready for Phase 7
+Last activity: 2026-02-25 — Completed 06-01 (CDP startup health-check)
 
-Progress: [██░░░░░░░░] 20% (v1.0 complete; v1.1 phases 6-10 not started)
+Progress: [███░░░░░░░] 22% (v1.0 complete; Phase 6 complete; v1.1 phases 7-10 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 0 (v1.1)
-- Average duration: —
-- Total execution time: —
+- Total plans completed: 1 (v1.1)
+- Average duration: 1 min
+- Total execution time: 1 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| v1.1 phases 6-10 | TBD | - | - |
+| 06-cdp-startup-health-check | 1 | 1min | 1min |
+| v1.1 phases 7-10 | TBD | - | - |
 
 *Updated after each plan completion*
 
@@ -39,6 +40,10 @@ Progress: [██░░░░░░░░] 20% (v1.0 complete; v1.1 phases 6-10 
 - No new Tool classes; `code_execution_tool` + `TTYSession` are sufficient primitives for all CLAUDE features
 - CLAUDECODE fix is per-subprocess env only (`env=` param), never globally unset
 - Phase 8 (claude single-turn) has empirical validation flag: confirm exact ANSI sequences and prompt marker by running `claude` in PTY before coding detection logic
+- [Phase 6] Use curl -sf on /json HTTP endpoint (not TCP port check) — HTTP confirms CDP serving, not just TCP bound
+- [Phase 6] 0.5s interval x 20 attempts = 10s max — matches Chromium 1-3s Docker startup with generous headroom
+- [Phase 6] kill -0 crash-early guard on every iteration — detect Chromium death immediately, not after full timeout
+- [Phase 6] Leave sleep 1 cleanup guard untouched — different concern from the CDP readiness race condition
 
 ### Pending Todos
 
@@ -53,5 +58,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Roadmap written, ready to plan Phase 6
+Stopped at: Completed 06-01-PLAN.md (CDP startup health-check)
 Resume file: None
