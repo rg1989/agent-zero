@@ -81,7 +81,10 @@ Plans:
   1. Agent Zero opens a persistent `code_execution_tool` PTY session for claude and sends a sequence of at least two prompts, receiving a coherent response to each
   2. Agent Zero detects claude response completion using combined idle-timeout and prompt-pattern detection — not idle-timeout alone — avoiding false "done" signals during claude's internal pauses
   3. If the claude session exits unexpectedly (crash, timeout), Agent Zero detects the dead session and can restart it rather than hanging
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 09-01-PLAN.md — Add claude_turn(), ClaudeSession, claude_turn_with_recovery() to claude_cli.py with live validation
 
 ### Phase 10: Claude CLI Skill Documentation
 **Goal**: A dedicated skill document captures every validated claude CLI interaction pattern so any Agent Zero session can invoke claude correctly without re-discovering these patterns
