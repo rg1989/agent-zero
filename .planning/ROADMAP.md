@@ -56,7 +56,7 @@
   3. Agent Zero sends special keys (Ctrl+C, Ctrl+D, Tab, Escape, arrow keys) to the shared tmux pane and the terminal responds correctly — interrupts, completions, and cursor movements work as a human keyboard would produce them
   4. Agent Zero captures the current pane screen content and the returned text contains the visible terminal output, free of tmux internal artifacts
   5. No sentinel text (`echo MARKER:$?` or similar) is ever written into the shared session — capture-pane and stability polling are the only observation mechanisms
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
 - [ ] 11-01-PLAN.md — Create python/tools/tmux_tool.py with send/keys/read actions and prompts/agent.system.tool.tmux.md for auto-registration
