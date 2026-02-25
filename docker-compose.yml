@@ -9,8 +9,10 @@ services:
       - "${WEB_UI_PORT:-50000}:80"
     volumes:
       - agent-zero-data:/per
-      - ./webui:/a0/webui  # live-reload: host webui/ is served directly
-      - ./apps:/a0/apps    # persist built web apps across rebuilds
+      - ./webui:/a0/webui     # live-reload: host webui/ is served directly
+      - ./apps:/a0/apps       # persist built web apps across rebuilds
+      - ./python:/a0/python   # live-reload: tool changes reach container without rebuild
+      - ./prompts:/a0/prompts # live-reload: prompt doc changes reach container without rebuild
     environment:
       - AUTH_LOGIN=${AUTH_LOGIN:-}
       - AUTH_PASSWORD=${AUTH_PASSWORD:-}
