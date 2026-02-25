@@ -57,7 +57,7 @@ completed: 2026-02-25
 - **Duration:** 7 min
 - **Started:** 2026-02-25T17:16:55Z
 - **Completed:** 2026-02-25T17:23:55Z
-- **Tasks:** 2 (Task 3 is checkpoint — awaiting human verify)
+- **Tasks:** 3 (2 auto + 1 checkpoint:human-verify, APPROVED)
 - **Files modified:** 3
 
 ## Accomplishments
@@ -75,7 +75,9 @@ Each task was committed atomically:
 1. **Task 1: Add OpenCode constants and install script** - `2e7e1ab` (feat)
 2. **Task 2: Update prompt doc and validate end-to-end** - `c7fc4d8` (feat)
 
-**Plan metadata:** (pending — after checkpoint)
+3. **Task 3: Human verify — CLI-01..04 lifecycle in shared terminal** - APPROVED (checkpoint, no code commit)
+
+**Plan metadata:** `811e738` (docs: complete plan)
 
 ## Files Created/Modified
 
