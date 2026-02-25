@@ -26,21 +26,27 @@ Agent Zero can build, run, and persist web applications directly within its own 
 - ✓ App templates: Flask Basic, Flask Dashboard, Static HTML scaffolding — v1.0
 - ✓ Skill Forge and Web App Builder meta-skills — v1.0
 - ✓ Welcome screen redesign and auto-reload UI — v1.0
+- ✓ CDP startup health-check: curl-based poll on /json endpoint before Agent Zero connects — v1.1
+- ✓ Browser navigate-with-verification: `navigate_and_wait()` with readyState poll, Observe→Act→Verify in SKILL.md — v1.1
+- ✓ Claude CLI single-turn: `claude_single_turn()` with CLAUDECODE env fix — v1.1
+- ✓ Claude CLI multi-turn: `ClaudeSession` with `--resume UUID`, session recovery — v1.1
+- ✓ Claude CLI skill: `usr/skills/claude-cli/SKILL.md` documents complete interaction pattern — v1.1
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] BROWSER-01: Agent Zero navigates to URLs via CDP Page.navigate (not visual address bar)
-- [ ] BROWSER-02: Agent Zero observes browser state with screenshot before every browser action
-- [ ] BROWSER-03: Agent Zero verifies navigation succeeded (URL/title check)
-- [ ] BROWSER-04: Shared browser Chromium always starts with CDP remote origins enabled
-- [ ] BROWSER-05: Agent Zero follows Observe → Act → Verify for all browser interactions
-- [ ] CLAUDE-01: Agent Zero can launch `claude` CLI in shared terminal or as a subprocess
-- [ ] CLAUDE-02: Agent Zero can send a prompt to a running claude session and receive a response
-- [ ] CLAUDE-03: Agent Zero can detect when claude has finished responding
-- [ ] CLAUDE-04: Agent Zero can run a complete multi-turn session with claude
-- [ ] CLAUDE-05: Dedicated skill documents the complete claude CLI interaction pattern
+- [ ] TERM-01: Agent Zero can send text + Enter to a named tmux pane (shared terminal)
+- [ ] TERM-02: Agent Zero can send text without Enter (partial input to interactive prompt)
+- [ ] TERM-03: Agent Zero can send special keys to tmux pane (Ctrl+C, Ctrl+D, Tab, arrows)
+- [ ] TERM-04: Agent Zero can capture current terminal screen content (tmux capture-pane)
+- [ ] TERM-05: Agent Zero can detect when terminal is ready for input (prompt detection + idle fallback)
+- [ ] CLI-01: Agent Zero can start an interactive CLI session in the shared terminal
+- [ ] CLI-02: Agent Zero can send prompts to a running interactive CLI and read responses
+- [ ] CLI-03: Agent Zero can detect when a CLI has finished responding and is ready for next input
+- [ ] CLI-04: Agent Zero can gracefully interrupt or exit an interactive CLI session
+- [ ] CLI-05: Pre-built OpenCode CLI orchestration wrapper (`opencode_session()`)
+- [ ] CLI-06: Generic CLI orchestration skill documents the complete pattern for any CLI tool
 
 ### Out of Scope
 
@@ -76,13 +82,15 @@ Agent Zero can build, run, and persist web applications directly within its own 
 | Registry in JSON file | Simple, survives restarts, no DB dependency | ✓ Good |
 | SKILL.md standard for GSD skills | Compatible with Claude Code, Cursor, Codex | ✓ Good |
 
-## Current Milestone: v1.1 Reliability
+## Current Milestone: v1.2 Terminal Orchestration
 
-**Goal:** Make browser control and Claude Code CLI work reliably as intended
+**Goal:** Agent Zero can interact with the shared terminal and interactive CLIs as a human would — type, read screen, send special keys, detect readiness — enabling orchestration of any CLI agent
 
 **Target features:**
-- Browser: CDP-based navigation, observe-act-verify workflow, Chromium CDP startup fix
-- Claude Code CLI: launch, interactive control, multi-turn sessions, dedicated skill
+- tmux_tool: new Python tool for sending/reading shared terminal (tmux send-keys + capture-pane)
+- Prompt detection: poll-based readiness check with prompt pattern + idle timeout fallback
+- OpenCode CLI wrapper: `opencode_session()` following ClaudeSession pattern from v1.1
+- CLI orchestration skill: `usr/skills/cli-orchestration/SKILL.md` for generic + tool-specific patterns
 
 ---
-*Last updated: 2026-02-25 after GSD initialization (new-milestone)*
+*Last updated: 2026-02-25 after milestone v1.2 started*
