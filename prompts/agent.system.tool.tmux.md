@@ -70,3 +70,55 @@ Use this tool to orchestrate interactive CLI sessions — NOT for simple shell c
 ```json
 { "tool_name": "tmux_tool", "tool_args": { "action": "wait_ready", "prompt_pattern": "opencode> $" } }
 ```
+
+## OpenCode Lifecycle Pattern
+
+Use these exact tmux_tool calls to orchestrate an OpenCode session.
+All patterns verified empirically in Phase 13 (see 13-01-OBSERVATION.md).
+
+The ready-state pattern covers two TUI states:
+- Initial startup: status bar at bottom shows `/a0  ...  1.2.14`
+- Post-response: hints bar shows `ctrl+t variants  tab agents` WITHOUT `esc interrupt` (busy indicator)
+
+```
+OPENCODE_PROMPT_PATTERN = ^(?:\s*/a0\s+\d+\.\d+\.\d+\s*$|(?!.*esc interrupt).*ctrl\+t variants\s+tab agents)
+OPENCODE_START_TIMEOUT  = 15 (seconds)
+```
+
+### CLI-01: Start OpenCode and wait for ready state
+```json
+{"tool_name": "tmux_tool", "tool_args": {"action": "send", "text": "opencode /a0"}}
+{"tool_name": "tmux_tool", "tool_args": {"action": "wait_ready", "timeout": 15, "prompt_pattern": "^(?:\\s*/a0\\s+\\d+\\.\\d+\\.\\d+\\s*$|(?!.*esc interrupt).*ctrl\\+t variants\\s+tab agents)"}}
+```
+
+### CLI-02 + CLI-03: Send prompt, wait for response, read result
+```json
+{"tool_name": "tmux_tool", "tool_args": {"action": "send", "text": "Your prompt here"}}
+{"tool_name": "tmux_tool", "tool_args": {"action": "wait_ready", "timeout": 120, "prompt_pattern": "^(?:\\s*/a0\\s+\\d+\\.\\d+\\.\\d+\\s*$|(?!.*esc interrupt).*ctrl\\+t variants\\s+tab agents)"}}
+{"tool_name": "tmux_tool", "tool_args": {"action": "read", "lines": 300}}
+```
+
+### CLI-04: Exit cleanly
+```json
+{"tool_name": "tmux_tool", "tool_args": {"action": "keys", "keys": "C-p"}}
+{"tool_name": "tmux_tool", "tool_args": {"action": "send", "text": "exit"}}
+{"tool_name": "tmux_tool", "tool_args": {"action": "wait_ready", "timeout": 15}}
+```
+!!! After exit, wait_ready uses the default shell prompt pattern — OpenCode pattern is NOT needed here.
+!!! Verify shell prompt is restored: the last non-blank line should end with $ or # character.
+!!! OpenCode exits cleanly in 1-2 seconds and prints the session name + resume command before quitting.
+
+IMPORTANT (v1.2.14 behavior): Do NOT use `{"action": "send", "text": "/exit"}` directly — the `/` character
+immediately triggers the AGENT PICKER, not the command autocomplete. Instead use Ctrl+P (commands palette),
+type "exit" to filter to "Exit the app", then press Enter. The three-step sequence above is the verified method.
+
+### Multi-turn loop
+Repeat CLI-02+CLI-03 steps for each prompt. Each send/wait_ready/read cycle is one turn.
+OpenCode maintains session context automatically within the TUI process.
+
+### Notes on OpenCode TUI behavior
+- First ever start in container: runs a one-time DB migration (< 3s, non-blocking, exits to shell before TUI)
+- "Getting started" dialog appears after first LLM response — does NOT block input; ignore it
+- Built-in "big-pickle" free model is available without any provider configuration
+- Resume a previous session: `opencode -s ses_[SESSION_ID]` (session ID shown at exit)
+- Typing `/` in the input area opens the AGENT PICKER (not command autocomplete); use Ctrl+P for commands
