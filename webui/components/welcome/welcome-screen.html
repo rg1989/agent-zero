@@ -13,13 +13,6 @@
                 <div class="welcome-content">
                     <!-- Action Cards -->
                     <div class="welcome-actions">
-                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('new-chat')"
-                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
-                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
-                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">add_circle</span>
-                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">New Chat</h3>
-                        </div>
-
                         <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('projects')"
                              x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
                              :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
@@ -63,6 +56,12 @@
                              :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
                             <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">public</span>
                             <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Shared Browser</h3>
+                        </div>
+                        <div class="welcome-action-card" @click="$store.welcomeStore.executeAction('shared-terminal')"
+                             x-data="{ hoverColor: '' }" @mouseenter="hoverColor = globalThis.getRandomNeonColor()" @mouseleave="hoverColor = ''"
+                             :style="hoverColor ? `border-color: ${hoverColor}; background: var(--color-message-bg); box-shadow: 0 0 15px ${hoverColor}40; transform: translateY(-2px);` : ''">
+                            <span class="material-symbols-outlined welcome-action-icon" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">terminal</span>
+                            <h3 class="welcome-action-title" :style="hoverColor ? `color: ${hoverColor}; text-shadow: 0 0 8px ${hoverColor};` : ''">Shared Terminal</h3>
                         </div>
                     </div>
 

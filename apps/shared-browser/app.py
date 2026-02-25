@@ -189,6 +189,25 @@ def reload_page():
         return jsonify({"ok": False, "error": str(e)}), 500
 
 
+@app.route('/api/resize', methods=['POST'])
+def resize_viewport():
+    body = request.json or {}
+    width  = int(body.get('width',  1280))
+    height = int(body.get('height', 900))
+    try:
+        _run(_cdp("Emulation.setDeviceMetricsOverride", {
+            "width":             width,
+            "height":            height,
+            "deviceScaleFactor": 1,
+            "mobile":            False,
+        }))
+        global _last_png_time
+        _last_png_time = 0
+        return jsonify({"ok": True, "width": width, "height": height})
+    except Exception as e:
+        return jsonify({"ok": False, "error": str(e)}), 500
+
+
 # ── HTML ──────────────────────────────────────────────────────────────────────
 
 HTML_TEMPLATE = """
@@ -263,7 +282,6 @@ HTML_TEMPLATE = """
             height: auto;
             image-rendering: auto;
         }
-        /* scroll container so tall pages don't get clipped */
         #scroll-area {
             position: absolute; inset: 0;
             overflow-y: auto;
@@ -324,7 +342,7 @@ HTML_TEMPLATE = """
         const REFRESH_MS = 800;
 
         // Natural browser viewport dimensions (updated from screenshot)
-        let nativeW = 420, nativeH = 800;
+        let nativeW = 1280, nativeH = 900;
 
         function refreshShot() {
             const next = new Image();
@@ -365,6 +383,29 @@ HTML_TEMPLATE = """
         setInterval(refreshUrl, 1500);
         refreshShot();
         refreshUrl();
+
+        // ── Viewport resize → resize Chrome to match ────────────────
+        // Debounce 50ms — the drawer animation continuously fires the observer,
+        // resetting the timer each time, so it naturally fires once fully settled.
+        const viewportEl = document.getElementById('viewport');
+        let resizeTimer = null;
+        let lastSentW = 0, lastSentH = 0;
+        new ResizeObserver(entries => {
+            const { width, height } = entries[0].contentRect;
+            const w = Math.round(width);
+            const h = Math.round(height);
+            if (w < 10 || h < 10) return;
+            clearTimeout(resizeTimer);
+            resizeTimer = setTimeout(() => {
+                if (w === lastSentW && h === lastSentH) return; // no change
+                lastSentW = w; lastSentH = h;
+                fetch('./api/resize', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ width: w, height: h })
+                }).then(() => refreshShot()).catch(() => {});
+            }, 50);
+        }).observe(viewportEl);
 
         // ── Navigation ──────────────────────────────────────────────
         window.navigateTo = function (e) {

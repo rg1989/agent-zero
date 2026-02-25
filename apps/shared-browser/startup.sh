@@ -34,7 +34,7 @@ chromium \
     --disable-extensions \
     --disable-sync \
     --disable-translate \
-    --window-size=420,800 \
+    --window-size=1280,900 \
     --remote-debugging-port=9222 \
     --remote-allow-origins=* \
     https://www.google.com &

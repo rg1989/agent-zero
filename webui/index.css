@@ -405,12 +405,33 @@ img {
 #right-panel {
   display: -webkit-flex;
   display: flex;
-  width: 100%;
+  min-width: 0;
   flex-direction: column;
-  flex-grow: 1;
+  flex: 1 1 0px;  /* flex-basis: 0px so free space is split from zero, not from content width */
   -webkit-transition: margin-left var(--transition-speed) ease-in-out;
   transition: margin-left var(--transition-speed) ease-in-out;
   background: var(--color-chat-background);
+}
+
+/* Right drawer x-component: the actual flex child in .container
+   Both panels use flex-basis:0 so free space is distributed equally (50/50).
+   flex-grow animates 0→1 to open/close. */
+.container > x-component:has(.right-drawer-wrapper) {
+  display: block;
+  flex: 0 0 0px;
+  min-width: 0;
+  overflow: hidden;
+  height: 100%;
+  transition: flex-grow var(--transition-speed) ease-in-out;
+}
+
+body.right-drawer-open .container > x-component:has(.right-drawer-wrapper) {
+  flex: 1 1 0px;
+}
+
+/* Alpine wrapper div inside x-component must fill it so the panel can fill too */
+.container > x-component:has(.right-drawer-wrapper) > div {
+  height: 100%;
 }
 
 /* Scrollbar styles for right panel */

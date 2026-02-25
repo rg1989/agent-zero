@@ -267,8 +267,11 @@ const model = {
         window.open("https://agent-zero.ai", "_blank");
         break;
       case "shared-browser":
-        window.open("/shared-browser/", "_blank");
+      case "shared-terminal": {
+        const rd = Alpine.store("rightDrawer");
+        if (rd) rd.openTab(actionId);
         break;
+      }
     }
   },
 };

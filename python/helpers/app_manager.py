@@ -113,6 +113,14 @@ class AppManager:
                     except Exception as e:
                         from python.helpers.print_style import PrintStyle
                         PrintStyle.warning(f"[AppManager] autostart failed for '{name}': {e}")
+
+        # Always pre-load the core app tabs in the drawer so they're visible
+        # to the user without the AI needing to call open_app first.
+        core_order = ["shared-browser", "shared-terminal"]
+        drawer_apps = [name for name in core_order if name in self._registry]
+        if drawer_apps:
+            self.set_drawer_state(open=True, apps=drawer_apps, active=drawer_apps[0])
+
         return started
 
     def set_autostart(self, name: str, enabled: bool) -> dict:

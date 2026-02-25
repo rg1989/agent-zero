@@ -75,6 +75,15 @@ const model = {
         await this._sync();
     },
 
+    async openTab(name) {
+        if (!this.apps.find(a => a.name === name)) {
+            this.apps = [...this.apps, { name, color: this._colorFor(name) }];
+        }
+        this.active = name;
+        this.isOpen = true;
+        await this._sync();
+    },
+
     async closeTab(name) {
         this.apps = this.apps.filter(a => a.name !== name);
         if (this.active === name) {

@@ -11,7 +11,7 @@
     "pid": 113,
     "created_at": "2026-02-22T17:43:17Z",
     "url": "/shared-browser/",
-    "started_at": "2026-02-24T21:20:19Z",
+    "started_at": "2026-02-25T00:10:57Z",
     "core": true
   },
   "shared-terminal": {
@@ -24,9 +24,24 @@
     "autostart": true,
     "core": true,
     "status": "running",
-    "pid": 1093,
+    "pid": 114,
     "created_at": "2026-02-24T21:17:41Z",
     "url": "/shared-terminal/",
-    "started_at": "2026-02-24T21:24:28Z"
+    "started_at": "2026-02-25T00:10:57Z"
+  },
+  "claude-demo-app": {
+    "name": "claude-demo-app",
+    "port": 9010,
+    "cmd": "exec bash startup.sh",
+    "cwd": "/a0/apps/claude-demo-app",
+    "description": "Claude Code Live \u2014 Demo Web App",
+    "env": {},
+    "autostart": true,
+    "core": false,
+    "status": "running",
+    "pid": 115,
+    "created_at": "2026-02-24T23:47:17Z",
+    "url": "/claude-demo-app/",
+    "started_at": "2026-02-25T00:10:57Z"
   }
 }

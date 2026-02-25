@@ -8,10 +8,11 @@
 
 <body>
   <div x-data
-       x-effect="document.body.classList.toggle('right-drawer-open', !!($store.rightDrawer && $store.rightDrawer.isOpen))">
+       x-effect="document.body.classList.toggle('right-drawer-open', !!($store.rightDrawer && $store.rightDrawer.isOpen && $store.rightDrawer.apps.length > 0))">
 
     <template x-if="$store.rightDrawer">
-      <div class="right-drawer-wrapper">
+      <div class="right-drawer-wrapper"
+           :class="{'drawer-slot-active': $store.rightDrawer && $store.rightDrawer.isOpen && $store.rightDrawer.apps.length > 0}">
 
         <!-- Mobile overlay: tap outside to close -->
         <div class="right-drawer-overlay"
@@ -21,6 +22,7 @@
 
         <!-- Drawer Panel -->
         <div id="right-drawer-panel"
+             x-init="new ResizeObserver(e => document.documentElement.style.setProperty('--drawer-width', e[0].contentRect.width + 'px')).observe($el)"
              :class="{'drawer-hidden': !$store.rightDrawer.isOpen || $store.rightDrawer.apps.length === 0}">
 
           <!-- Tab bar -->
@@ -32,9 +34,6 @@
                       @click="$store.rightDrawer.setActive(tab.name)">
                 <span class="rd-tab-dot" :style="`background: ${tab.color}`"></span>
                 <span class="rd-tab-name" x-text="tab.name.replace(/-/g, '\u00a0')"></span>
-                <span class="rd-tab-newtab material-symbols-outlined"
-                      @click.stop="window.open(`/${tab.name}/`, '_blank')"
-                      title="Open in new tab">open_in_new</span>
                 <span class="rd-tab-close material-symbols-outlined"
                       @click.stop="$store.rightDrawer.closeTab(tab.name)"
                       title="Close tab">close</span>
@@ -62,27 +61,23 @@
   </div>
 
   <style>
-    /* ── Wrapper ── */
+    /* ── Wrapper: fills the x-component (flex controlled in index.css via :has) ── */
     .right-drawer-wrapper {
       position: relative;
+      width: 100%;
+      height: 100%;
     }
 
-    /* ── Panel ── */
+    /* ── Panel: fills its wrapper ── */
     #right-drawer-panel {
       background-color: var(--color-panel);
       border-left: 1px solid var(--color-border);
       display: flex;
       flex-direction: column;
-      transition: margin-right var(--transition-speed) ease-in-out;
-      width: 420px;
-      min-width: 420px;
+      width: 100%;
       height: 100vh;
       overflow: hidden;
       box-shadow: -2px 0 15px rgba(0, 242, 254, 0.05);
-    }
-
-    #right-drawer-panel.drawer-hidden {
-      margin-right: -420px;
     }
 
     .light-mode #right-drawer-panel {
@@ -154,8 +149,7 @@
       text-transform: capitalize;
     }
 
-    /* ── Tab actions (open-in-new + close) ── */
-    .rd-tab-newtab,
+    /* ── Tab actions (close) ── */
     .rd-tab-close {
       font-size: 14px !important;
       line-height: 1;
@@ -166,14 +160,11 @@
       transition: opacity 0.15s ease, background 0.15s ease;
     }
 
-    .rd-tab:hover .rd-tab-newtab,
     .rd-tab:hover .rd-tab-close,
-    .rd-tab--active .rd-tab-newtab,
     .rd-tab--active .rd-tab-close {
       opacity: 0.55;
     }
 
-    .rd-tab-newtab:hover,
     .rd-tab-close:hover {
       opacity: 1 !important;
       background: color-mix(in srgb, var(--tab-color, var(--color-border)) 30%, transparent);
@@ -241,13 +232,10 @@
       font-size: 18px;
     }
 
-    /* ── Shift the time/date widget left when drawer is open ── */
-    #time-date-container {
-      transition: right var(--transition-speed) ease-in-out;
-    }
-
+    /* ── Time/date widget: tracks drawer width live via CSS variable ── */
+    /* No CSS transition needed — --drawer-width updates each animation frame */
     .right-drawer-open #time-date-container {
-      right: calc(420px + var(--spacing-sm));
+      right: calc(var(--drawer-width, 0px) + var(--spacing-sm));
     }
 
     /* ── Mobile overlay ── */
@@ -260,6 +248,11 @@
     }
 
     @media (max-width: 768px) {
+      /* Wrapper takes no layout space on mobile (panel is position:fixed) */
+      .right-drawer-wrapper {
+        flex: 0 0 0px !important;
+      }
+
       #right-drawer-panel {
         position: fixed;
         right: 0;
@@ -267,11 +260,18 @@
         bottom: 0;
         width: min(420px, 100vw) !important;
         min-width: unset;
+        height: 100vh;
         z-index: 1003;
+        transition: margin-right var(--transition-speed) ease-in-out;
       }
 
       #right-drawer-panel.drawer-hidden {
         margin-right: calc(-1 * min(420px, 100vw));
+      }
+
+      /* Don't shift time-date on mobile (drawer overlays, doesn't push) */
+      .right-drawer-open #time-date-container {
+        right: var(--spacing-md);
       }
 
       .right-drawer-overlay.visible {
