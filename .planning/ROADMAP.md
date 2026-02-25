@@ -100,7 +100,7 @@ Plans:
   1. Agent Zero skill code can start an OpenCode session, send a prompt, receive the response, and exit using only `.start()`, `.send()`, and `.exit()` — without any direct tmux subcommand calls in the skill code
   2. `OpenCodeSession` correctly applies the empirically verified OpenCode prompt patterns and exit sequences from Phase 13 — it encodes observed reality, not documentation assumptions
   3. If the OpenCode version is affected by the `opencode run` hang regression (v0.15+), the wrapper applies a hard timeout with `process.terminate()` on expiry and surfaces a clear error rather than hanging indefinitely
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
 - [ ] 14-01-PLAN.md — Create python/helpers/opencode_cli.py with OpenCodeSession class; validate against installed OpenCode binary
