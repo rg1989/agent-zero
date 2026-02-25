@@ -27,7 +27,7 @@ Or see DeepWiki generated documentation:
 
 ## 🔀 Fork Enhancements
 
-> This is a heavily extended fork of [frdel/agent-zero](https://github.com/frdel/agent-zero).
+> This is a heavily extended fork of [frdel/agent-zero](https://github.com/frdel/agent-zero), built by **[Roman Grinevich](https://github.com/rg1989/)** — [LinkedIn](https://www.linkedin.com/in/roman-grinevich-03b13bab/).
 > Nearly every commit beyond the initial setup represents original work — covering infrastructure, agent capabilities, UI, and structured workflows.
 > Below is a summary of what has been built on top of the upstream base.
 
