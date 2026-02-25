@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 9 — Claude CLI Multi-Turn Sessions (complete) → Phase 10 next
+**Current focus:** Phase 10 complete — v1.1 milestone COMPLETE (all 10 phases done)
 
 ## Current Position
 
-Phase: 9 of 10 (Claude CLI Multi-Turn Sessions)
+Phase: 10 of 10 (Claude CLI Skill Documentation)
 Plan: 1 of 1 in current phase (complete)
-Status: Phase 9 complete — ready for Phase 10
-Last activity: 2026-02-25 — Completed 09-01 (claude_turn, ClaudeSession, claude_turn_with_recovery multi-turn helpers)
+Status: Phase 10 complete — v1.1 milestone COMPLETE
+Last activity: 2026-02-25 — Completed 10-01 (usr/skills/claude-cli/SKILL.md — CLAUDE-05 satisfied)
 
-Progress: [█████████░] 90% (v1.0 complete; Phases 6-9 complete; v1.1 phase 10 remaining)
+Progress: [██████████] 100% (v1.0 complete; v1.1 complete — all 10 phases done)
 
 ## Performance Metrics
 
@@ -31,10 +31,11 @@ Progress: [█████████░] 90% (v1.0 complete; Phases 6-9 comple
 | 07-browser-navigate-with-verification | 1 | 2min | 2min |
 | 08-claude-cli-single-turn-env-fix | 1 | 14min | 14min |
 | 09-claude-cli-multi-turn-sessions | 1 | 3min | 3min |
-| v1.1 phase 10 | TBD | - | - |
+| 10-claude-cli-skill-documentation | 1 | 2min | 2min |
 
 *Updated after each plan completion*
 | Phase 09-claude-cli-multi-turn-sessions P01 | 3 | 2 tasks | 1 files |
+| Phase 10-claude-cli-skill-documentation P01 | 2 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -54,6 +55,8 @@ Progress: [█████████░] 90% (v1.0 complete; Phases 6-9 comple
 - [Phase 08-claude-cli-single-turn-env-fix]: Use subprocess.run capture_output=True (not PTY) for clean stdout; per-call env_clean dict for CLAUDECODE fix; claude_single_turn() with --output-format json; claude_single_turn_text() with --output-format text
 - [Phase 09-claude-cli-multi-turn-sessions]: Use --resume UUID (not --continue) for multi-turn to avoid cwd race conditions; ClaudeSession delegates to claude_turn() — single source of truth; was_recovered bool signals context loss to callers
 - [Phase 09]: Use --resume UUID (not --continue) for multi-turn to avoid cwd race conditions; ClaudeSession delegates to claude_turn(); was_recovered bool signals context loss to callers
+- [Phase 10-claude-cli-skill-documentation]: Single SKILL.md file — no rules/ subdirectory needed (scope is self-contained)
+- [Phase 10-claude-cli-skill-documentation]: CRITICAL env fix section placed before all code examples (highest priority fact)
 
 ### Pending Todos
 
@@ -68,5 +71,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 09-01-PLAN.md (claude CLI multi-turn session helpers)
+Stopped at: Completed 10-01-PLAN.md (claude-cli skill documentation — v1.1 milestone complete)
 Resume file: None
