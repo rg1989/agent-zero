@@ -23,7 +23,7 @@ Requirements for the Terminal Orchestration milestone. Each maps to roadmap phas
 - [x] **CLI-03**: Agent Zero can detect when an interactive CLI has finished responding and is ready for next input
 - [x] **CLI-04**: Agent Zero can interrupt or exit an interactive CLI session cleanly (Ctrl+C, Ctrl+D, or tool-specific exit command)
 - [x] **CLI-05**: Agent Zero can use a pre-built `OpenCodeSession` wrapper with `.start()` / `.send(prompt)` / `.exit()` interface, mirroring `ClaudeSession`
-- [ ] **CLI-06**: Agent Zero can follow documented orchestration patterns for any interactive CLI via `usr/skills/cli-orchestration/SKILL.md`
+- [x] **CLI-06**: Agent Zero can follow documented orchestration patterns for any interactive CLI via `usr/skills/cli-orchestration/SKILL.md`
 
 ## v2 Requirements
 
@@ -74,7 +74,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLI-03 | Phase 13 | Complete |
 | CLI-04 | Phase 13 | Complete |
 | CLI-05 | Phase 14 | Complete |
-| CLI-06 | Phase 15 | Pending |
+| CLI-06 | Phase 15 | Complete |
 
 **Coverage:**
 - v1.2 requirements: 11 total

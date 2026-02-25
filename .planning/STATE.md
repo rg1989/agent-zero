@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 14 — OpenCode Session Wrapper (v1.2)
+**Current focus:** Phase 15 complete — v1.2 milestone DONE
 
 ## Current Position
 
-Phase: 14 of 15 (OpenCode Session Wrapper)
-Plan: 1 of 1 complete — Phase 14 DONE
-Status: Phase 14 complete — OpenCodeSession class implemented and validated end-to-end against OpenCode v1.2.14; CLI-05 satisfied
-Last activity: 2026-02-25 — Phase 14 Plan 01 complete; OpenCodeSession multi-turn validated in Docker
+Phase: 15 of 15 (CLI Orchestration Skill Documentation)
+Plan: 1 of 1 complete — Phase 15 DONE
+Status: Phase 15 complete — usr/skills/cli-orchestration/SKILL.md written (371 lines); CLI-06 satisfied; v1.2 milestone complete
+Last activity: 2026-02-25 — Phase 15 Plan 01 complete; CLI-06 satisfied
 
-Progress: [██████████████░░░░░░] 75% (14-01 complete — Phase 14 done, Phase 15 next)
+Progress: [████████████████████] 100% (15-01 complete — all phases done)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5 (v1.2)
+- Total plans completed: 6 (v1.2)
 - Average duration: 6 min
-- Total execution time: 36 min
+- Total execution time: 39 min
 
 **By Phase:**
 
@@ -31,6 +31,7 @@ Progress: [██████████████░░░░░░] 75% (14
 | 12-readiness-detection | 1 | 2 min | 2 min |
 | 13-interactive-cli-session-lifecycle | 2 | 20 min | 10 min |
 | 14-opencode-session-wrapper | 1 | 2 min | 2 min |
+| 15-cli-orchestration-skill-documentation | 1 | 3 min | 3 min |
 
 *Updated after each plan completion*
 
@@ -54,6 +55,7 @@ Progress: [██████████████░░░░░░] 75% (14
 - [Phase 14-01]: OpenCodeSession constants (ANSI_RE, OPENCODE_PROMPT_PATTERN, OPENCODE_START_TIMEOUT) copied into opencode_cli.py with source comment — direct import from tmux_tool fails because agent.py dependency pulls nest_asyncio which is absent in standalone Python contexts
 - [Phase 14-01]: OpenCodeSession is a sync class with time.sleep polling — asyncio is in Tool dispatch layer only; helper modules run synchronously matching claude_cli.py pattern
 - [Phase 14-01]: send() returns full ANSI-stripped pane content (300 lines); differential response extraction deferred to Phase 15 SKILL.md
+- [Phase 15-01]: usr/skills/cli-orchestration/SKILL.md documents both layers — tmux_tool primitive actions and OpenCodeSession high-level API; CLI-06 satisfied; Read-Detect-Write-Verify cycle established as the required interaction pattern for all interactive CLI orchestration
 
 ### Carried from v1.1
 
@@ -72,5 +74,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 14-01-PLAN.md — Phase 14 done; next is Phase 15 (OpenCode SKILL.md documentation)
+Stopped at: Completed 15-01-PLAN.md — Phase 15 done; v1.2 milestone complete
 Resume file: None

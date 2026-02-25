@@ -42,7 +42,7 @@
 - [x] **Phase 12: Readiness Detection** - ANSI stripping utility and dual-strategy `wait_ready` (prompt pattern + idle timeout) validated against real pane output (completed 2026-02-25)
 - [x] **Phase 13: Interactive CLI Session Lifecycle** - Empirical observation of OpenCode in Docker; CLI-01..04 implemented with verified prompt patterns and exit sequences (completed 2026-02-25)
 - [x] **Phase 14: OpenCode Session Wrapper** - `OpenCodeSession` class in `python/helpers/opencode_cli.py` with clean `.start()` / `.send(prompt)` / `.exit()` interface (completed 2026-02-25)
-- [ ] **Phase 15: CLI Orchestration Skill Documentation** - `usr/skills/cli-orchestration/SKILL.md` documenting the Read-Detect-Write-Verify cycle and all confirmed patterns
+- [x] **Phase 15: CLI Orchestration Skill Documentation** - `usr/skills/cli-orchestration/SKILL.md` documenting the Read-Detect-Write-Verify cycle and all confirmed patterns (completed 2026-02-25)
 
 ## Phase Details
 
@@ -114,7 +114,7 @@ Plans:
   2. The skill documents the Read-Detect-Write-Verify cycle as the required interaction pattern and includes the environment isolation warning (code_execution_tool and the shared tmux session are separate, non-sharing execution contexts)
   3. The skill includes OpenCode-specific patterns: confirmed prompt patterns, startup sequence, exit command, and the version hang regression workaround — all derived from Phase 13 empirical findings
   4. The skill follows the established format of `usr/skills/claude-cli/SKILL.md` and can be consumed by an agent session without ambiguity
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 15-01-PLAN.md — Create usr/skills/cli-orchestration/SKILL.md documenting all confirmed patterns from Phases 11-14
@@ -140,4 +140,4 @@ Phases 11 → 12 → 13 → 14 → 15 (strictly sequential — each phase depend
 | 12. Readiness Detection | 1/1 | Complete    | 2026-02-25 | - |
 | 13. Interactive CLI Session Lifecycle | 2/2 | Complete    | 2026-02-25 | - |
 | 14. OpenCode Session Wrapper | 1/1 | Complete    | 2026-02-25 | - |
-| 15. CLI Orchestration Skill Documentation | v1.2 | 0/1 | Not started | - |
+| 15. CLI Orchestration Skill Documentation | 1/1 | Complete   | 2026-02-25 | - |
