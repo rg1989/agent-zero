@@ -5,30 +5,31 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 6 — CDP Startup Health-Check
+**Current focus:** Phase 7 — Browser Navigate-with-Verification (complete) → Phase 8 next
 
 ## Current Position
 
-Phase: 6 of 10 (CDP Startup Health-Check)
+Phase: 7 of 10 (Browser Navigate-with-Verification)
 Plan: 1 of 1 in current phase (complete)
-Status: Phase 6 complete — ready for Phase 7
-Last activity: 2026-02-25 — Completed 06-01 (CDP startup health-check)
+Status: Phase 7 complete — ready for Phase 8
+Last activity: 2026-02-25 — Completed 07-01 (browser navigate-with-verification SKILL.md rewrite)
 
-Progress: [███░░░░░░░] 22% (v1.0 complete; Phase 6 complete; v1.1 phases 7-10 remaining)
+Progress: [████░░░░░░] 33% (v1.0 complete; Phases 6-7 complete; v1.1 phases 8-10 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v1.1)
-- Average duration: 1 min
-- Total execution time: 1 min
+- Total plans completed: 2 (v1.1)
+- Average duration: 1.5 min
+- Total execution time: 3 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
 | 06-cdp-startup-health-check | 1 | 1min | 1min |
-| v1.1 phases 7-10 | TBD | - | - |
+| 07-browser-navigate-with-verification | 1 | 2min | 2min |
+| v1.1 phases 8-10 | TBD | - | - |
 
 *Updated after each plan completion*
 
@@ -44,6 +45,9 @@ Progress: [███░░░░░░░] 22% (v1.0 complete; Phase 6 complete;
 - [Phase 6] 0.5s interval x 20 attempts = 10s max — matches Chromium 1-3s Docker startup with generous headroom
 - [Phase 6] kill -0 crash-early guard on every iteration — detect Chromium death immediately, not after full timeout
 - [Phase 6] Leave sleep 1 cleanup guard untouched — different concern from the CDP readiness race condition
+- [Phase 7] navigate_and_wait uses time.sleep(0.1) after Page.navigate to prevent false-positive from old page readyState
+- [Phase 7] send() signature updated to send(ws, method, params) with explicit ws arg to enable try/finally cleanup pattern
+- [Phase 7] Bare Page.navigate + time.sleep(2) pattern fully eliminated from SKILL.md — replaced with navigate_and_wait() everywhere
 
 ### Pending Todos
 
@@ -53,10 +57,10 @@ None yet.
 
 - [Phase 8] Claude CLI prompt marker string must be confirmed empirically (MEDIUM confidence) — run `claude` in PTY and inspect raw bytes with `repr()` or `xxd` before writing completion detection regex
 - [Phase 9] Idle-timeout calibration for multi-turn requires profiling claude's natural pause durations (1-2s thinking pauses can trigger false "done" signals)
-- [General] `websocket-client>=1.9.0` must be confirmed installable in Docker venv (`/opt/venv-a0`) — verify during Phase 7 setup
+- [RESOLVED - Phase 7] `websocket-client>=1.9.0` added to requirements.txt — will be installed on Docker image rebuild
 
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 06-01-PLAN.md (CDP startup health-check)
+Stopped at: Completed 07-01-PLAN.md (browser navigate-with-verification)
 Resume file: None

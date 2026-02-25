@@ -9,11 +9,11 @@ Requirements for the Reliability milestone. Each maps to roadmap phases 6–10.
 
 ### Browser Control
 
-- [ ] **BROWSER-01**: Agent Zero navigates to a URL using CDP `Page.navigate` followed by a `document.readyState` poll (never treats navigation as complete before page loads)
-- [ ] **BROWSER-02**: Agent Zero takes a screenshot via CDP before every browser interaction to observe current state
-- [ ] **BROWSER-03**: Agent Zero verifies navigation succeeded by checking current URL and page title after navigate-and-wait
+- [x] **BROWSER-01**: Agent Zero navigates to a URL using CDP `Page.navigate` followed by a `document.readyState` poll (never treats navigation as complete before page loads)
+- [x] **BROWSER-02**: Agent Zero takes a screenshot via CDP before every browser interaction to observe current state
+- [x] **BROWSER-03**: Agent Zero verifies navigation succeeded by checking current URL and page title after navigate-and-wait
 - [x] **BROWSER-04**: Shared browser Chromium startup replaces fragile `sleep 2` with a CDP WebSocket health-check poll, ensuring CDP is ready before any agent tries to connect
-- [ ] **BROWSER-05**: Agent Zero uses a consistent Observe → Act → Verify workflow for all browser interactions (documented and enforced in skill)
+- [x] **BROWSER-05**: Agent Zero uses a consistent Observe → Act → Verify workflow for all browser interactions (documented and enforced in skill)
 
 ### Claude CLI Control
 
@@ -56,10 +56,10 @@ Which phases cover which requirements. Updated during roadmap creation.
 | Requirement | Phase | Status |
 |-------------|-------|--------|
 | BROWSER-04 | Phase 6 | Complete |
-| BROWSER-01 | Phase 7 | Pending |
-| BROWSER-02 | Phase 7 | Pending |
-| BROWSER-03 | Phase 7 | Pending |
-| BROWSER-05 | Phase 7 | Pending |
+| BROWSER-01 | Phase 7 | Complete |
+| BROWSER-02 | Phase 7 | Complete |
+| BROWSER-03 | Phase 7 | Complete |
+| BROWSER-05 | Phase 7 | Complete |
 | CLAUDE-01 | Phase 8 | Pending |
 | CLAUDE-02 | Phase 8 | Pending |
 | CLAUDE-03 | Phase 8 | Pending |
