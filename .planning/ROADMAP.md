@@ -114,7 +114,7 @@ Plans:
   2. The skill documents the Read-Detect-Write-Verify cycle as the required interaction pattern and includes the environment isolation warning (code_execution_tool and the shared tmux session are separate, non-sharing execution contexts)
   3. The skill includes OpenCode-specific patterns: confirmed prompt patterns, startup sequence, exit command, and the version hang regression workaround — all derived from Phase 13 empirical findings
   4. The skill follows the established format of `usr/skills/claude-cli/SKILL.md` and can be consumed by an agent session without ambiguity
-**Plans**: TBD
+**Plans:** 1 plan
 
 Plans:
 - [ ] 15-01-PLAN.md — Create usr/skills/cli-orchestration/SKILL.md documenting all confirmed patterns from Phases 11-14
