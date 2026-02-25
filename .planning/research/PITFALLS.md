@@ -1,211 +1,240 @@
 # Pitfalls Research
 
-**Domain:** CDP browser control + interactive CLI subprocess control in a Docker-based LLM agent
+**Domain:** tmux-based terminal orchestration + interactive CLI control added to an existing Agent Zero fork (v1.2 Terminal Orchestration milestone)
 **Researched:** 2026-02-25
-**Confidence:** HIGH (based on direct codebase analysis of existing implementation + training knowledge of CDP/PTY patterns)
+**Confidence:** HIGH (direct codebase analysis of existing TTYSession/code_execution_tool/shared-terminal, verified against tmux upstream issues and OpenCode issue tracker)
+
+> **Scope note:** This document covers v1.2 (tmux_tool + OpenCode CLI orchestration). For v1.1 pitfalls (CDP browser + claude CLI subprocess), see the prior research on file — this document supersedes PITFALLS.md and focuses entirely on the new milestone domain.
 
 ---
 
 ## Critical Pitfalls
 
-### Pitfall 1: Page.navigate Returns Before the Page Has Loaded
+### Pitfall 1: capture-pane Reads Stale Output Because tmux Renders Asynchronously
 
 **What goes wrong:**
-`Page.navigate` resolves its CDP response as soon as the navigation *starts* — not when the page finishes loading. Agent Zero currently calls `_run(_cdp("Page.navigate", {"url": url}))` and immediately invalidates the screenshot cache. The agent takes a screenshot milliseconds later and sees a blank white page or the previous page still rendering. It concludes navigation "worked" or failed incorrectly.
+`tmux capture-pane -p -t shared` executes and returns immediately with whatever is currently in the pane's render buffer. When called immediately after `tmux send-keys`, it reads the output that was present *before* the command finished, not after. The agent captures the previous command's output, not the new one, and incorrectly concludes the command is complete with stale results.
 
 **Why it happens:**
-CDP's `Page.navigate` method returns the frameId and loaderId on the initial HTTP redirect/request, not on DOMContentLoaded or load events. Developers assume "got a response = page is ready." The existing `app.py` does exactly this — no wait after navigate.
+tmux is event-driven. `send-keys` puts keystrokes into the pseudo-terminal's input buffer; the shell process reads them and starts executing asynchronously. `capture-pane` reads the *display buffer*, which is the terminal's rendered screen — it does not wait for any process to finish. The gap between keystroke injection and screen update can be 50–500ms under normal conditions and multiple seconds for long-running commands.
 
 **How to avoid:**
-After calling `Page.navigate`, subscribe to `Page.loadEventFired` on the same WebSocket connection before navigating, then wait for that event (or `Page.frameStoppedLoading` on the returned frameId). A simpler practical approach: call `Page.enable` first, then navigate, then poll `/json` URL field + `Runtime.evaluate document.readyState` with a 2-second back-off loop until `readyState === 'complete'`. Cap at 10 seconds with a hard timeout, then proceed anyway.
+Never call `capture-pane` immediately after `send-keys`. Always implement a polling loop:
+1. Send keys.
+2. Wait a minimum settle time (100–200ms) before first read.
+3. Poll `capture-pane` at regular intervals (300–500ms), comparing successive captures.
+4. Declare "done" only when the screen content has been stable (no change between two consecutive reads) AND the last line matches a known prompt pattern.
+
+Use `tmux capture-pane -p -t shared -S -` to capture the full scrollback rather than just the visible pane area, so long output is not clipped.
 
 **Warning signs:**
-- Screenshots after navigation show loading spinner or previous page
-- Agent reports "navigation succeeded" but URL check shows old URL still
-- Intermittent test failures where navigation "works" only when the next step has a delay
+- Captured output contains the *previous* command's prompt line followed by the new command text, not the new command's output.
+- Agent receives empty string from capture despite the command being long-running.
+- Output appears correct on one run but truncated on another — timing sensitive.
 
-**Phase to address:** BROWSER-01 (CDP navigation fix) and BROWSER-03 (verification step)
+**Phase to address:** TERM-04 (capture current screen content) and TERM-05 (readiness detection)
 
 ---
 
-### Pitfall 2: CDP WebSocket 403 Because `--remote-allow-origins` Is Missing or Wrong
+### Pitfall 2: Prompt Detection False Positives From Command Output That Resembles a Prompt
 
 **What goes wrong:**
-Chromium's CDP WebSocket endpoint enforces an `Origin` header check. Without `--remote-allow-origins=*`, any WebSocket connection from a non-localhost origin (including the Flask app running inside the same container but connecting as a Python `websockets` client) gets a 403. The HTTP `/json` endpoint still responds (port is open), making developers think CDP is available — only WebSocket connections fail.
+The existing `CodeExecution` tool uses prompt_patterns like `root@[^:]+:[^#]+# ?$` and `[a-zA-Z0-9_.-]+@[^:]+:[^$#]+[$#] ?$`. These match shell prompts reliably for *one-shot commands*. When orchestrating interactive CLIs in the shared terminal, the output from the program being run can contain text that matches these patterns. For example: OpenCode prints progress lines like `> Running tool` or a Python REPL echoes `>>> ` — both match prompt-like patterns. The agent thinks the CLI is done and ready for input when it's actually mid-response.
 
 **Why it happens:**
-The flag was added in Chromium ~108. Docker deployments often reuse old startup scripts. The current `startup.sh` already includes `--remote-allow-origins=*`, but if anyone changes the startup command, removes that flag, or Chromium restarts via a different mechanism (supervisor, app manager restart), the flag can be lost.
+The prompt_patterns in `code_execution_tool.py` were designed for the shell wrapper — they match the *shell's own prompt* that appears at the end of a command. When the shared terminal is running an interactive CLI like OpenCode, the shell prompt is hidden (OpenCode has taken over the terminal) and the CLI emits its own cursor/prompt characters. These are different patterns and were never accounted for.
 
 **How to avoid:**
-- Treat `--remote-allow-origins=*` as a hard requirement, not a suggestion. Assert it in `startup.sh` comments and in the skill doc.
-- Add a health check on app startup: hit `/json` with `urllib.request`, then also attempt a WebSocket handshake. If WebSocket fails but HTTP succeeds, log "CDP WebSocket 403 — check `--remote-allow-origins=*` flag."
-- Keep the flag in a single place (`startup.sh`) — never reconstruct the Chromium launch command inline anywhere else.
+For tmux_tool interacting with the shared terminal running an interactive CLI:
+- Do NOT reuse the shell prompt_patterns from `code_execution_tool.py`. These apply to a *bash* session, not an OpenCode session.
+- Identify and hardcode the specific ready-state indicator for each CLI. For OpenCode TUI: the TUI renders a visible input area; the ready signal is when the screen stops changing (screen stability), not a specific text pattern. For `opencode run` (non-interactive mode): completion is indicated by process exit (exit code 0), not a prompt.
+- For generic CLIs in the shared terminal, use screen-stability detection (two identical consecutive captures with no output change) plus a minimum wait time as the fallback.
 
 **Warning signs:**
-- `websockets.exceptions.InvalidStatusCode: 403` in Flask logs
-- `/json` returns tabs successfully but every `_cdp()` call raises an exception
-- Works when testing manually with `curl` but fails from Python code
+- Agent sends the next prompt while OpenCode is still generating, causing garbled input.
+- Rapid fire of multiple inputs because each line of verbose output triggers a false "ready" detection.
+- `> ` or `>>>` appearing in OpenCode progress output triggers early return.
 
-**Phase to address:** BROWSER-04 (Chromium CDP startup fix)
+**Phase to address:** TERM-05 (readiness detection), CLI-03 (CLI done-response detection)
 
 ---
 
-### Pitfall 3: Per-Request CDP WebSocket Reconnection Is Fragile Under Load
+### Pitfall 3: ANSI Escape Sequences and OSC Sequences Corrupt capture-pane Output
 
 **What goes wrong:**
-The current `_cdp()` helper opens a new WebSocket connection, sends one command, waits for its response, and closes the connection — every single call. Under concurrent requests (polling screenshot + clicking + navigating simultaneously), multiple goroutines race for the same CDP tab. Chrome CDPs accepts multiple simultaneous connections but routes events by connection; closing a connection mid-navigation loses events (like `loadEventFired`) that were fired while waiting on a different command. This also adds 50-100ms of TLS+handshake latency per call.
+By default, `tmux capture-pane` returns the pane content with ANSI color/formatting codes *stripped* — this sounds correct, but it is not the whole picture. tmux passes through OSC sequences (Operating System Commands, e.g. `\x1b]0;title\x07` for terminal title setting) and some CSI sequences that it does not interpret. Interactive CLIs like OpenCode emit heavy ANSI output including cursor movement (`\x1b[A`, `\x1b[2K`), inline progress spinners (which overwrite previous lines), and bracketed paste mode markers. Even after capture-pane's basic ANSI stripping, the resulting text contains these sequences mixed into what appears to be plain text.
+
+The `-e` flag to `capture-pane` *preserves* escape sequences (adds them back for display purposes) and should never be used for programmatic parsing.
 
 **Why it happens:**
-Stateless per-request design is simpler to write but ignores that CDP is a stateful, event-driven protocol. The pattern was chosen in the current `app.py` as the simplest thing that works.
+`capture-pane` outputs what the terminal *displays*, not what the program *wrote*. A TUI like OpenCode renders using absolute cursor positioning — lines get overwritten in place. The captured output may show partial lines, spinner artifacts (`⠋`, `⠙`), or duplicate content from cursor-up-then-rewrite sequences.
 
 **How to avoid:**
-Use a persistent, module-level CDP WebSocket connection with a message dispatcher keyed by `msg_id`. Accept events into a separate queue. For this project's scale (single-user, low concurrency), a threading.Lock around a single persistent connection is sufficient. If that's too complex for the scope, at minimum ensure navigation waits use a dedicated connection kept open for the duration of the load wait, not the shared fire-and-forget helper.
+- Always strip the captured output through a comprehensive ANSI regex before processing: `re.sub(r'\x1b(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~]|\][^\x07]*\x07)', '', text)`.
+- After stripping, also strip bare `\r` (carriage returns without `\n`) and collapse runs of blank lines.
+- For OpenCode TUI specifically: use `opencode run <prompt>` (non-interactive mode) instead of injecting into the TUI via send-keys wherever possible. The `run` subcommand outputs cleaner text to stdout without TUI rendering artifacts.
+- Never try to parse cursor-positioning sequences to reconstruct "what's on screen line N" — use `capture-pane` whole-buffer captures and strip aggressively.
 
 **Warning signs:**
-- Occasional `ConnectionClosedError` or `TimeoutError` in CDP calls during navigation
-- Screenshots return stale data even though the browser has moved to a new page
-- Race condition symptoms: sometimes works, sometimes doesn't, based on timing
+- Captured text contains `\x1b[2K` (clear line), `\x1b[A` (cursor up), or spinner characters (`⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`).
+- Line-by-line parsing produces duplicate content (same line appears twice from cursor-up-rewrite pattern).
+- OpenCode's multi-line response appears as a single garbled line with embedded escape codes.
 
-**Phase to address:** BROWSER-01, with a note that a persistent connection is ideal but the per-request approach is acceptable if navigation wait is added
+**Phase to address:** TERM-04 (screen capture), CLI-02 (read CLI responses)
 
 ---
 
-### Pitfall 4: `claude` CLI Prompt Detection Using Idle-Timeout Is Unreliable
+### Pitfall 4: Sentinel Echo Leaks into the Shared Terminal and Corrupts the Interactive Session
 
 **What goes wrong:**
-The existing `TTYSession.read_full_until_idle()` collects output until there's been `idle_timeout` seconds of silence. For `claude` CLI, this breaks in two ways: (1) Claude streaming responses sometimes pauses mid-sentence for 1-2 seconds during tool calls or thinking, causing premature "done" detection; (2) The final prompt (e.g. `>` or the blinking cursor prompt state) produces no text at all — the idle timeout never fires because there's no further output to stop.
+The existing `code_execution_tool.py` / `shell_local.py` uses a sentinel-based end-of-command detection: it runs the actual command, then immediately runs `echo SENTINEL_<uuid>` and waits for that exact string in output to know the command has finished. This pattern works cleanly in the *agent's own isolated PTY sessions*. But if anyone applies this same pattern in the *shared terminal* (the tmux `shared` session that's also visible to human users via ttyd), the sentinel echo appears visibly in the browser terminal and breaks any interactive CLI currently running there.
 
 **Why it happens:**
-Idle-timeout is designed for shell commands with deterministic end states. Claude CLI is a streaming LLM output tool — it has natural pauses that look like "done" but aren't, and its completion state is a UI cursor/prompt, not a trailing newline.
+The shared terminal (`tmux new-session -s shared`) is shared between the agent and the user. It is a persistent, interactive session — not an isolated subprocess. Injecting `echo SENTINEL_XYZ` via `tmux send-keys` sends that text as keyboard input to *whatever process currently has focus* in that pane — which might be `bash`, `opencode`, a Python REPL, or a running `less` pager. The sentinel appears as user-typed text, corrupts the running program's input buffer, and is permanently visible in the terminal scrollback.
 
 **How to avoid:**
-Detect completion by matching the specific terminal prompt pattern that `claude` CLI renders when it's waiting for input. Inspect the raw PTY output: the claude CLI (Ink/React-based TUI) renders a visual prompt character sequence at the end of output — typically something like a `>` or a specific ANSI escape sequence indicating the input prompt is active. Use `read_chunks_until_idle` with a longer idle timeout (3-4s) AND add a regex check on the last 200 chars of accumulated output for the prompt marker. Do not rely on idle-timeout alone.
+- The shared terminal must NEVER receive sentinel injection. This is an absolute rule.
+- For the shared terminal, use *screen-stability detection* (compare successive `capture-pane` outputs) plus *prompt-pattern matching* as the only readiness signals.
+- For any operation that requires sentinel-based detection, use a *separate, dedicated tmux window or session* (`tmux new-session -d -s agent-scratch`) that is NOT the `shared` session. The agent gets its own isolated window; the human sees only the `shared` window.
+- Document this boundary clearly in the tmux_tool implementation: commands to `shared` use stability polling; commands to agent-private windows can use sentinels.
 
 **Warning signs:**
-- Agent receives partial responses (truncated mid-sentence)
-- Agent sends the next prompt to claude before it has finished generating
-- claude receives double input — one prompt while still processing, one after
-- Infinite wait when claude is done but the prompt detection never fires
+- The shared browser terminal (ttyd) shows `echo SENTINEL_abc123` appearing mid-CLI-output.
+- Interactive program (Python REPL, OpenCode) receives unexpected text and crashes or throws an error.
+- Human user reports "random text appearing" in the terminal.
 
-**Phase to address:** CLAUDE-02 and CLAUDE-03
+**Phase to address:** TERM-01 (send text to tmux pane) — establish the no-sentinel-in-shared rule before any code is written
 
 ---
 
-### Pitfall 5: ANSI Escape Sequences Corrupt Claude CLI Output Parsing
+### Pitfall 5: tmux Session Name Collision Causes Silent Failure or Wrong Target
 
 **What goes wrong:**
-Claude CLI is built with Ink (React for terminal). Its output is wrapped in ANSI escape sequences for colors, cursor positioning, and clearing lines. When the agent reads this output and tries to parse it as plain text, it gets garbage like `\x1b[2K\x1b[1A\x1b[2K` mixed into the response. If the agent tries to extract claude's answer by looking for its own prompt echoed back, the echo is also ANSI-wrapped.
+The shared terminal uses session name `shared`. If the agent creates additional tmux sessions (for scratch work, for running isolated commands), name collisions cause two types of failures:
+
+1. `tmux new-session -s shared` fails with exit code 1 ("session 'shared' already exists") — silently skipped with `|| true` in most scripts, leaving the agent targeting the wrong existing session.
+2. Session names containing special characters (`.`, `:`, `%`, `$`, `@`) break the `-t` target format parser. tmux uses `.` as a pane separator and `:` as a window separator — a session named `agent.task:1` is parsed as `session=agent`, `window=task`, `pane=1`.
 
 **Why it happens:**
-PTY output is raw terminal bytes. ANSI stripping is not automatic. The existing `tty_session.py`'s `_pump_stdout` reads raw chunks and decodes them as UTF-8 but does not strip ANSI codes. The `shell_ssh.py`'s `clean_string` function handles some cases for shell use but may not handle all of Ink's escape sequences.
+The `startup.sh` pre-creates `shared` with `tmux new-session -d -s shared 2>/dev/null || true`. This is correct for the startup script. But if tmux_tool creates additional sessions programmatically without checking for collisions, and names them with app-name-style strings that contain dots or colons, the targeting silently breaks.
 
 **How to avoid:**
-Apply an ANSI stripping pass before returning output to the agent. Use the `re.sub(r'\x1b\[[0-9;]*[mGKHFABCDEFJ]', '', text)` pattern, or use the `strip-ansi` equivalent. Also strip carriage returns (`\r`) which PTY output uses liberally. Apply this in the claude-specific wrapper layer, not in `TTYSession` itself (other uses of TTYSession may need ANSI intact).
+- For programmatic agent-private sessions: use `tmux new-session -d -s agent-$(date +%s)` or include a UUID fragment: `agent-$(python3 -c "import uuid; print(str(uuid.uuid4())[:8])")`. Avoid dots and colons in session names entirely.
+- Before creating any session: `tmux has-session -t <name> 2>/dev/null && echo EXISTS`. If it exists and is agent-private, kill and recreate; if it's `shared`, never destroy it.
+- Use tmux's stable ID format (`$N` for sessions, `@N` for windows, `%N` for panes) when targeting from scripts — IDs are stable even if sessions are renamed.
+- For the `shared` session specifically: always check `tmux has-session -t shared` returns 0 before sending keys, and never attempt to create or destroy it from tmux_tool.
 
 **Warning signs:**
-- Agent output contains `\x1b[` or `ESC[` character sequences
-- LLM gets confused by "weird characters" in tool call responses
-- Response length is grossly inflated compared to what claude actually said
+- `tmux send-keys -t shared` returns exit code 1 — session was accidentally killed.
+- Agent sends commands to `agent-scratch` but they appear in the user-visible `shared` session — collision caused wrong session to be targeted.
+- `tmux new-session` succeeds but `tmux ls` shows two sessions with similar names.
 
-**Phase to address:** CLAUDE-02 (output reading) and CLAUDE-05 (skill documentation)
+**Phase to address:** TERM-01 (send text to named tmux pane), CLI-01 (start CLI session)
 
 ---
 
-### Pitfall 6: Claude CLI Session Reuse Fails After claude Exits or Times Out
+### Pitfall 6: code_execution_tool Shell Sessions and tmux_tool Operate in Separate Shell Environments
 
 **What goes wrong:**
-Agent Zero might keep a `TTYSession` reference from a previous claude interaction and send new input into it after claude has exited (due to timeout, error, or the user's inactivity timer). The PTY master fd becomes an orphan — writes succeed (the OS buffers them) but nothing reads them. From the agent's perspective, it sent the prompt but waits forever for output.
+Agent Zero's existing `code_execution_tool` (via `LocalInteractiveSession` / `TTYSession`) manages its own private PTY sessions — completely separate from the shared terminal. A command run through `code_execution_tool runtime=terminal` is NOT visible in the shared browser terminal and has NO access to anything running in the `shared` tmux session. Developers may mistakenly assume that `cd /some/dir` in a `code_execution_tool` session has any effect on what the shared terminal sees — it does not.
+
+Conversely, the new `tmux_tool` (sending keys to the `shared` session) operates in the user-visible shell. If the user's shell has an active virtual environment or changed directory, those state changes are NOT reflected in any `code_execution_tool` session.
 
 **Why it happens:**
-`TTYSession` does not detect when the child process exits unless you call `wait()` or check `returncode`. The `_pump_stdout` coroutine exits silently when it reads EOF, leaving `self._buf` as an empty queue. The session object still exists and `send()` succeeds (it just writes to a closed PTY master that the OS allows).
+These are separate processes with separate environments. `code_execution_tool` creates subprocess shells via `TTYSession(runtime.get_terminal_executable())`. The `shared` tmux session is a completely different bash process managed by tmux and ttyd. There is no shared state between them.
 
 **How to avoid:**
-Track process liveness. After `_pump_stdout` receives EOF, set a flag (`self._eof = True`). In `read()` / `read_full_until_idle()`, return `None` immediately when `_eof` is True after draining the remaining queue. In the claude skill wrapper, always check `session.eof` before sending and restart the session if needed. Additionally, claude CLI has a configurable timeout — set it explicitly with `--timeout` or design sessions to be short-lived (one task per session).
+- Never use `code_execution_tool` to "set up" state for commands that will be sent to the shared terminal via tmux_tool, or vice versa.
+- Document this boundary in both the tmux_tool docstring and the CLI orchestration skill.
+- If the agent needs to run setup commands before starting an interactive CLI, run those setup commands via tmux send-keys in the same shared session — do not mix execution contexts.
+- For OpenCode CLI: if you need to set environment variables (e.g. `ANTHROPIC_API_KEY`) before running opencode in the shared terminal, send those via tmux send-keys to the same session: `tmux send-keys -t shared "export ANTHROPIC_API_KEY=$KEY && opencode run 'prompt'" Enter`.
 
 **Warning signs:**
-- Hang after a second prompt is sent to claude
-- No output returned but no error raised
-- Process table shows no `claude` process but `TTYSession._proc.returncode` is still `None`
+- Agent sets `PATH` or activates a venv via `code_execution_tool`, then tries to run a binary in the shared terminal that can't be found.
+- `cd` commands in `code_execution_tool` have no effect on the shared terminal's working directory.
+- Environment variables set in one context are missing in the other.
 
-**Phase to address:** CLAUDE-04 (multi-turn sessions)
+**Phase to address:** TERM-01, CLI-01 — establish execution context model in skill documentation before writing code
 
 ---
 
-### Pitfall 7: Chromium in headless=new Mode Has Different CDP Behavior Than Headed Mode
+### Pitfall 7: opencode run Hangs Indefinitely on v0.15+ — Process Never Exits
 
 **What goes wrong:**
-The current `startup.sh` uses `--headless=new` (Chromium's new headless mode introduced in M112, replacing the legacy `--headless` / `--headless=old`). New headless mode fixes many rendering issues but has subtle CDP differences: `Page.captureScreenshot` with `fromSurface: true` is required (the current code has this correctly), but `Emulation.setDeviceMetricsOverride` behaves differently — viewport changes may not take effect immediately, requiring a subsequent `Page.navigate` or `Page.reload` to actually re-render at the new size.
+In OpenCode versions 0.15.0 through at least 0.15.2, `opencode run <prompt>` (non-interactive mode) completes its output stream but the process never exits. It finishes generating the response, prints it, then hangs — requiring `Ctrl+C` (SIGINT) to return control to the shell. When Agent Zero wraps this in a subprocess call or a tmux send-keys pattern expecting process exit as the done signal, it waits forever.
+
+This is a confirmed, documented regression (GitHub issue #3213, sst/opencode). Downgrading to 0.14.7 is the only known workaround as of the research date.
 
 **Why it happens:**
-Headless=new uses a compositing pipeline that separates the virtual display from the rendering surface. Viewport emulation changes are queued but not flushed until the next paint cycle, which only happens on navigation or explicit repaint triggers.
+The 0.15.0 rewrite of OpenCode's TUI architecture (moving from go+bubbletea to an in-house zig+solidjs framework called OpenTUI) introduced a process lifecycle bug where the server component continues running after the TUI client exits. Because `opencode run` starts both components internally, the process hangs on the server side even after the client-side response is complete.
 
 **How to avoid:**
-After `Emulation.setDeviceMetricsOverride`, do not rely on immediate screenshot reflecting the new size. Either follow it with `Page.navigate` to the current URL (forces repaint) or add a `Runtime.evaluate` with `window.dispatchEvent(new Event('resize'))` as a softer trigger. Test the resize flow explicitly during BROWSER-04 implementation.
+- Pin OpenCode to a version where `opencode run` exits cleanly (e.g. `<0.15.0` or verify on the exact installed version before writing automation code).
+- Do not rely on process exit as the sole done signal. Use an alternative: capture output until it stops changing (screen stability with timeout), then send the interrupt if the process is still alive.
+- If using `subprocess.Popen` to run `opencode run`: set a hard `timeout` and follow it with `process.terminate()` if it does not exit cleanly.
+- Check the installed version: `opencode --version` before building any automation. Document the tested version in the CLI orchestration skill.
+- Consider using the OpenCode HTTP server mode (`opencode serve`) + API calls instead of `opencode run` for programmatic use — the server mode is explicitly designed for scripting and does not have the hang bug.
 
 **Warning signs:**
-- Viewport resize API returns success but screenshot still shows old dimensions
-- Tests pass immediately after a fresh navigation but fail when resize is the only action
+- `opencode run "prompt"` prints the response and then the terminal cursor hangs — no shell prompt returns.
+- `subprocess.Popen.wait()` or `process.communicate()` never returns.
+- `tmux send-keys -t shared "opencode run 'prompt'" Enter` followed by screen-stability polling shows stable output but the shell prompt never reappears.
 
-**Phase to address:** BROWSER-04 (Chromium startup/config)
+**Phase to address:** CLI-02 (send prompts, read responses), CLI-03 (detect CLI done), CLI-05 (OpenCode wrapper)
 
 ---
 
-### Pitfall 8: CDP Tab Selection Gets the Wrong Target After Multi-Tab or App-Related Navigation
+### Pitfall 8: Interactive CLI State Machine Confusion — CLI Sees Prior Session's Partial Input
 
 **What goes wrong:**
-`_get_ws_url()` always picks `tabs[0]` from `/json`. This is the first tab in Chromium's internal order, which is NOT necessarily the visible tab. When Chromium starts with a URL, that is `tabs[0]`. But if any internal page (chrome://new-tab-page, chrome://settings, DevTools) opens, or if the skill code opens a new target via `Target.createTarget`, the agent silently starts controlling the wrong tab.
+When tmux_tool sends input to an interactive CLI (OpenCode TUI or a Python REPL) and then the agent needs to interrupt (Ctrl+C), the CLI's input buffer may contain a partially-typed command. The next time input is sent, it appends to the partial buffer rather than starting fresh. Result: the next command is corrupted with leftover characters from the previous interaction.
+
+This also occurs on session resume: if Agent Zero crashed mid-interaction or the connection was lost, the tmux pane still has the interactive CLI waiting at a partial input state. The next agent run resumes injection into a poisoned buffer.
 
 **Why it happens:**
-The `/json` endpoint returns tabs in Chrome's internal object creation order, not in user-visible order. A newly opened tab via `Target.createTarget` may appear anywhere in the list.
+Interactive CLIs maintain their own line-editing state (readline, the TUI framework). `Ctrl+C` cancels the *current running command* but does not clear the line buffer if the CLI was waiting for input with partial text already entered. tmux send-keys sends raw keystrokes and has no concept of "is the buffer empty?"
 
 **How to avoid:**
-Filter `/json` results by `type == 'page'` and prefer the tab whose URL is not `about:blank` or `chrome://`. The skill doc already recommends this filter (it's in the SKILL.md code examples) but `app.py` and `_get_ws_url()` do not apply it. Fix `_get_ws_url()` to filter by `type == 'page'` and skip `chrome://` and `about:blank` targets.
+- Before injecting any new command into an interactive CLI, send a "clean state" sequence:
+  1. `Ctrl+C` — cancel any running operation.
+  2. Wait for screen stability.
+  3. `Ctrl+U` — clear the current line buffer (works in bash, Python REPL, many CLIs).
+  4. Verify the captured screen shows an empty prompt line before injecting new input.
+- After a crash/resume, assume the CLI is in unknown state and restart it:
+  1. Try `Ctrl+D` or `exit` to exit the CLI gracefully.
+  2. If the CLI exits, re-launch it cleanly.
+  3. If `Ctrl+D` doesn't exit (the CLI is stuck), send `Ctrl+C` repeatedly, then kill the process by its PID.
 
 **Warning signs:**
-- CDP commands succeed but nothing visible changes
-- Screenshot shows a blank tab or settings page
-- URL polling returns `chrome://new-tab-page` instead of the intended URL
+- Commands sent to OpenCode arrive as `<previous partial text><new command>`, producing syntax errors.
+- CLI reports `KeyboardInterrupt` on the injected command — the `Ctrl+C` cleared the partial input correctly but the command was interpreted as a new input, not an interrupt.
+- Screen shows `>>> f` before the agent sends `compute_something()` — result is `>>> fcompute_something()`.
 
-**Phase to address:** BROWSER-01 (CDP navigation fix)
+**Phase to address:** CLI-02 (send prompts to running CLI), CLI-04 (interrupt / exit)
 
 ---
 
-### Pitfall 9: asyncio.run() Inside Flask Threads Causes Event Loop Conflicts
+### Pitfall 9: `tmux send-keys` Injects Before the Shell Is Ready After Session Attach or CLI Exit
 
 **What goes wrong:**
-`app.py` uses `asyncio.run(coro)` (via `_run()`) inside Flask route handlers, which run in regular OS threads (Flask's `threaded=True` mode). Python 3.10+ raises `RuntimeError: This event loop is already running` if called from a thread that already has an active event loop. This does not happen with simple Flask threading today, but it will break if the server is ever run under an ASGI host (Uvicorn/Hypercorn) or if any library sets a running event loop on the worker threads.
+After attaching to a tmux session that has just started (e.g. `startup.sh` runs `tmux new-session -d -s shared`), or after an interactive CLI exits and drops back to the shell prompt, there is a short window where the shell is initializing (loading `.bashrc`, setting `$PS1`, etc.). If tmux_tool immediately sends keys during this window, the keystrokes are received by the shell but processed incorrectly: they appear at the prompt but are not executed, or they are executed before the shell's readline is ready, causing them to be treated as raw text rather than commands.
+
+This is the same race condition documented in claude-code's own issue tracker (#23513) when spawning team agents in tmux panes.
 
 **Why it happens:**
-`asyncio.run()` creates and destroys a new event loop per call. This is safe in plain threads but fragile — it cannot be used inside `async` contexts, and some libraries (like `nest_asyncio`) interfere with it in unexpected ways.
+`tmux new-session` returns success as soon as the pty process is forked — not when the shell inside has finished initialization. On systems with heavy `~/.bashrc` (nvm, conda, rbenv, custom prompts), initialization can take 500ms–2s. The agent's polling starts immediately and sees a "ready" prompt that is actually a partially-initialized shell.
 
 **How to avoid:**
-For the current Flask threading model, `asyncio.run()` works but should be clearly documented as a limitation. If the server ever migrates to an async host, replace `asyncio.run()` with a module-level event loop running in a dedicated background thread, and use `asyncio.run_coroutine_threadsafe()`. For this milestone, leave as-is but add a comment warning about the limitation.
+- After any session creation or CLI exit, wait for the shell prompt pattern to appear in `capture-pane` output before sending new commands. Do not rely on a fixed sleep.
+- Use the poll-and-compare pattern: capture screen, wait 300ms, capture again. If the second capture shows a stable shell prompt line (matching one of `code_execution_tool.py`'s `prompt_patterns`), the shell is ready.
+- For the `shared` session on startup: the `startup.sh` already pre-creates it — the health check should verify the session exists and shows a stable prompt before the agent attempts any injection.
 
 **Warning signs:**
-- `RuntimeError: This event loop is already running` in Flask logs
-- Happens only under specific deployment configurations (Gunicorn with gevent workers, Uvicorn)
+- First command sent to a fresh session appears as partial text in the prompt but does not execute.
+- Shell shows the command text but no output — it was echoed without execution.
+- Works when there's a manual `sleep 2` between session create and send, fails without it.
 
-**Phase to address:** Not a current milestone concern, but document it in BROWSER-01 implementation
-
----
-
-### Pitfall 10: Claude CLI Spawned as Subprocess Inherits the Parent's Environment Incorrectly
-
-**What goes wrong:**
-When `TTYSession` spawns `claude` via `create_subprocess_shell`, it passes `env=os.environ.copy()`. If Agent Zero's Docker environment has `ANTHROPIC_API_KEY` set (it does — it's how the agent works), claude CLI will use it silently. But if the key is absent or scoped only to a specific context, claude fails to start with a cryptic error that looks like a PTY problem rather than an auth problem.
-
-**Why it happens:**
-claude CLI requires `ANTHROPIC_API_KEY` or a stored credentials file. When launched as a subprocess in Docker, it may not find credentials from the system keyring (no keyring daemon running in minimal Docker). The error message from claude CLI goes to stderr, which the PTY merges with stdout — it looks like random noise in the output.
-
-**How to avoid:**
-When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is present in the environment dict before spawning. If absent, return a clear error to the agent: "ANTHROPIC_API_KEY not set — cannot launch claude CLI." Also verify claude is on `$PATH` with a `which claude` or `claude --version` check before attempting a full session.
-
-**Warning signs:**
-- TTYSession starts successfully (process spawns) but first output contains "Invalid API key" or similar
-- First read returns empty string or ANSI-only content before the session closes
-- `_pump_stdout` hits EOF immediately after start
-
-**Phase to address:** CLAUDE-01 (claude CLI launch)
+**Phase to address:** TERM-01 (send text to tmux pane), CLI-01 (start interactive CLI session)
 
 ---
 
@@ -213,11 +242,11 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Shortcut | Immediate Benefit | Long-term Cost | When Acceptable |
 |----------|-------------------|----------------|-----------------|
-| Per-request CDP WebSocket connections | Simple, no connection pooling logic | Adds latency, loses async events, fragile under concurrency | Acceptable for milestone if nav-wait is added; revisit if concurrency becomes an issue |
-| `asyncio.run()` in Flask threads | Works today with no additional infrastructure | Breaks under async hosts, not forward-compatible | Acceptable for this milestone; document the limitation |
-| Idle-timeout only for claude output detection | Dead simple to implement | Unreliable for LLM streaming outputs with natural pauses | Never acceptable for production — always combine with prompt pattern matching |
-| `tabs[0]` tab selection without type filtering | Works when Chromium opens with exactly one page tab | Breaks silently when internal tabs appear | Never acceptable — always filter for `type == 'page'` and non-chrome URLs |
-| `time.sleep(2)` after Chromium start in `startup.sh` | Simple startup delay | Race condition — slow machines or loaded Docker hosts may need more time | Acceptable only with a fallback health-check loop (like `_wait_for_cdp()` already in `browser_agent.py`) |
+| Fixed `sleep` after `send-keys` before `capture-pane` | Simple, no polling logic | Race condition on slow hosts; over-waits on fast ones | Never for production; use poll-and-compare instead |
+| Screen stability as sole readiness signal (no prompt detection) | Works for any CLI | Slow commands with periodic output (progress bars) will never appear stable until complete; timeout becomes the fallback | Acceptable as fallback only — combine with prompt detection where possible |
+| Sharing `code_execution_tool` shell sessions with tmux_tool | Reuses existing infrastructure | Completely different execution contexts; state assumptions will fail | Never — they are separate environments; document and enforce boundary |
+| Using `opencode run` without version pin | Latest features | Hang bug on ≥0.15.0 may return in any release | Only when version is pinned to a tested build |
+| Sentinel injection into shared terminal | Reliable end detection | Visually corrupts the terminal; breaks any running interactive program | Never — shared terminal is user-visible; sentinels are for isolated sessions only |
 
 ---
 
@@ -225,14 +254,14 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Integration | Common Mistake | Correct Approach |
 |-------------|----------------|------------------|
-| CDP `Page.navigate` | Treat the method response as "page loaded" | Wait for `Page.loadEventFired` or poll `document.readyState === 'complete'` after navigate |
-| CDP `/json` tab list | Use `tabs[0]` directly | Filter `type == 'page'`, skip `chrome://` and `about:blank` |
-| CDP WebSocket origin | Assume HTTP endpoint working means WebSocket works | Test WebSocket specifically; HTTP and WebSocket auth are separate in Chromium |
-| claude CLI output | Treat raw PTY bytes as plain text | Strip ANSI escape sequences and `\r` before passing to LLM |
-| claude CLI completion | Use idle timeout alone | Idle timeout + prompt pattern regex on last N bytes of output |
-| claude CLI environment | Let subprocess inherit everything | Explicitly validate `ANTHROPIC_API_KEY` in env before spawning |
-| TTYSession reuse | Reuse session object across tasks without checking liveness | Check `_eof` flag / process returncode before each send |
-| Chromium resize + headless=new | Assume immediate repaint after `Emulation.setDeviceMetricsOverride` | Trigger repaint with navigate or JS `resize` event dispatch |
+| `tmux capture-pane` after `send-keys` | Call immediately after sending keys | Wait minimum 200ms, then poll until stable |
+| `capture-pane` output parsing | Treat as plain text | Strip ANSI sequences (`\x1b[...m`, `\x1b[...K`, OSC `\x1b]...\x07`) before processing |
+| OpenCode `opencode run` | Expect process to exit normally | Set a hard timeout; terminate if process does not exit; verify installed version |
+| Shared terminal vs. agent sessions | Use `code_execution_tool` to set up state for tmux commands | Each context is completely isolated — set up state within the same execution context |
+| `tmux new-session -s shared` | Always runs, even if session already exists | Check with `has-session` first; the shared session must never be recreated or destroyed by automation |
+| Interactive CLI input buffer | Inject new command without clearing buffer | Send Ctrl+U before injecting to clear any partial input |
+| Special characters in tmux `-t` targets | Use dots/colons in session names | Only use alphanumeric + hyphens in programmatic session names; use `$N` IDs for stability |
+| OpenCode TUI mode vs. run mode | Run OpenCode TUI for programmatic use | Use `opencode run <prompt>` for scripting; TUI mode is interactive-only and not automatable |
 
 ---
 
@@ -240,9 +269,10 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Trap | Symptoms | Prevention | When It Breaks |
 |------|----------|------------|----------------|
-| Per-call WebSocket handshake for CDP | CDP calls add 50-150ms latency each; screenshot polling feels sluggish | Use persistent connection with message dispatcher | At >1 concurrent CDP operation, or when polling rate is < 800ms |
-| Full PTY output buffering for claude | `read_full_until_idle` accumulates entire session output in memory | Stream output chunks; only keep last N chars for prompt detection | When claude produces multi-page responses (context-heavy tasks) |
-| Screenshot polling at 800ms unconditionally | 800ms poll is fine normally; after navigation it means up to 800ms of stale view | Invalidate cache immediately on navigate (current code does this correctly) + lower TTL post-navigate | Latency perception — not a functional break |
+| High-frequency `capture-pane` polling (< 100ms interval) | Excessive subprocess spawn overhead; tmux socket contention | Poll at 300–500ms intervals; use a stable-count check (N consecutive identical captures) | At any polling rate — tmux is not designed for sub-100ms polling |
+| Reading full scrollback on every poll (`-S -` flag) | Large output buffers slow string comparison; high memory use | Only read visible pane (`-S 0`) during polling; use full scrollback only for final content extraction | When the terminal has > ~10K lines of history |
+| Launching `opencode run` as a new process per agent message | Each invocation pays full cold-boot cost (MCP server startup, ~3–5s) | Use `opencode serve` and send API requests; or keep a persistent `opencode` process and reuse it | Every invocation — MCP server cold boot adds 3–5s overhead per turn |
+| Using TTYSession to drive shared terminal instead of tmux subcommands | TTYSession creates a new shell process; not connected to the shared tmux session at all | Use `subprocess.run(['tmux', 'send-keys', '-t', 'shared', cmd, 'Enter'])` for tmux interaction | Immediately — TTYSession and tmux are completely orthogonal |
 
 ---
 
@@ -250,9 +280,9 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Mistake | Risk | Prevention |
 |---------|------|------------|
-| CDP port 9222 exposed on Docker host interface (not just localhost) | Any process/container that can reach the host can control the browser, including reading cookies and executing JS | Bind CDP only to 127.0.0.1 inside the container; never expose 9222 via docker-compose `ports:` |
-| `ANTHROPIC_API_KEY` logged in claude session debug output | API key appears in Agent Zero chat logs | Mask the key in any output captured from claude before logging; use the existing `get_secrets_manager` masking |
-| claude CLI runs arbitrary shell commands on behalf of the LLM | If another agent sends malicious prompts to claude CLI, it can execute shell commands | Scope claude CLI sessions to sandboxed tasks only; document this in CLAUDE-05 skill |
+| Sending user-supplied text directly to `tmux send-keys` without sanitization | Shell injection: user prompt "foo; rm -rf /" becomes a shell command | Wrap user-supplied content in a single-use heredoc or write it to a temp file first; never pass raw user text as a `send-keys` argument |
+| Agent-visible scratch tmux sessions accessible from the shared terminal | Agent's private commands appear in user-visible terminal | Use separate sessions (not windows of `shared`) and document that `shared` is user-facing only |
+| `ANTHROPIC_API_KEY` visible in `tmux` pane history | Key appears in `tmux capture-pane` output and Agent Zero chat logs | Set env vars before launching opencode in the same `send-keys` chain but mask the key in any captured output before logging |
 
 ---
 
@@ -260,22 +290,22 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Pitfall | User Impact | Better Approach |
 |---------|-------------|-----------------|
-| Agent navigates and immediately screenshots before page loads | User sees the agent "observe" a blank/loading page and make wrong decisions | BROWSER-02/03: always wait for load complete before observe screenshot |
-| Agent tells user "navigation succeeded" based on CDP response, not actual URL | Agent gives false confidence; user sees wrong page in drawer | Verify by comparing `tabs[0].url` to intended URL after navigation |
-| claude CLI session left open after task completes | Subsequent agent tasks try to reuse stale session; hang | Explicit session lifecycle: open for task, close when done or after TTL |
-| Agent Zero UI shows perpetual "loading" indicator when claude CLI session hangs | User thinks Agent Zero itself is stuck | Set hard timeouts on every claude CLI interaction (total_timeout ≤ 120s for any single exchange) |
+| Agent injects commands into the shared terminal while the user is typing | User's in-progress input is clobbered; their partially-typed command executes unexpectedly | Detect user activity before injecting: capture screen, wait 1s, capture again — if content changed without agent intervention, abort injection and wait |
+| Agent leaves interactive CLI running in shared terminal after task completes | User opens the terminal and sees a foreign CLI they didn't start | Always clean up: send Ctrl+D or `exit` when done; verify the CLI exited before returning |
+| Agent sends many rapid commands to shared terminal during debugging | User's terminal becomes a blur of injected text; unusable | Rate-limit agent injections; batch multi-step interactions with visible progress in Agent Zero's own UI rather than raw terminal injection |
+| Screen-stability detection fails during progress spinners | Spinner keeps changing screen → stability never detected → timeout fires → agent proceeds with incomplete state | Detect spinner patterns in captured output; if spinner is the only change between captures, treat as stable |
 
 ---
 
 ## "Looks Done But Isn't" Checklist
 
-- [ ] **CDP navigation:** `Page.navigate` was called and returned a result — verify the URL in `/json` matches the target URL before concluding navigation succeeded
-- [ ] **CDP WebSocket:** `/json` HTTP endpoint responds — also verify a WebSocket connection succeeds with a `Runtime.evaluate 1+1` test call
-- [ ] **Chromium startup:** Port 9222 is open (TCP connect succeeds) — also verify Chromium is past the startup splash by checking that `/json` returns at least one tab with a non-blank URL
-- [ ] **claude CLI launch:** The process was spawned — also verify first output contains the claude greeting/prompt, not an error about missing API key or missing binary
-- [ ] **claude CLI output received:** `read_full_until_idle` returned text — also verify the text contains actual content and not only ANSI escape sequences
-- [ ] **claude CLI completion detected:** Idle timeout elapsed — also verify the last chars of output match the claude input prompt pattern, not a mid-response pause
-- [ ] **Viewport resize:** `Emulation.setDeviceMetricsOverride` returned OK — also verify screenshot dimensions match the requested size
+- [ ] **tmux send-keys:** Command was sent — verify `capture-pane` eventually shows the command's output (not just the command echoed at the prompt)
+- [ ] **Prompt detection:** Shell prompt pattern matched — verify it is the *shell's* prompt, not a CLI sub-prompt (Python `>>>`, opencode `>`) that happens to match
+- [ ] **ANSI stripping:** `re.sub` was applied — verify by asserting `\x1b[` does not appear in the result string
+- [ ] **Shared session safety:** tmux_tool sends to `shared` — verify no sentinel text appears by reviewing the next capture-pane output
+- [ ] **OpenCode run completion:** Output stopped — verify the `opencode` process has actually exited via `pgrep opencode` or process.poll(), not just that output stopped
+- [ ] **Interactive CLI startup:** `opencode` was launched in the shared terminal — verify `capture-pane` shows OpenCode's ready state (TUI rendered or `run` mode cursor at input), not a shell error message
+- [ ] **Session isolation:** tmux_tool routes to the correct session — verify the target session name matches `tmux ls` output and is the intended session, not an alias match
 
 ---
 
@@ -283,13 +313,13 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Pitfall | Recovery Cost | Recovery Steps |
 |---------|---------------|----------------|
-| Navigation returns before load complete | LOW | Add explicit wait loop; no architecture change needed |
-| CDP WebSocket 403 | LOW | Restart Chromium with correct flags; the `startup.sh` already has them |
-| Wrong tab selected | LOW | Fix `_get_ws_url()` filter; one-line change |
-| claude CLI prompt detection mismatch | MEDIUM | Profile claude CLI's actual ANSI output to find the prompt marker; update regex |
-| claude session hangs (orphaned PTY) | LOW | Kill process + respawn; add liveness check to `TTYSession` |
-| ANSI sequences corrupting output | LOW | Add ANSI stripping in the claude-specific wrapper; no change to core `TTYSession` |
-| Chromium started without CDP flags | LOW | `pkill chromium && restart shared-browser app` — already documented in skill troubleshooting |
+| capture-pane race / stale output | LOW | Add minimum settle wait + stability polling loop; no architecture change |
+| Sentinel leaked into shared terminal | MEDIUM | Kill and restart the interactive CLI; scroll back to audit damage; add the no-sentinel rule to code review checklist |
+| opencode run hang (v0.15+ bug) | LOW | `process.terminate()` after timeout; pin to working version; switch to `opencode serve` API mode |
+| Partial input buffer contamination | LOW | Send Ctrl+C + Ctrl+U before each new injection; treat shared terminal as always-dirty on resume |
+| Session name collision | LOW | `tmux kill-session -t <name>` for agent-private sessions; `has-session` check at every creation point |
+| code_execution_tool / tmux environment confusion | MEDIUM | Document the boundary; grep codebase for any code that attempts cross-context state setup and refactor |
+| Shell not ready after session create | LOW | Replace fixed sleeps with poll-until-stable-prompt pattern; 2-3 second total wait cap |
 
 ---
 
@@ -297,27 +327,28 @@ When creating the claude session, explicitly assert `ANTHROPIC_API_KEY` is prese
 
 | Pitfall | Prevention Phase | Verification |
 |---------|------------------|--------------|
-| Page.navigate timing (screenshot before load) | BROWSER-01, BROWSER-02, BROWSER-03 | Screenshot after navigate shows fully loaded page, URL matches target |
-| CDP WebSocket 403 | BROWSER-04 | `websockets.connect(ws_url)` succeeds from Python after startup |
-| Per-request WebSocket fragility | BROWSER-01 | Navigation + concurrent screenshot polling does not error |
-| claude idle-timeout prompt detection | CLAUDE-02, CLAUDE-03 | claude returns full response; second prompt sent only after first completes |
-| ANSI sequences in output | CLAUDE-02 | Captured output contains no `\x1b[` sequences when logged |
-| claude session reuse after exit | CLAUDE-04 | Multi-turn session survives 3+ round trips; dead session auto-restarts |
-| headless=new viewport resize | BROWSER-04 | Screenshot dimensions match viewport after resize |
-| Wrong tab selection | BROWSER-01 | CDP always targets the visible page tab, not chrome:// internal tabs |
-| asyncio.run() in Flask threads | BROWSER-01 (document only) | No crash under current deployment; comment warns about async host incompatibility |
-| Subprocess env / auth failure | CLAUDE-01 | Missing API key produces a clear error message, not a silent hang |
+| capture-pane reads stale output | TERM-04, TERM-05 | Two consecutive identical captures + prompt match before returning |
+| Prompt detection false positives from CLI output | TERM-05, CLI-03 | Test with OpenCode TUI running: false-positive rate = 0 |
+| ANSI/OSC sequences in capture-pane output | TERM-04, CLI-02 | Captured text asserts no `\x1b[` after stripping pass |
+| Sentinel injection into shared terminal | TERM-01 | Review + integration test: no sentinel text appears in shared terminal during any agent operation |
+| Session name collision | TERM-01, CLI-01 | `tmux ls` shows correct sessions; `shared` is never recreated or destroyed |
+| code_execution_tool / tmux context boundary | TERM-01 (docs), CLI-06 (skill) | Skill documents the isolation; no cross-context state assumptions in implementation |
+| opencode run hang (version-specific) | CLI-05 | `opencode --version` verified; process exits cleanly within timeout |
+| Interactive CLI buffer contamination | CLI-02, CLI-04 | Ctrl+U pre-injection confirmed; garbled command test = 0 occurrences |
+| Shell not ready race after session create | TERM-01, CLI-01 | Fixed sleeps replaced with poll-and-wait; stress test on slow machine |
+| User activity collision in shared terminal | CLI-01 through CLI-04 (docs) | Document the user-activity check; no agent injection during active user typing |
 
 ---
 
 ## Sources
 
-- Direct codebase analysis: `/apps/shared-browser/app.py`, `/python/tools/browser_agent.py`, `/python/helpers/tty_session.py`, `/python/helpers/shell_local.py`, `/usr/skills/shared-browser/SKILL.md`
-- CDP protocol semantics: training knowledge of Chrome DevTools Protocol (Page.navigate, Page.loadEventFired, Emulation.setDeviceMetricsOverride behavior) — MEDIUM confidence on specific event names, HIGH confidence on the fundamental timing issue
-- Chromium `--remote-allow-origins` flag: introduced ~M108, well-documented pattern — HIGH confidence
-- claude CLI TUI/Ink architecture and ANSI output: training knowledge of Ink-based CLIs — MEDIUM confidence on specific escape sequences; recommend profiling actual claude output during CLAUDE-01
-- PTY/pexpect subprocess control patterns: well-established patterns from training — HIGH confidence
+- Direct codebase analysis: `python/tools/code_execution_tool.py`, `python/helpers/tty_session.py`, `python/helpers/shell_local.py`, `apps/shared-terminal/startup.sh`, `usr/skills/claude-cli/SKILL.md`
+- tmux upstream: [race condition with shell initialization (claude-code #23513)](https://github.com/anthropics/claude-code/issues/23513), [capture-pane timing (tmux #1412)](https://github.com/tmux/tmux/issues/1412), [ANSI sequences in tmux (tmux #2254)](https://github.com/tmux/tmux/issues/2254), [new-session -A with -d (tmux #2211)](https://github.com/tmux/tmux/issues/2211)
+- OpenCode issue tracker: [`opencode run` hang on v0.15+ (#3213)](https://github.com/sst/opencode/issues/3213), [TUI exits but process hangs (#1717)](https://github.com/sst/opencode/issues/1717), [`opencode run` hangs on API errors (#8203)](https://github.com/anomalyco/opencode/issues/8203), [subprocess.Popen hang with opencode (#11891)](https://github.com/anomalyco/opencode/issues/11891)
+- OpenCode architecture: server-centric TUI (zig+solidjs OpenTUI in v1.0 rewrite); `opencode serve` HTTP API mode for programmatic use
+- libtmux documentation: capture_pane API, escape_sequences parameter behavior — MEDIUM confidence on exact flag behavior
+- General PTY/tmux automation patterns: HIGH confidence from training knowledge
 
 ---
-*Pitfalls research for: CDP browser control + claude CLI interactive subprocess, Agent Zero fork (v1.1 Reliability milestone)*
+*Pitfalls research for: tmux-based terminal orchestration + interactive CLI control (v1.2 Terminal Orchestration milestone)*
 *Researched: 2026-02-25*

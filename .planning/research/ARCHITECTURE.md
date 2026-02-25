@@ -1,6 +1,6 @@
 # Architecture Research
 
-**Domain:** Agent Zero fork — CDP browser control reliability + claude CLI skill integration
+**Domain:** Agent Zero fork — tmux terminal orchestration + interactive CLI integration (v1.2)
 **Researched:** 2026-02-25
 **Confidence:** HIGH (all findings from direct codebase inspection)
 
@@ -9,135 +9,106 @@
 ## System Overview
 
 ```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         Agent Zero Core (FastAPI)                        │
-│  agent.py message loop → tool dispatch → tool.execute() → Response      │
-├────────────────┬───────────────────┬──────────────────┬─────────────────┤
-│  browser_agent │  terminal_agent   │ code_execution   │  skills_tool    │
-│  (Tool class)  │  (Tool class)     │  (Tool class)    │  (Tool class)   │
-│                │                   │                  │                  │
-│  browser-use   │  tmux send-keys   │  LocalInteractive│  loads SKILL.md │
-│  Playwright    │  + capture-pane   │  Session / SSH   │  into context   │
-│  BrowserSession│                   │                  │                  │
-└───────┬────────┴──────────┬────────┴──────────────────┴────────┬────────┘
-        │                   │                                      │
-        ▼                   ▼                                      ▼
-┌──────────────┐   ┌─────────────────┐                  ┌──────────────────┐
-│ Shared Browser│   │ Shared Terminal │                  │ usr/skills/      │
-│ App (Flask)  │   │ App (tmux)      │                  │ shared-browser/  │
-│ port 9003    │   │                 │                  │   SKILL.md       │
-│              │   │                 │                  │ claude-cli/      │
-│  CDP ← → ──→│   │                 │                  │   SKILL.md (NEW) │
-│  Chromium    │   │                 │                  └──────────────────┘
-│  port 9222   │   │                 │
-└──────────────┘   └─────────────────┘
-        │
-        ▼
-┌──────────────────────────────────────────────────────────────────────────┐
-│  startup.sh: Chromium --headless=new --remote-debugging-port=9222        │
-│              --remote-allow-origins=*                                     │
-│  app.py:     Flask routes /api/navigate, /api/screenshot, /api/click...  │
-│  Agent code: python WebSocket client → CDP port 9222                     │
-└──────────────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                           Agent Zero Core (FastAPI)                              │
+│   agent.py message loop → get_tool(name) → tool.execute() → Response           │
+│   Tool dispatch: subagents.get_paths() searches usr/tools/, python/tools/       │
+├──────────────┬──────────────────┬──────────────────┬───────────────────────────┤
+│ terminal_    │  tmux_tool       │  code_execution  │  skills_tool              │
+│ agent.py     │  (NEW Tool class)│  _tool.py        │                           │
+│ (EXISTING)   │                  │  (EXISTING)      │  loads SKILL.md           │
+│              │                  │                  │  into context             │
+│ single-shot  │  send-keys       │  LocalInteractive│                           │
+│ sentinel     │  capture-pane    │  Session / SSH   │                           │
+│ pattern      │  special keys    │  full PTY        │                           │
+│              │  prompt detect   │                  │                           │
+└──────┬───────┴────────┬─────────┴──────────────────┴──────────────┬────────────┘
+       │                │                                             │
+       ▼                ▼                                             ▼
+┌──────────────────────────────────────┐                  ┌──────────────────────┐
+│         Shared Terminal App          │                  │  usr/skills/         │
+│  startup.sh: tmux new-session -d -s shared              │  cli-orchestration/  │
+│  ttyd --port 9004 tmux new-session -A -s shared         │    SKILL.md (NEW)    │
+│                                      │                  │  claude-cli/         │
+│  tmux session "shared"               │                  │    SKILL.md          │
+│  pane target: shared:0.0             │                  └──────────────────────┘
+│  visible to user in UI drawer        │
+└──────────────────────────────────────┘
+         │  tmux CLI (subprocess)
+         │  send-keys / capture-pane / send-keys Ctrl+C
+         ▼
+┌──────────────────────────────────────┐
+│  opencode_session() helper           │
+│  python/helpers/opencode_cli.py      │
+│  (NEW — mirrors claude_cli.py        │
+│   pattern with tmux backend)         │
+└──────────────────────────────────────┘
 ```
 
 ### Component Responsibilities
 
 | Component | Responsibility | Implementation |
 |-----------|----------------|----------------|
-| `browser_agent.py` (Tool) | Connects browser-use/Playwright to shared or headless Chromium; manages BrowserSession lifecycle | Python class extending Tool; State object stored in agent.data |
-| `apps/shared-browser/startup.sh` | Launches Chromium with CDP flags; starts Flask app | bash script called by AppManager |
-| `apps/shared-browser/app.py` | Flask server bridging Agent Zero UI and Chromium; routes /api/navigate, /api/screenshot, etc. | Python Flask with asyncio CDP via websockets library |
-| `usr/skills/shared-browser/SKILL.md` | Documents CDP WebSocket patterns and xdotool commands for agent consumption | Markdown loaded dynamically via skills_tool |
-| `terminal_agent.py` (Tool) | Injects commands into shared tmux session, captures output via sentinel pattern | Python class extending Tool; subprocess tmux calls |
-| `code_execution_tool.py` (Tool) | Runs code in persistent LocalInteractiveSession shells; handles Python, node, bash | Full interactive PTY; prompt and dialog detection |
-| `skills_tool.py` (Tool) | Lists and loads SKILL.md files into agent context extras | Reads from usr/skills/; populates agent.data["loaded_skills"] |
-| `prompts/agent.system.tool.browser.md` | Instructs agent how/when to invoke browser_agent | Markdown injected into system prompt |
+| `terminal_agent.py` (existing Tool) | Single-shot commands with sentinel completion; visible to user | Subprocess tmux send-keys + capture-pane poll |
+| `tmux_tool.py` (NEW Tool) | Multi-operation tmux control: send text, send special keys, read screen, detect prompt readiness | New Tool class in `python/tools/`; wraps subprocess tmux calls |
+| `python/helpers/opencode_cli.py` (NEW helper) | Pre-built OpenCode CLI orchestration; mirrors ClaudeSession pattern from claude_cli.py | Pure Python helper; not a Tool class; called from skill code or tmux_tool |
+| `code_execution_tool.py` (existing Tool) | Private PTY shells for Agent Zero's own code/command execution; NOT the shared terminal | LocalInteractiveSession; multiple sessions by ID |
+| `skills_tool.py` (existing Tool) | Lists and loads SKILL.md files into agent context | Reads usr/skills/; populates agent.data["loaded_skills"] |
+| `apps/shared-terminal/startup.sh` (existing) | Starts persistent tmux session "shared" + ttyd web terminal | bash script; pre-creates `tmux new-session -d -s shared` |
+| `usr/skills/cli-orchestration/SKILL.md` (NEW) | Documents complete Read-Detect-Write-Verify cycle for any CLI; OpenCode-specific pattern | Markdown loaded via skills_tool |
 
 ---
 
-## Where CDP Control Lives Now vs. What Needs Fixing
+## What Already Exists vs. What Is New
 
-The CDP integration exists at two distinct levels, with a gap between them:
+### EXISTING — No Changes Needed
 
-**Level 1 — Flask bridge (apps/shared-browser/app.py)**
-Flask exposes HTTP endpoints that wrap CDP calls. The UI (noVNC/screenshot polling) uses these. This layer is fully functional — navigate, click, screenshot, scroll all work.
+**`python/tools/terminal_agent.py`** — already uses tmux send-keys + sentinel. Covers TERM-01 for simple commands. NOT suitable for interactive CLIs (sentinel appended to command would be fed as input to the CLI program).
 
-**Level 2 — browser-use via Playwright (python/tools/browser_agent.py)**
-When `use_shared=true`, browser_agent connects Playwright to Chromium via `cdp_url=http://localhost:9222`. This works IF Chromium started with `--remote-allow-origins=*`.
+**`apps/shared-terminal/startup.sh`** — already pre-creates `tmux new-session -d -s shared` before ttyd starts. The tmux session exists before any browser or agent connects. No changes needed.
 
-**The Bug (BROWSER-04)**
-`startup.sh` already has `--remote-allow-origins=*`. However, the skill documentation (SKILL.md v3.0) says "If CDP returns 403: kill Chromium and restart." This suggests the flag may be missing from some startup path, or there is an ordering issue where browser_agent connects before Chromium is ready. The `_wait_for_cdp()` helper in browser_agent.py handles the readiness wait, but only checks TCP connectivity — not that the CDP WebSocket actually accepts cross-origin connections.
+**`python/helpers/claude_cli.py` + `ClaudeSession`** — the multi-turn session model. `opencode_session()` will follow this exact pattern but with a tmux backend instead of subprocess.run.
 
-**The Workflow Gap (BROWSER-01 through BROWSER-05)**
-browser_agent delegates all navigation decisions to the browser-use AI sub-agent, which decides to use `Page.navigate` or not. There is no explicit observe-act-verify enforced in code — it is entirely left to the LLM inside browser-use. The fix is not to rewrite browser_agent but to update the SKILL.md to enforce this workflow when the agent uses the skill directly via CDP (not browser-use).
+**`python/helpers/tty_session.py`** — correct primitive for private PTY sessions (code_execution_tool). Not used for the shared terminal.
 
----
+### EXISTING — Terminal Agent Gap Analysis
 
-## CDP Control: Modified vs. New Components
+`terminal_agent.py` does TERM-01 (send text + Enter) but has these gaps for TERM-02 through CLI-06:
 
-### MODIFY: `usr/skills/shared-browser/SKILL.md`
+| Requirement | terminal_agent | Gap |
+|-------------|---------------|-----|
+| TERM-02: send without Enter | Uses "Enter" hardcoded | No `enter=False` mode |
+| TERM-03: special keys (Ctrl+C, Tab) | Not implemented | tmux send-keys literal mode needed |
+| TERM-04: capture screen | Embedded in sentinel loop only | No standalone capture |
+| TERM-05: prompt detection | Sentinel-only; no pattern matching | No idle+pattern detection |
+| CLI-01..06: interactive CLI | sentinel breaks interactive programs | Wrong tool entirely |
 
-**What:** Add explicit Observe → Act → Verify section with CDP-based navigation that is separate from the xdotool fallback. Current SKILL.md already documents `Page.navigate` but lacks the verification step — it says to screenshot after but does not show how to verify URL/title.
+### NEW — `python/tools/tmux_tool.py`
 
-**Change scope:** Add a "Navigation with Verification" pattern section showing:
-1. `scrot` → `vision_load` (observe)
-2. CDP `Page.navigate`
-3. `time.sleep(2)` then CDP `Runtime.evaluate({expression: '({url: location.href, title: document.title})'})` (verify)
-4. Screenshot (confirm visually)
+New Tool class. Reason for a Tool class (not skill-only): the tmux operations require subcommand dispatch, state (pane target, last-read cursor), and timeout management that cannot be cleanly expressed as skill-directed code_execution_tool calls. A Tool class also appears in the system prompt as a first-class tool the agent can call directly.
 
-This is a documentation-only change to an existing SKILL.md file. No Python code changes.
-
-### MODIFY: `apps/shared-browser/startup.sh`
-
-**What:** Add an explicit readiness check after Chromium starts — currently `sleep 2` is the only guard. Replace with a loop that polls `http://localhost:9222/json` until it returns HTTP 200, with a timeout and clear error message.
-
-**Change scope:** 10-line bash modification. No Python changes.
-
-### NO CHANGE: `python/tools/browser_agent.py`
-
-The Playwright/browser-use integration is not the primary path for CDP control. SKILL.md directs agents to use CDP Python directly (via `code_execution_tool` running Python WebSocket code), not via browser_agent. browser_agent is for the browser-use AI sub-agent path. The `_wait_for_cdp()` helper and `--remote-allow-origins=*` flag path are already correct. The remaining issues are skill documentation and startup robustness.
-
----
-
-## Claude CLI Control: Component Analysis
-
-### New Component: `usr/skills/claude-cli/SKILL.md`
-
-This is the primary deliverable for CLAUDE-01 through CLAUDE-05. No Python tool changes are needed because `terminal_agent` and `code_execution_tool` already provide all necessary primitives.
-
-**Why a SKILL.md (not a new Tool class):**
-- The claude CLI is an interactive process, not a single-shot command. Its interaction pattern is: launch → read prompt → send input → read response → repeat.
-- `terminal_agent` handles single commands with a marker/sentinel. It is not designed for multi-turn interactive processes.
-- `code_execution_tool` with a persistent LocalInteractiveSession IS the correct mechanism for interactive CLI programs — the session persists between calls, and output is read incrementally.
-- The skill documents the exact `code_execution_tool` invocation sequences to launch claude, detect when it has finished responding, and send follow-up prompts.
-
-**What the skill must document:**
+**Methods the Tool exposes:**
 
 ```
-Launch:
-  code_execution_tool runtime=terminal
-  code=`claude --no-pager --model claude-opus-4-6 -p "your prompt"`
-
-For one-shot (non-interactive):
-  Above is sufficient. Claude prints response to stdout and exits.
-
-For multi-turn (interactive session):
-  Use code_execution_tool runtime=terminal with persistent session.
-  claude CLI enters interactive REPL mode when stdin is a TTY.
-  In a LocalInteractiveSession, stdin IS a pseudo-TTY.
-  Invoke: `claude` (no -p flag)
-  Claude will print a prompt marker (e.g., "> " or "Human:").
-  Detect: read output until between_output_timeout fires (idle = done).
-  Send: session.send_command("your next message")
-  Read: get_terminal_output() again.
+tmux_tool:send        — send text to pane (enter=true/false)
+tmux_tool:keys        — send special keys: Ctrl+C, Ctrl+D, Tab, arrows, Escape
+tmux_tool:read        — capture current pane screen (capture-pane -p)
+tmux_tool:wait_ready  — poll until prompt pattern matches or idle timeout fires
 ```
 
-**Detection mechanism for "claude has finished responding":**
-The existing `code_execution_tool.get_terminal_output()` loop already handles this via `between_output_timeout` (default 15s) — when claude stops producing output for 15 seconds, the tool returns. The skill should document this behavior and recommend using `runtime=output` on the same session ID to poll for completion without re-sending a command.
+**Why not extend terminal_agent?** Extending terminal_agent would break its sentinel contract and make the code harder to reason about. A separate tmux_tool with explicit subcommands is cleaner. Both tools coexist — terminal_agent for visible single-shot commands, tmux_tool for interactive CLI orchestration.
 
-**Subprocess alternative for one-shot (CLAUDE-01/CLAUDE-02):**
-For simple one-shot use cases, the skill can document running `claude -p "prompt"` via `code_execution_tool runtime=terminal`. This is the simplest path and does not require interactive session management.
+### NEW — `prompts/agent.system.tool.tmux.md`
+
+Tool prompt file for tmux_tool. The tools system automatically picks up all `agent.system.tool.*.md` files from the prompts directory (confirmed by reading `agent.system.tools.py`). No other registration step needed.
+
+### NEW — `python/helpers/opencode_cli.py`
+
+Mirrors the structure of `claude_cli.py`. Wraps OpenCode interactive CLI sessions via tmux. Called from skill code or from tmux_tool's higher-level session management. Provides `OpenCodeSession` class with `.start()`, `.send(prompt)`, `.read_response()`, `.interrupt()`, `.exit()`.
+
+### NEW — `usr/skills/cli-orchestration/SKILL.md`
+
+Documents the complete CLI orchestration pattern — generic (any CLI tool) and OpenCode-specific. References tmux_tool subcommands. Documents the Read-Detect-Write-Verify cycle.
 
 ---
 
@@ -145,251 +116,350 @@ For simple one-shot use cases, the skill can document running `claude -p "prompt
 
 ```
 agent-zero/
-├── apps/
-│   └── shared-browser/
-│       └── startup.sh           MODIFY: add CDP readiness poll loop
-├── usr/
-│   └── skills/
-│       ├── shared-browser/
-│       │   └── SKILL.md         MODIFY: add navigate-with-verify pattern
-│       └── claude-cli/          NEW directory
-│           └── SKILL.md         NEW: documents claude CLI interaction
+├── python/
+│   ├── tools/
+│   │   └── tmux_tool.py           NEW: Tool class for tmux interaction
+│   └── helpers/
+│       └── opencode_cli.py        NEW: OpenCode CLI session wrapper (mirrors claude_cli.py)
+├── prompts/
+│   └── agent.system.tool.tmux.md  NEW: Tool prompt (auto-discovered by tools.py)
+└── usr/
+    └── skills/
+        └── cli-orchestration/
+            └── SKILL.md           NEW: CLI orchestration skill doc
 ```
 
-No changes to `python/tools/`. No new Tool classes. No new Flask endpoints.
+No changes to existing files. `terminal_agent.py`, `startup.sh`, and `code_execution_tool.py` are unchanged.
 
 ---
 
 ## Data Flow
 
-### CDP Browser Control Flow (Fixed)
+### TERM-01 through TERM-05: tmux_tool Data Flow
 
 ```
-Agent needs to navigate browser
+Agent wants to interact with shared terminal
     ↓
-skills_tool:load → shared-browser SKILL.md into context
-    ↓
-Agent generates CDP Python code using SKILL.md patterns
-    ↓
-code_execution_tool runtime=python
-    ↓ (Python inside LocalInteractiveSession)
-import websocket, urllib.request
-tabs = json.loads(urlopen('http://localhost:9222/json').read())
-ws = websocket.create_connection(tabs[0]['webSocketDebuggerUrl'])
-send('Page.navigate', {'url': url})
-    ↓ (verify step — NEW in SKILL.md)
-result = send('Runtime.evaluate', {'expression': '({url:location.href,title:document.title})', 'returnByValue':True})
-    ↓
-scrot → vision_load (screenshot verify)
-    ↓
-Response to agent with URL + title confirmation
+tmux_tool:send  {"text": "opencode", "enter": true}
+    ↓ (subprocess)
+tmux send-keys -t shared "opencode" Enter
+    ↓ (wait for CLI to start)
+tmux_tool:wait_ready  {"pattern": "> ", "timeout": 10}
+    ↓ (poll loop)
+while time < deadline:
+    tmux capture-pane -t shared -p
+    check last lines for pattern match
+    OR check if output stopped for idle_seconds
+    ↓ (ready)
+Response: "ready" + captured screen snapshot
 ```
 
-### Claude CLI One-Shot Flow
+### CLI-01 through CLI-05: Interactive CLI Session Flow (Read-Detect-Write-Verify)
 
 ```
-Agent wants to run claude with a prompt
+Agent wants to start OpenCode session
     ↓
-skills_tool:load → claude-cli SKILL.md into context
+tmux_tool:send  {"text": "opencode", "enter": true}
     ↓
-code_execution_tool runtime=terminal
-    code=`claude --no-pager -p "the prompt"`
-    ↓ (LocalInteractiveSession runs command, reads stdout)
-get_terminal_output() loops until shell prompt detected
+tmux_tool:wait_ready  {"pattern": "> |◆", "timeout": 15}
+    ← Response: screen content showing OpenCode prompt
+                                    [READ]
+    ↓ (agent DETECTS ready state)
+                                    [DETECT]
+tmux_tool:send  {"text": "refactor this function", "enter": true}
+                                    [WRITE]
     ↓
-Full claude response returned as tool result to agent
+tmux_tool:wait_ready  {"pattern": "> |◆", "timeout": 120, "idle_seconds": 5}
+    ← Response: screen content with OpenCode response
+                                    [VERIFY]
+    ↓ (agent reads response, continues or exits)
+tmux_tool:keys  {"keys": "Ctrl+C"}   ← interrupt if needed
+tmux_tool:send  {"text": "exit", "enter": true}
 ```
 
-### Claude CLI Multi-Turn Flow
+### CLI-05: OpenCode via opencode_cli.py Helper
 
 ```
-Agent starts interactive session
+Agent code (in code_execution_tool runtime=python):
+    sys.path.insert(0, '/a0')
+    from python.helpers.opencode_cli import OpenCodeSession
+
+    session = OpenCodeSession()
+    session.start()                     # tmux send-keys "opencode" Enter + wait_ready
+    r1 = session.send("write a test")  # send + wait_ready → returns response text
+    r2 = session.send("add docstrings") # next turn, same session
+    session.exit()                      # Ctrl+C or "exit" + Enter
+```
+
+### Skill-Directed Flow (CLI-06)
+
+```
+Agent loads skill:  skills_tool:load → "cli-orchestration"
+    ↓ (SKILL.md injected into context extras)
+Agent reads SKILL.md → learns Read-Detect-Write-Verify cycle
+Agent generates tmux_tool calls directly
     ↓
-code_execution_tool runtime=terminal session=1
-    code=`claude`  (no -p; enters REPL)
+tmux_tool:read → observe current state
+tmux_tool:send / tmux_tool:keys → act
+tmux_tool:wait_ready → verify ready
     ↓
-get_terminal_output() returns after between_output_timeout (claude idle)
-    → agent reads first response / greeting
-    ↓
-code_execution_tool runtime=terminal session=1 allow_running=True
-    code=`next message to claude`
-    ↓
-get_terminal_output() returns when claude finishes second response
-    ↓
-Repeat for additional turns (same session ID)
+Response returned to agent
 ```
 
 ---
 
 ## Integration Points
 
-### How SKILL.md Content Reaches the Agent
+### How tmux_tool Fits Into Tool Dispatch
 
-The skills system injects content at two points:
+Tool names map to filenames: `tool_name: "tmux_tool"` → `python/tools/tmux_tool.py`. The agent's `get_tool()` method calls `subagents.get_paths(agent, "tools", "tmux_tool.py", default_root="python")`, which finds the file in `python/tools/`. No registration table, no factory, no imports in agent.py required. Drop the file in, write the prompt, done.
 
-1. **Available skills list:** `agent.system.skills.md` shows all skill names/descriptions in the system prompt so the agent knows what skills exist.
-2. **Loaded skill content:** When `skills_tool:load` is called, the SKILL.md content is added to `agent.data["loaded_skills"]` (max 5 skills). `agent.system.skills.loaded.md` renders this into the system extras section each turn.
+### How tmux_tool Appears in the System Prompt
 
-This means the claude-cli SKILL.md content is NOT in context until the agent explicitly loads it. The agent discovers it exists from the skills list (name + description + tags).
+`prompts/agent.system.tools.py` dynamically assembles the tools section by reading all `agent.system.tool.*.md` files from the prompts directory. Creating `agent.system.tool.tmux.md` is the only registration step needed. The tools section is rebuilt each inference turn.
 
-### Tool ↔ Tool Interactions
+### tmux_tool ↔ Shared Terminal Session
 
-| From | To | Mechanism | Notes |
-|------|----|-----------|-------|
-| browser_agent (use_shared) | shared-browser app | CDP WebSocket via Playwright cdp_url | Playwright connects to port 9222 |
-| SKILL.md (CDP pattern) | shared-browser Chromium | Python websocket in code_execution_tool | Direct WebSocket, no Flask proxy |
-| terminal_agent | tmux shared session | subprocess tmux send-keys | Single-shot sentinel pattern |
-| code_execution_tool | LocalInteractiveSession | PTY-based shell | Persistent; multi-turn via session IDs |
-| skills_tool | usr/skills/*/SKILL.md | File read at load time | Content injected into context extras |
-| browser_agent (auto-start) | AppManager | mgr.start_app("shared-browser") | Triggers startup.sh |
+The shared terminal always uses session name `"shared"` (confirmed in `terminal_agent.py`: `_TMUX_SESSION = "shared"`). tmux_tool targets `shared:0.0` (window 0, pane 0) by default. The pane is pre-created by `startup.sh` before any agent or browser connects. No setup handshake needed.
 
-### Critical Boundary: CDP Direct vs. Flask Bridge vs. Playwright
+### tmux_tool ↔ terminal_agent Coexistence
 
-There are three separate paths to Chromium:
+Both tools write to the same tmux pane. They do not conflict as long as they are not called simultaneously from different agents. The sentinel in terminal_agent (`echo "MARKER:$?"`) cannot appear in tmux_tool flows because tmux_tool never uses sentinel markers — it uses prompt pattern detection and idle timeout instead.
 
-1. **Flask bridge (app.py /api/*)**: Used by the browser UI for human interaction. The agent does NOT use this path directly.
-2. **CDP WebSocket direct (skill pattern)**: Used by agent-generated Python code via code_execution_tool. Connects to `ws://localhost:9222/devtools/page/...`. Fast, programmatic.
-3. **Playwright via browser-use (browser_agent tool)**: Used for AI-driven browsing tasks. Playwright is a wrapper over CDP. Used when the task requires the browser-use AI sub-agent to make decisions.
+**When to use which:**
 
-The skill (shared-browser/SKILL.md) documents path 2. The browser_agent tool uses path 3. These do not conflict — they connect to separate WebSocket instances per the CDP spec (each debug client gets its own connection).
+| Scenario | Tool |
+|----------|------|
+| Run a command the user should see, get exit code | terminal_agent |
+| Start an interactive CLI, send prompts, read responses | tmux_tool |
+| Send Ctrl+C or special keys | tmux_tool:keys |
+| Capture current screen state | tmux_tool:read |
+| Private shell (not shared terminal) | code_execution_tool |
+
+### opencode_cli.py ↔ tmux_tool
+
+`opencode_cli.py` is a Python helper that internally calls `subprocess.run(["tmux", ...])` directly — the same calls tmux_tool makes. It is NOT a Tool class. It is callable from `code_execution_tool runtime=python` skill code. It mirrors `claude_cli.py`'s `ClaudeSession` interface so the two patterns look identical to the agent:
+
+```python
+# claude_cli.py pattern (v1.1)
+session = ClaudeSession()
+r = session.turn("prompt")
+
+# opencode_cli.py pattern (v1.2)
+session = OpenCodeSession()
+session.start()
+r = session.send("prompt")
+```
+
+### Prompt Detection: Shared State Problem
+
+Both tmux_tool and opencode_cli.py call `tmux capture-pane` independently. They read the same pane but do not share a cursor position. This means if the agent calls `tmux_tool:read` and separately calls opencode_cli.py, they both see the full scrollback. This is fine — both read from the same source and use the same prompt detection logic. There is no cursor advancement; reads are idempotent.
 
 ---
 
 ## Architectural Patterns
 
-### Pattern 1: Skill-Documented Tool Composition
+### Pattern 1: Prompt-Pattern + Idle-Timeout Dual Detection
 
-**What:** Complex multi-step interactions (CDP sequences, CLI sessions) are documented as SKILL.md content rather than implemented as new Tool classes. The agent assembles the interaction from existing primitives (code_execution_tool, vision_load) guided by the skill.
+**What:** After sending a command, poll capture-pane output in a loop. Declare "done" when either (a) the last line matches a prompt regex (fast path, ~instant), or (b) no new output has appeared for `idle_seconds` (fallback for programs without a predictable prompt).
 
-**When to use:** When the complexity is in the sequence and knowledge, not in the Python plumbing. Both CDP browser control and claude CLI fit this — the underlying I/O mechanisms already exist.
+**When to use:** Any interactive CLI where you need to detect readiness for next input. Use this in both tmux_tool:wait_ready and opencode_cli.py's read_response().
 
-**Trade-offs:** Pro: no Python deployment changes, fully inspectable by agent, easy to iterate. Con: agent must load the skill explicitly; skill content is token-heavy.
+**Trade-offs:**
+- Pro: handles CLIs with unpredictable prompts (idle fallback)
+- Pro: fast for CLIs with known prompts (pattern match)
+- Con: idle timeout is speculative — too short → false positive (returns before CLI finishes); too long → unnecessarily slow
+- Mitigation: make idle_seconds configurable per-call; document that slow AI CLIs need 5-10s
 
-### Pattern 2: Sentinel-Based Completion Detection
+**Example:**
+```python
+deadline = time.time() + timeout
+last_output = ""
+last_change = time.time()
 
-**What:** A unique string marker is appended to commands (`echo "MARKER:$?"`). Output is polled until the marker appears. This is how terminal_agent works.
+while time.time() < deadline:
+    cap = subprocess.run(["tmux", "capture-pane", "-t", "shared", "-p", "-S", "-200"],
+                         capture_output=True, text=True)
+    screen = cap.stdout
+    if screen != last_output:
+        last_output = screen
+        last_change = time.time()
+    # Fast path: known prompt pattern
+    last_lines = screen.strip().splitlines()[-3:]
+    for line in reversed(last_lines):
+        if re.search(prompt_pattern, line):
+            return screen
+    # Fallback: idle timeout
+    if time.time() - last_change > idle_seconds:
+        return screen
+    time.sleep(poll_interval)
 
-**When to use:** Single-shot commands where exact completion time matters. Works well for deterministic programs.
+return screen  # hard timeout — return whatever is on screen
+```
 
-**Trade-offs:** Breaks for interactive programs that do not return to a shell prompt.
+### Pattern 2: tmux Pane Target Addressing
 
-### Pattern 3: Timeout-Based Idle Detection
+**What:** All tmux CLI calls target a specific pane using `-t session:window.pane` format. Use `"shared"` (shorthand for `shared:0.0`) consistently. Never use bare session name when window/pane matters.
 
-**What:** code_execution_tool's `between_output_timeout` returns when output stops for N seconds. This is how the multi-turn claude session works — "idle for 15s = done responding."
+**When to use:** Every `tmux send-keys` and `tmux capture-pane` call.
 
-**When to use:** Interactive programs (claude CLI, REPLs, long-running commands) where a shell prompt never appears.
+**Trade-offs:**
+- Pro: explicit, survives window creation events
+- Con: breaks if user creates extra windows (unlikely for shared-terminal which opens in window 0)
 
-**Trade-offs:** Risk of false early returns if claude is slow to respond. The skill should recommend raising timeout for long prompts.
+### Pattern 3: Skill-First, Tool-Second
+
+**What:** Document the full interaction pattern in SKILL.md first. The tmux_tool exposes primitives (send, keys, read, wait_ready). The SKILL.md documents when and how to compose them into a CLI orchestration workflow. The agent calls the primitives guided by the skill.
+
+**When to use:** For CLI-06 (generic pattern) and all OpenCode interactions.
+
+**Trade-offs:**
+- Pro: skill is inspectable, agent can adapt to edge cases not covered by opencode_cli.py
+- Con: agent must load the skill first; adds token cost
+
+### Pattern 4: ClaudeSession-Style Wrapper for CLI Tools
+
+**What:** For well-known CLIs (OpenCode), provide a Python class (opencode_cli.py) that hides tmux plumbing. Interface matches ClaudeSession: `.start()`, `.send(prompt)` → response, `.exit()`. Called from code_execution_tool Python runtime.
+
+**When to use:** CLI-05 (OpenCode wrapper). Any CLI with a stable prompt pattern.
+
+**Trade-offs:**
+- Pro: clean interface; no tmux knowledge required in skill code
+- Con: hides errors; prompt pattern must be known in advance
+- Con: does not work for CLIs with variable prompts → fall back to tmux_tool direct
 
 ---
 
 ## Build Order
 
-The two workstreams (CDP browser fixes and claude CLI skill) are independent and can be built in parallel. However, within each stream there is a dependency order.
-
-### Stream 1: CDP Browser Fixes
+Dependencies run in a strict sequence within the terminal orchestration stream. The stream is independent of any v1.1 work.
 
 ```
-Step 1: MODIFY startup.sh — add CDP readiness poll
-  (Unblocks everything; ensures Chromium is ready before any CDP client connects)
+Step 1: python/tools/tmux_tool.py + prompts/agent.system.tool.tmux.md
+        (TERM-01, TERM-02, TERM-03, TERM-04)
+        Prerequisite for everything else.
+        Verify: agent can send text, send Ctrl+C, capture pane output.
 
-Step 2: MODIFY shared-browser/SKILL.md — add navigate-with-verify pattern
-  (Documents the Observe → Act → Verify workflow for agent use)
+Step 2: Prompt detection in tmux_tool:wait_ready
+        (TERM-05)
+        Depends on Step 1 (needs capture-pane working).
+        Verify: wait_ready returns when shell prompt appears, and on idle timeout.
 
-No Step 3 needed — browser_agent.py already has correct CDP connection logic
+Step 3: CLI-01 through CLI-04 — interactive CLI session via tmux_tool
+        (CLI-01: start OpenCode, CLI-02: send prompts + read responses,
+         CLI-03: detect done, CLI-04: interrupt/exit)
+        Depends on Step 2 (wait_ready is the completion detector).
+        Empirical: run OpenCode manually in shared terminal; capture exact prompt
+        pattern bytes before writing detection regex. This is the high-risk step.
+
+Step 4: python/helpers/opencode_cli.py — OpenCode wrapper
+        (CLI-05)
+        Depends on Step 3 (patterns validated).
+        Mirrors claude_cli.py's ClaudeSession interface.
+
+Step 5: usr/skills/cli-orchestration/SKILL.md
+        (CLI-06)
+        Depends on Steps 3 and 4 (documents validated patterns only).
+        Always written last.
 ```
 
-### Stream 2: Claude CLI Skill
+**Rationale for this order:**
 
-```
-Step 1: CREATE usr/skills/claude-cli/SKILL.md — one-shot pattern
-  (CLAUDE-01, CLAUDE-02: launch + send prompt + receive response)
+- Steps 1-2 are pure infrastructure; they have no dependency on any specific CLI behavior.
+- Step 3 (interactive CLI) is the empirical step where the actual OpenCode prompt format, startup time, and response boundary must be confirmed manually before coding detection logic.
+- Step 4 (OpenCode wrapper) must come after Step 3 because the wrapper encodes the prompt pattern — writing it before empirical validation would embed untested assumptions.
+- Step 5 (skill doc) is always last. Skill documents must reflect confirmed behavior.
 
-Step 2: EXTEND SKILL.md — add completion detection section
-  (CLAUDE-03: how to detect claude finished responding)
+---
 
-Step 3: EXTEND SKILL.md — add multi-turn session section
-  (CLAUDE-04: complete multi-turn pattern using persistent code_execution_tool session)
+## New vs. Modified Files Summary
 
-Note: Steps 1-3 are all in the same file. The skill can be written in one pass
-once the interaction pattern is verified manually via code_execution_tool.
-```
-
-### Recommended Overall Order
-
-1. Verify `startup.sh` CDP readiness (manual test: does it error if Chromium takes 5s to start?)
-2. Fix `startup.sh` poll loop
-3. Manually test claude CLI invocation via code_execution_tool to confirm interaction pattern
-4. Write `claude-cli/SKILL.md` from confirmed patterns
-5. Update `shared-browser/SKILL.md` with navigate-verify pattern
-6. Test both skills end-to-end from agent context
-
-Step 3 (manual claude CLI verification) is the highest-risk item — the exact behavior of claude CLI in a PTY vs. non-TTY context, and the prompt/response detection pattern, must be confirmed empirically before writing the skill.
+| File | Action | Purpose |
+|------|--------|---------|
+| `python/tools/tmux_tool.py` | NEW | Tool class for tmux send/keys/read/wait_ready |
+| `prompts/agent.system.tool.tmux.md` | NEW | Tool registration in system prompt |
+| `python/helpers/opencode_cli.py` | NEW | OpenCode session wrapper (ClaudeSession pattern) |
+| `usr/skills/cli-orchestration/SKILL.md` | NEW | CLI orchestration patterns for agent consumption |
+| `python/tools/terminal_agent.py` | NO CHANGE | Existing single-shot tool unchanged |
+| `apps/shared-terminal/startup.sh` | NO CHANGE | Session creation already correct |
+| `python/helpers/tty_session.py` | NO CHANGE | Private PTY helper, not used for shared terminal |
+| `python/helpers/claude_cli.py` | NO CHANGE | v1.1 pattern; opencode_cli.py mirrors it |
 
 ---
 
 ## Anti-Patterns
 
-### Anti-Pattern 1: New Tool Class for Claude CLI
+### Anti-Pattern 1: Using terminal_agent for Interactive CLI Sessions
 
-**What people do:** Create `python/tools/claude_agent.py` mirroring browser_agent.py for claude CLI interaction.
+**What people do:** Call `terminal_agent` with `command: "opencode"` expecting to have an interactive session.
 
-**Why it's wrong:** code_execution_tool already provides persistent interactive sessions with PTY. A new tool class would duplicate this infrastructure, add Python deployment risk, and be harder to modify without restarting Agent Zero. The interaction complexity is in the knowledge (what flags, how to detect completion), not in the I/O plumbing.
+**Why it's wrong:** terminal_agent appends `; echo "MARKER:$?"` to every command. For an interactive CLI, this sends "; echo ..." as input to the CLI, producing garbage. Also, terminal_agent has no mechanism for follow-up sends to the same running process — it sends one command and polls for the sentinel.
 
-**Do this instead:** SKILL.md that guides the agent to use `code_execution_tool` with the right session ID and timeout settings.
+**Do this instead:** Use `tmux_tool:send` to start the CLI, `tmux_tool:wait_ready` to detect startup, then `tmux_tool:send` for each subsequent prompt.
 
-### Anti-Pattern 2: Using terminal_agent for Multi-Turn Claude Sessions
+### Anti-Pattern 2: Using code_execution_tool for Shared Terminal Interaction
 
-**What people do:** Use `terminal_agent` (tmux send-keys) to launch and interact with claude CLI.
+**What people do:** Run `opencode` via `code_execution_tool runtime=terminal`, treating it like a local PTY process.
 
-**Why it's wrong:** terminal_agent's sentinel pattern (`echo "MARKER:$?"`) appends to the command. For claude CLI, this would inject `echo MARKER` as input to claude, producing garbage. Also, tmux capture-pane reads from a scrollback buffer which does not cleanly separate claude's output from previous session content.
+**Why it's wrong:** code_execution_tool creates a *private* LocalInteractiveSession — an isolated PTY process that the user cannot see in the shared terminal drawer. OpenCode running in code_execution_tool is invisible to the user. Also, code_execution_tool's `between_output_timeout` was tuned for code execution (15s), not for AI CLI response times which can be 30-120s.
 
-**Do this instead:** `code_execution_tool` with a dedicated session number. The PTY and prompt-detection loop in LocalInteractiveSession handle interactive programs correctly.
+**Do this instead:** Use `tmux_tool` to run OpenCode in the shared terminal (visible to user), or use `opencode_cli.py` which also uses the shared terminal via tmux.
 
-### Anti-Pattern 3: Hardcoding CDP Tab Index
+### Anti-Pattern 3: Hardcoded Idle Timeout for AI CLIs
 
-**What people do:** Always connect to `tabs[0]` in CDP, assuming the first tab is the right one.
+**What people do:** Use a fixed 5-second idle timeout for wait_ready, assuming that's enough for OpenCode to respond.
 
-**Why it's wrong:** Chromium may have multiple tabs. If the agent has opened additional tabs (via `Target.createTarget`), tabs[0] may not be the active page.
+**Why it's wrong:** AI CLI tools like OpenCode call the Anthropic API, which can take 5-60 seconds to return. A 5-second idle timeout causes false "done" signals mid-response.
 
-**Do this instead:** Filter for `type == 'page'` tabs and either use the most recently activated one (via `Page.getFrameTree` or checking `webSocketDebuggerUrl` ordering) or document that the agent should track which tab it opened. The current SKILL.md already does this correctly: `page_tabs = [t for t in tabs if t.get('type') == 'page']`.
+**Do this instead:** Default `idle_seconds=10` minimum for AI CLIs; allow per-call override. Combine with prompt pattern detection — if the prompt appears before the idle timeout, return immediately without waiting the full duration.
 
-### Anti-Pattern 4: Skipping CDP Verification After Navigation
+### Anti-Pattern 4: Reading Stale Scrollback as Current State
 
-**What people do:** Call `Page.navigate` and immediately proceed with actions, assuming the page loaded.
+**What people do:** Call `tmux capture-pane` and treat the full scrollback as the current response, not distinguishing between output from the current turn and previous turns.
 
-**Why it's wrong:** `Page.navigate` returns when the navigation is initiated, not when the page is loaded. Fast DOM actions on a loading page will fail silently or interact with the old page.
+**Why it's wrong:** tmux capture-pane with `-S -N` returns up to N lines of scrollback, including all prior session output. If the agent sent a command 3 turns ago, that output is still in the scrollback.
 
-**Do this instead:** After `Page.navigate`, either: (a) sleep 1-2s then verify via `Runtime.evaluate` on `document.readyState` and `location.href`, or (b) listen for `Page.loadEventFired` before acting. The skill should document option (a) as the simpler pattern.
+**Do this instead:** Track a "last read position" by recording a unique marker sent before each new command, then extracting only output after that marker. Or limit the scrollback window to the lines produced since the last send (use `-S -50` rather than `-S -500` when response is expected to be short).
+
+### Anti-Pattern 5: New Tool Class for OpenCode with Embedded TTY Session
+
+**What people do:** Create `python/tools/opencode_tool.py` that spawns opencode as a child process via TTYSession (similar to code_execution_tool).
+
+**Why it's wrong:** This makes OpenCode invisible to the user (runs in a hidden PTY). The whole point of CLI-01 through CLI-06 is that the user can watch the shared terminal while the agent operates it. Shared terminal visibility requires running in the tmux session.
+
+**Do this instead:** tmux_tool + opencode_cli.py, both using the shared tmux session.
 
 ---
 
 ## Scaling Considerations
 
-This is a single-user local tool. Scaling is not relevant. The only resource concern is:
+This is a single-user local tool. Scaling is not a concern. The only resource issue is:
 
-| Concern | Current | Risk |
+| Concern | Reality | Risk |
 |---------|---------|------|
-| CDP WebSocket connections | One per code_execution_tool call (opened and closed) | Low — websocket.close() is documented in skill |
-| claude CLI processes | One per session, terminated when terminal_agent/code_execution_tool session ends | Low — process lifecycle tied to session |
-| Chromium memory | Single Chromium instance shared across all agent calls | Medium — if Chromium crashes, all browser ops fail. The `_wait_for_cdp()` readiness check and startup.sh fix address this |
+| Multiple agents writing to same tmux pane | Concurrent sends would interleave output | Low — Agent Zero is typically single-threaded per conversation |
+| OpenCode long response blocking tmux_tool:wait_ready | Waits up to `timeout` seconds, blocking the agent | Medium — set generous timeout (120s); agent cannot do other terminal work during wait |
+| tmux session not existing when tmux_tool sends | `tmux send-keys -t shared` fails if session missing | Low — startup.sh pre-creates "shared"; shared-terminal app restarts on failure |
 
 ---
 
 ## Sources
 
-- Direct inspection of `python/tools/browser_agent.py` (codebase, 2026-02-25)
-- Direct inspection of `python/tools/terminal_agent.py` (codebase, 2026-02-25)
-- Direct inspection of `python/tools/code_execution_tool.py` (codebase, 2026-02-25)
-- Direct inspection of `python/tools/skills_tool.py` (codebase, 2026-02-25)
-- Direct inspection of `python/helpers/tool.py` (codebase, 2026-02-25)
-- Direct inspection of `apps/shared-browser/startup.sh` (codebase, 2026-02-25)
-- Direct inspection of `apps/shared-browser/app.py` (codebase, 2026-02-25)
-- Direct inspection of `usr/skills/shared-browser/SKILL.md` v3.0 (codebase, 2026-02-25)
-- Direct inspection of `prompts/agent.system.tool.browser.md` (codebase, 2026-02-25)
-- Direct inspection of `prompts/agent.system.tool.terminal.md` (codebase, 2026-02-25)
+- Direct inspection of `python/tools/terminal_agent.py` — tmux_SESSION = "shared", sentinel pattern confirmed
+- Direct inspection of `python/tools/code_execution_tool.py` — LocalInteractiveSession, between_output_timeout, session IDs
+- Direct inspection of `python/helpers/tty_session.py` — PTY subprocess control (private sessions only)
+- Direct inspection of `python/helpers/shell_local.py` — wraps TTYSession for code_execution_tool
+- Direct inspection of `python/helpers/claude_cli.py` — ClaudeSession pattern; opencode_cli.py will mirror this
+- Direct inspection of `python/helpers/tool.py` — Tool base class: execute(), before_execution(), after_execution()
+- Direct inspection of `python/helpers/subagents.py` — get_paths(): tool resolution order (usr/tools/, python/tools/)
+- Direct inspection of `python/helpers/extract_tools.py` — load_classes_from_file(): how tool classes are found
+- Direct inspection of `agent.py` lines 974-1000 — get_tool(): full dispatch chain confirmed
+- Direct inspection of `prompts/agent.system.tools.py` — auto-discovery of agent.system.tool.*.md files confirmed
+- Direct inspection of `prompts/agent.system.tool.terminal.md` — terminal_agent system prompt format (model for tmux.md)
+- Direct inspection of `apps/shared-terminal/startup.sh` — pre-creates "shared" session; ttyd -A flag confirmed
+- Direct inspection of `.planning/PROJECT.md` — TERM-01..05 and CLI-01..06 requirements
 
 ---
 
-*Architecture research for: Agent Zero fork — CDP browser control and claude CLI integration*
+*Architecture research for: Agent Zero fork — tmux terminal orchestration (v1.2)*
 *Researched: 2026-02-25*

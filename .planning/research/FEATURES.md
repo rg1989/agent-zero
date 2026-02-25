@@ -1,20 +1,41 @@
 # Feature Research
 
-**Domain:** Browser automation reliability + interactive CLI session control (Agent Zero fork, v1.1)
+**Domain:** tmux-based terminal interaction + interactive CLI orchestration (Agent Zero fork, v1.2)
 **Researched:** 2026-02-25
-**Confidence:** HIGH (findings derived from live code inspection, direct CLI interrogation, CDP protocol knowledge — no web sources required)
+**Confidence:** HIGH (findings derived from live code inspection — terminal_agent.py, code_execution_tool.py, tty_session.py, claude-cli SKILL.md — plus web research on OpenCode CLI behavior and tmux orchestration patterns)
 
 ---
 
 ## Context
 
-This is a reliability milestone, not a greenfield feature build. The infrastructure already
-exists. The gaps are behavioral: the browser skill documents the right patterns but does not
-enforce them, and the claude CLI can be called but nested invocations crash because
-`CLAUDECODE=1` is set in the Agent Zero environment.
+This is the v1.2 Terminal Orchestration milestone. The goal is to give Agent Zero the ability to interact with the shared terminal and interactive CLIs as a human would — type, read screen, send special keys, detect readiness — enabling orchestration of any CLI agent (OpenCode first, generically second).
 
-What follows maps each PROJECT.md requirement (BROWSER-01..05, CLAUDE-01..05) to its feature
-category, complexity, and the Agent Zero capabilities it depends on.
+### What Already Exists (Do Not Re-Implement)
+
+| Existing Capability | Where | Status |
+|---------------------|-------|--------|
+| Shared terminal (tmux `shared` session, ttyd) | `apps/shared-terminal/startup.sh` | Shipped v1.0 |
+| `terminal_agent.py` — tmux send-keys + sentinel-based completion | `python/tools/terminal_agent.py` | Shipped v1.1 |
+| `code_execution_tool.py` — PTY-based shell sessions, prompt detection, idle timeout | `python/tools/code_execution_tool.py` | Shipped v1.0 |
+| `TTYSession` — PTY subprocess wrapper, send/read, idle-timeout collection | `python/helpers/tty_session.py` | Shipped v1.1 |
+| `ClaudeSession` / `claude_turn()` — subprocess-based multi-turn with `--resume UUID` | `python/helpers/claude_cli.py` | Shipped v1.1 |
+| claude-cli SKILL.md — all validated claude invocation patterns | `usr/skills/claude-cli/SKILL.md` | Shipped v1.1 |
+
+### What the Existing `terminal_agent.py` Can and Cannot Do
+
+The existing tool can:
+- Run fire-and-forget shell commands in the shared tmux session with sentinel detection
+- Return stdout after the command completes (exit code recovered from sentinel line)
+
+The existing tool CANNOT:
+- Send text without Enter (partial input to a waiting prompt)
+- Send special keys (Ctrl+C, Ctrl+D, Tab, Escape, arrows)
+- Interact with an interactive CLI already running in the pane (opencode TUI, python REPL, etc.)
+- Capture current pane screen content for observation
+- Detect when an interactive program is ready for input (vs. still processing)
+- Support multi-turn send/observe cycles within a single session
+
+These gaps are exactly what v1.2 must fill.
 
 ---
 
@@ -22,115 +43,195 @@ category, complexity, and the Agent Zero capabilities it depends on.
 
 ### Table Stakes (Users Expect These)
 
-Features that must work for the v1.1 milestone to be considered done. Missing any of these
-means the stated goal — "make browser control and Claude Code CLI work reliably" — is not met.
+Features required for the milestone goal to be met. Missing any of these means "Agent Zero can interact with the terminal as a human would" is false.
 
 | Feature | Why Expected | Complexity | Notes |
 |---------|--------------|------------|-------|
-| CDP navigation that waits for page load | Navigating and immediately reading the page returns a blank/partial result without a load-complete wait. Users expect "navigate" to mean "the page is ready." | MEDIUM | `Page.navigate` returns `frameId` immediately. Must follow with `Page.loadEventFired` event or poll `document.readyState` via `Runtime.evaluate`. Already have the WebSocket helper in SKILL.md; need to extend it. |
-| Screenshot before every browser action | "Observe before acting" is the only way an agent can know where it is. Without this, clicks land on the wrong element after dynamic page changes. | LOW | `Page.captureScreenshot` via CDP already exists in app.py. The skill documents it. The gap is enforcing it as mandatory, not optional. |
-| URL/title verification after navigation | "Did we actually land where we intended?" Without this, failed navigations (redirects, errors, blocked pages) silently pass. | LOW | `Runtime.evaluate` → `{url: location.href, title: document.title}` already shown in SKILL.md. Needs to be the standard post-navigate step. |
-| Chromium always starts with CDP remote origins flag | `--remote-allow-origins=*` missing → CDP WebSocket returns 403. The skill documents the fix but the startup script must enforce it. | LOW | `startup.sh` already has `--remote-allow-origins=*`. Verify it is present in every code path that can launch Chromium (startup + any restart logic). |
-| claude CLI single-turn invocation from Agent Zero | CLAUDE-01/02/03: The most common use case — "run claude on this task and get an answer" — must work. | LOW | **Critical finding:** `CLAUDECODE=1` is set in Agent Zero's environment. Direct `claude --print "..."` fails with "Cannot be launched inside another Claude Code session." Fix: `env -u CLAUDECODE claude --print "..."`. This is the primary blocker. |
-| Completion detection for single-turn claude calls | Agent Zero must know when claude has finished so it can read the output. Without this it reads partial output or hangs. | LOW | In `--print` mode, claude exits with code 0 when done. Standard subprocess completion detection applies. Agent Zero's `code_execution_tool` terminal runtime already handles this pattern. |
-| Multi-turn claude sessions via tmux | CLAUDE-04: "Run a complete multi-turn session" — send multiple prompts to the same running instance. | MEDIUM | The shared terminal already has a persistent `tmux shared` session. Pattern: `tmux send-keys -t shared "claude --continue" Enter` followed by `tmux send-keys -t shared "prompt text" Enter`. Detect completion by watching for the claude prompt character (`>` or `?`) returning. |
-| Dedicated claude CLI skill (SKILL.md) | CLAUDE-05: Without a skill file, Agent Zero will keep reinventing the patterns wrong. The skill is how knowledge persists. | LOW | Write `usr/skills/claude-cli/SKILL.md` documenting: env var fix, single-turn template, multi-turn tmux template, completion detection patterns, and the `--output-format stream-json` option for structured output. |
+| **TERM-01: Send text + Enter to named tmux pane** | The most fundamental action — type a command and submit it. Every terminal interaction starts here. | LOW | `tmux send-keys -t shared "text" Enter` — already used in `terminal_agent.py`. The new tmux_tool needs to expose this as a discrete action separate from fire-and-forget command execution. Key difference from existing tool: no sentinel appended, no completion-wait loop. |
+| **TERM-02: Send text without Enter (partial input)** | Interactive CLIs show prompts mid-line (e.g., `Are you sure? [y/N]`) and expect a single character response without Enter. Also required for OpenCode: it shows an input field that accepts text before the user hits Enter. | LOW | `tmux send-keys -t shared "text"` (no `Enter` at end). Critical: `-l` flag may be needed to suppress tmux key-name interpretation (e.g., send literal `y` not key name `y`). Use `send-keys -l` for literal text, standard `send-keys` for key names. |
+| **TERM-03: Send special keys to tmux pane** | Ctrl+C to interrupt a running process, Ctrl+D to send EOF, Tab for completion, Escape to cancel, arrow keys for navigation in interactive TUIs. These are the control signals that interactive programs depend on. | LOW | tmux key name syntax: `C-c` (Ctrl+C), `C-d` (Ctrl+D), `Escape`, `Tab`, `Up`, `Down`, `Left`, `Right`. `tmux send-keys -t shared C-c ""` — note: no `Enter` for control keys. The tmux_tool must expose a `key` parameter distinct from `text`. |
+| **TERM-04: Capture current terminal screen content** | Agent must observe current state before acting — same principle as the browser skill's "screenshot before every action." Capture-pane gives the current screen buffer. Without this, Agent operates blind. | LOW | `tmux capture-pane -t shared -p -S -200` captures last 200 lines of scrollback. Already used in `terminal_agent.py`. The new tool exposes this as a standalone read action, not bundled with command execution. Key parameter: `-S -N` controls scrollback depth. |
+| **TERM-05: Detect when terminal is ready for input** | Interactive CLIs have two states: processing (output flowing or spinner visible) and waiting (prompt displayed, expecting input). Sending input while processing corrupts the session. Agent must wait for the ready state. | HIGH | Dual strategy required: (1) prompt pattern matching on captured pane content (regex for `$ `, `# `, `> `, tool-specific prompts), (2) idle timeout fallback when no recognized prompt exists. `code_execution_tool.py` already implements this for its own PTY sessions — the same logic applies to tmux pane capture-pane polling. High complexity because interactive TUI prompts (OpenCode) are not simple regex matches — they contain ANSI color codes and may span multiple lines. |
+| **CLI-01: Start an interactive CLI in shared terminal** | Before any interaction can occur, the CLI must be running in the pane. Agent must be able to launch opencode, python REPL, etc. in the shared session. | LOW | `terminal_agent.py` already does this for fire-and-forget commands. For interactive CLIs: `tmux send-keys -t shared "opencode" Enter` then wait for the initial prompt before proceeding. The launch step and the first prompt-wait are always coupled. |
+| **CLI-02: Send prompts to running interactive CLI and read responses** | The core multi-turn interaction loop. Send text, wait for response to complete, read screen, repeat. This is what makes orchestration possible. | HIGH | Requires TERM-01 + TERM-04 + TERM-05 in sequence: send text + Enter → poll capture-pane until ready signal → read screen. The completion detection problem (TERM-05) is the hard part. Response may stream for seconds; premature capture returns partial output. Idle timeout is the fallback when no terminal prompt returns (e.g., opencode streaming response). |
+| **CLI-03: Detect when CLI has finished responding** | Agent must not send the next prompt before the CLI is done with the current one. Over-eager input corrupts state. | HIGH | Strategy depends on CLI type. For opencode non-interactive (`opencode run`): process exit is the signal (no detection needed — subprocess.run blocks). For opencode TUI: screen-scrape for the input field re-appearing. For generic interactive CLIs: idle timeout after output stops flowing. This is the highest-complexity feature of the milestone. |
+| **CLI-04: Interrupt or exit an interactive CLI session** | Ctrl+C to cancel a long-running response, `/quit` or `q` to exit gracefully, Ctrl+D for EOF-based exit. Failure to exit cleanly leaves orphan processes in the shared terminal pane. | LOW | Requires TERM-03 for Ctrl+C/Ctrl+D. For opencode: `/quit` command or `q` then Enter. For Python REPL: `exit()` or Ctrl+D. The skill must document per-CLI exit sequences. |
+| **CLI-06: Generic CLI orchestration skill document** | Without a SKILL.md, Agent Zero will reinvent patterns incorrectly in each session. The skill is how validated patterns persist and become reusable. | LOW | Write `usr/skills/cli-orchestration/SKILL.md` documenting: tmux_tool actions, generic send/observe/detect/read loop, per-CLI prompt patterns, exit sequences, and the OpenCode-specific wrapper. Must follow the same structure as `claude-cli/SKILL.md`. |
 
 ### Differentiators (Competitive Advantage)
 
-Features that improve reliability beyond the minimum. Not required to close the milestone, but
-would make the patterns significantly more robust.
+Features that make the orchestration significantly more robust but are not the minimum to close the milestone.
 
 | Feature | Value Proposition | Complexity | Notes |
 |---------|-------------------|------------|-------|
-| Structured output from claude via `--output-format json` | Instead of parsing free-form text, get a JSON envelope with `result`, `cost`, `session_id`. Makes multi-turn session management deterministic. | LOW | `claude --print --output-format json "prompt"` returns `{"type":"result","subtype":"success","result":"...","session_id":"..."}`. No parsing heuristics needed. |
-| CDP load-event-fenced navigation helper (Python function) | Wraps `Page.navigate` + `Page.loadEventFired` + URL verify into a single reusable function that the skill can reference. Reduces the chance of the agent skipping the wait step. | MEDIUM | Can live as a standalone Python snippet in the skill or as a method in `app.py` (`/api/navigate` could optionally wait for load). |
-| `--session-id` persistence for multi-turn claude | Allows resuming a specific claude session by UUID rather than relying on "most recent." Makes multi-agent coordination reliable if two agents run claude sessions. | LOW | CLI already supports `--resume UUID` and `--session-id UUID`. Just needs to be documented in the skill. |
-| Observe-Act-Verify as a named pattern in SKILL.md | Giving the three-step loop a name and template makes it a reusable unit the agent can invoke by name rather than reconstruct from first principles each time. | LOW | Already described in SKILL.md v3.0. Needs to be the lead section, not buried after the method reference. |
+| **CLI-05: Pre-built OpenCode CLI wrapper (`opencode_session()`)** | Following the `ClaudeSession` pattern from v1.1, an `OpenCodeSession` class would abstract session lifecycle, prompt detection, and response extraction behind a simple `session.run("prompt")` interface. Callers don't implement the send/wait/capture loop themselves. | HIGH | Complexity is in the OpenCode-specific prompt detection. OpenCode TUI uses ANSI color codes to render its input field — detecting "ready for input" requires ANSI-aware pattern matching (or stripping ANSI and matching the stripped text). The non-interactive `opencode run` mode is simpler: subprocess exit = done. Recommendation: implement via `opencode run "prompt"` subprocess first (mirrors ClaudeSession pattern), add TUI interaction only if needed. |
+| **Pane-specific targeting (named panes, not just `shared`)** | Allows Agent to target different panes within the shared terminal — e.g., run opencode in pane 1 while monitoring output in pane 2. Enables parallel CLI sessions. | MEDIUM | `tmux send-keys -t shared:0.1` targets window 0, pane 1. The tmux_tool needs a `pane` parameter. Low implementation cost per pane, but multi-pane coordination logic adds complexity. |
+| **ANSI stripping before prompt pattern matching** | Raw capture-pane output contains ANSI escape sequences (`\x1b[...m`). Matching `$ ` in ANSI-decorated text requires stripping first. Without this, prompt patterns fail against color-decorated prompts. | LOW | Python: `re.sub(r'\x1b\[[0-?]*[ -/]*[@-~]', '', raw)`. Already implicitly needed by TERM-05. Should be a utility function in the tmux_tool or the skill. `code_execution_tool.py`'s `fix_full_output()` does a partial version of this — reference implementation. |
+| **Scrollback depth control for capture-pane** | Default capture may miss response content for long outputs. Parameterizing `-S -N` lets callers get more history without always pulling maximum scrollback. | LOW | Simple parameter addition. Default of -200 lines covers most cases. Increase to -1000 for verbose CLI tools. |
 
 ### Anti-Features (Commonly Requested, Often Problematic)
 
 | Feature | Why Requested | Why Problematic | Alternative |
 |---------|---------------|-----------------|-------------|
-| Wrapping CDP in Playwright | "Playwright is higher-level and handles waits automatically." | The shared browser runs a real persistent Chromium instance. Playwright spawns its own isolated instance, creates a persistent loader artifact in the Agent Zero UI (`pkill -f playwright` is already in the troubleshooting guide for this reason), and cannot attach to an already-running Chromium without the CDP-attach mode (which is an advanced Playwright configuration that adds complexity without benefit over raw CDP). | Use raw CDP WebSocket directly. The existing SKILL.md patterns are sufficient. |
-| Using `xdotool` for URL navigation | "It's simpler — just type the URL into the address bar." | xdotool navigation is unreliable: it requires `windowfocus` to succeed, is sensitive to focus state, can mis-fire if the address bar already has text selected, and provides no programmatic feedback on success. It also cannot navigate a headless Chromium (which is the actual configuration after the startup.sh rewrite). | `CDP Page.navigate` — fast, reliable, returns a frameId, independent of UI focus. |
-| Running claude interactively in Agent Zero's own terminal session | "Just start an interactive claude session and type into it." | Agent Zero's terminal sessions (`code_execution_tool`) are persistent PTY sessions that Agent Zero uses for its own work. Injecting an interactive claude process into them creates a conflict: Agent Zero's prompt detection patterns see the claude prompt as a shell idle signal, causing premature output capture. | Use `--print` mode for single-turn (subprocess exits cleanly) or a dedicated tmux window for interactive sessions, isolated from Agent Zero's own shells. |
-| Polling for claude output with a fixed `time.sleep()` | "Just wait 5 seconds and read the output." | LLM response time is non-deterministic. Short waits fail on complex prompts; long waits waste time on simple ones. Makes streaming impossible. | Subprocess completion detection (`wait()` on the PID) for `--print` mode. tmux `capture-pane` polling for interactive mode with idle detection. |
-| Setting a global `CLAUDECODE` env override in the Docker image | "Fix the env var problem permanently by unsetting it in the Dockerfile." | `CLAUDECODE=1` is set by Claude Code at runtime, not at image build time. It signals active nesting protection. Removing it from the environment permanently would require a workaround that might break future Claude Code behavior. | Unset it per-invocation: `env -u CLAUDECODE claude ...`. This is precise, reversible, and only affects the spawned subprocess. |
+| **Using `TTYSession` for the shared terminal** | TTYSession is available in the codebase and provides PTY-based interaction. Might seem like the right tool for interactive CLI orchestration. | TTYSession spawns a NEW subprocess. The shared terminal is an EXISTING tmux session that the user can see and interact with. Creating a TTYSession to "control" the shared terminal doesn't interact with the shared session — it creates an invisible parallel process. The user's terminal view becomes inconsistent with what the agent is doing. | Use tmux send-keys + capture-pane for ALL interaction with the shared terminal. TTYSession is the right tool for isolated headless subprocess control (which has different use cases). |
+| **Running opencode with `browser_agent` (Playwright)** | Playwright can interact with web-based TUIs. OpenCode might have a web interface. | OpenCode's TUI is a terminal application, not a browser tab. Playwright cannot interact with terminal content. This is a category error. | Use tmux send-keys + capture-pane for terminal TUI control. If OpenCode ever ships a web UI, revisit. |
+| **Infinite polling loop without timeout** | "Just keep polling capture-pane until the prompt appears." | Without a max-wait timeout, any deadlocked CLI (crashed, waiting for a keypress the agent doesn't know about) causes the agent to hang forever. This blocks the entire Agent Zero session. | Always pair polling loops with a `max_total_timeout` (e.g., 120s for long AI responses, 30s for quick commands). Log the pane content on timeout so the agent can diagnose the state. |
+| **Sending raw escape sequences via send-keys** | "Send `\x1b[A` for up-arrow instead of tmux key names." | Raw escape sequences may be interpreted differently depending on tmux terminal settings and the target application's input handling. tmux key names (`Up`, `Escape`, `C-c`) are portable and well-defined across tmux versions. | Use tmux key name syntax exclusively: `tmux send-keys -t target Escape ""`, `tmux send-keys -t target Up ""`. |
+| **Running opencode interactively inside `code_execution_tool`** | Seems like the simplest approach — start opencode in an existing Agent Zero PTY session. | `code_execution_tool` prompt patterns (`$ `, `# `, `PS >`) will match before opencode has finished responding, causing premature output capture. The sentinel pattern (`__A0_xyz:0`) added to commands won't work for interactive CLIs that don't exit. The PTY sessions are Agent Zero's own work shells — injecting another interactive process creates state confusion. | Run opencode in the shared tmux session (separate from Agent Zero's PTY shells) and interact via tmux send-keys + capture-pane. This is visually transparent to the user and does not contaminate Agent Zero's work sessions. |
+| **Expecting subprocess exit for TUI opencode completion** | The claude CLI `--print` mode exits cleanly when done. Reuse same pattern for opencode TUI. | OpenCode TUI does not exit after each prompt — it stays running and waits for the next input. The TUI is a persistent process, not a request-response subprocess. Process exit is NOT the completion signal for TUI mode. | For opencode TUI: screen-scrape input prompt re-appearance. For opencode non-interactive: use `opencode run "prompt"` which DOES exit after one turn — matching the subprocess-exit pattern from ClaudeSession. |
 
 ---
 
 ## Feature Dependencies
 
 ```
-[BROWSER-01: CDP navigate with load wait]
-    └──requires──> [BROWSER-04: Chromium starts with CDP enabled]
-    └──requires──> [CDP WebSocket helper — already in SKILL.md]
+[TERM-01: Send text + Enter]
+    └──required by──> [CLI-01: Start interactive CLI]
+    └──required by──> [CLI-02: Send prompts / multi-turn]
+    └──required by──> [CLI-05: opencode_session()]
 
-[BROWSER-02: Screenshot before every action]
-    └──requires──> [BROWSER-04: Chromium starts with CDP enabled]
-    └──enhances──> [BROWSER-05: Observe→Act→Verify workflow]
+[TERM-02: Send text without Enter]
+    └──required by──> [CLI-02: Send prompts — for single-char responses to inline prompts]
 
-[BROWSER-03: Verify navigation URL/title]
-    └──requires──> [BROWSER-01: CDP navigate with load wait]
-    └──is part of──> [BROWSER-05: Observe→Act→Verify workflow]
+[TERM-03: Send special keys]
+    └──required by──> [CLI-04: Interrupt/exit CLI]
+    └──enhances──> [CLI-02: Send prompts — for navigation in TUI]
 
-[BROWSER-05: Observe→Act→Verify workflow]
-    └──requires──> [BROWSER-01 + BROWSER-02 + BROWSER-03 + BROWSER-04]
+[TERM-04: Capture pane screen content]
+    └──required by──> [TERM-05: Detect readiness]
+    └──required by──> [CLI-02: Read response after sending]
+    └──required by──> [CLI-03: Detect when CLI is done]
 
-[CLAUDE-02: Send prompt, receive response]
-    └──requires──> [CLAUDE-01: Launch claude CLI]
-    └──requires──> [env -u CLAUDECODE fix — blocks all claude invocations]
+[TERM-05: Detect readiness]
+    └──requires──> [TERM-04: Capture pane]
+    └──required by──> [CLI-02: Send prompts — must wait before sending]
+    └──required by──> [CLI-03: Detect completion]
+    └──required by──> [CLI-05: opencode_session()]
 
-[CLAUDE-03: Detect completion]
-    └──requires──> [CLAUDE-02: Send prompt]
+[CLI-01: Start interactive CLI]
+    └──requires──> [TERM-01]
+    └──requires──> [TERM-05 — wait for initial prompt before first interaction]
 
-[CLAUDE-04: Multi-turn session]
-    └──requires──> [CLAUDE-01 + CLAUDE-02 + CLAUDE-03]
-    └──requires──> [shared-terminal tmux session running]
+[CLI-02: Send prompts + read responses]
+    └──requires──> [TERM-01 + TERM-02 + TERM-04 + TERM-05]
 
-[CLAUDE-05: Dedicated skill]
-    └──requires──> [CLAUDE-01..04 all validated]
-    └──documents──> [all claude CLI patterns]
+[CLI-03: Detect completion]
+    └──requires──> [TERM-04 + TERM-05]
+
+[CLI-04: Interrupt/exit]
+    └──requires──> [TERM-03]
+
+[CLI-05: opencode_session() wrapper]
+    └──requires──> [CLI-01 + CLI-02 + CLI-03 + CLI-04]
+    └──follows pattern of──> [ClaudeSession from python/helpers/claude_cli.py]
+
+[CLI-06: Generic CLI orchestration SKILL.md]
+    └──requires──> [CLI-01..05 all validated]
+    └──documents──> [tmux_tool API + per-CLI patterns]
 ```
 
 ### Dependency Notes
 
-- **BROWSER-04 is a prerequisite for all BROWSER features:** If Chromium does not expose CDP with `--remote-allow-origins=*`, every CDP call returns 403. The startup.sh already has this flag; the implementation task is verifying it survives restarts and adding a health-check that confirms CDP is reachable before attempting any browser operation.
+- **TERM-04 + TERM-05 are the core difficulty:** Everything else is straightforward tmux invocation. Screen capture and readiness detection are where the complexity lives, because terminal output is noisy (ANSI codes, partial lines, spinner characters) and interactive TUIs don't emit stable "I'm done" signals.
 
-- **The `env -u CLAUDECODE` fix is a prerequisite for all CLAUDE features:** Without unsetting this variable, every attempt to call the claude CLI from within an Agent Zero session fails immediately. This is a single-line fix but it blocks all five CLAUDE requirements.
+- **TERM-01..04 can all be implemented in a single `tmux_tool` with action dispatch:** One new Python tool `python/tools/tmux_tool.py` with `action` parameter (`send`, `send_keys`, `capture`, `send_and_wait`). This is lower overhead than four separate tools.
 
-- **CLAUDE-04 (multi-turn) depends on the shared-terminal tmux session:** The `shared` tmux session is started by `apps/shared-terminal/startup.sh`. If the shared-terminal app is not running, the tmux-based multi-turn pattern has no session to target. The skill must document the fallback: create a new tmux session (`tmux new-session -d -s claude-session`) if the shared session is unavailable.
+- **CLI-05 (opencode wrapper) should use `opencode run` non-interactive first:** The `opencode run "prompt"` mode exits after one turn, giving process-exit completion detection — identical to `ClaudeSession`. Only escalate to TUI interaction if multi-turn with session memory is required. Session continuation in non-interactive mode uses `--continue` or `--session` flag (similar to claude's `--resume UUID`).
 
-- **CLAUDE-05 (skill) requires CLAUDE-01..04 to be validated:** Writing the skill before confirming the patterns work embeds untested patterns. The skill is the last step, not the first.
+- **OpenCode session continuity note:** OpenCode `--continue` flag continues the most recent session; `--session <id>` targets a specific session. The session memory issue in non-interactive mode (GitHub Issue #917) is real — verify session memory works before relying on it. Fallback: embed prior context in each prompt (less elegant but reliable).
+
+---
+
+## OpenCode CLI Behavior Reference
+
+Research findings on what OpenCode expects from an orchestrator (MEDIUM confidence — web sources, not direct CLI interrogation of local binary).
+
+### Non-Interactive Mode (`opencode run`)
+
+```bash
+# Single-turn — process exits after response
+opencode run "Explain the use of context in Go"
+
+# With quiet flag (suppress spinner — needed for scripting)
+opencode run -q "prompt"
+
+# With JSON output format
+opencode run -f json "prompt"
+
+# Continue most recent session
+opencode run --continue "follow-up prompt"
+
+# Target specific session
+opencode run --session <session-id> "prompt"
+
+# Allow specific tools only
+opencode run --allowedTools "bash,read_file" "prompt"
+
+# Title for the session (scripting/logging)
+opencode run --title "Task name" "prompt"
+```
+
+**Completion signal:** Process exits (returncode 0 = success). Identical pattern to `claude --print`.
+
+**Known issue (subprocess.Popen hang):** GitHub Issue #11891 documents that `opencode run --format json` can hang indefinitely when launched via Python `subprocess.Popen` + `readline()`. Mitigation: use `subprocess.run` (blocking, captures all output at once) rather than streaming. Matches the `ClaudeSession` subprocess.run pattern exactly.
+
+**Known issue (session memory in non-interactive):** GitHub Issue #917 reports session memory is not reliably passed in non-interactive mode. Test this before depending on `--continue` for multi-turn state.
+
+### Interactive TUI Mode (`opencode` with no args)
+
+```
+Starts a full TUI with:
+  - Input field at bottom
+  - Response streaming above
+  - Spinner while processing
+  - Input field disappears during processing
+  - Input field reappears when ready for next prompt
+```
+
+**Completion signal for TUI:** Input field re-appearance in the pane. No structured exit code. Must screen-scrape via `tmux capture-pane`.
+
+**Prompt detection strategy for TUI:** ANSI strip the captured pane, then look for the input field indicator. The exact prompt string varies by opencode version and theme. Fallback: idle timeout after output stops flowing (no new content in capture-pane across N polls).
+
+**ForgeFlow precedent:** The ForgeFlow project (September 2025, GitHub: Kingson4Wu/ForgeFlow) documents this exact adapter pattern for interactive AI CLIs in tmux. Its approach: (1) ANSI-aware capture, (2) regex detection of tool-specific "ready" prompts, (3) configurable rules system. Validates that the approach is technically sound and not novel.
+
+### Exit Signals
+
+| Exit Method | Use When | tmux Command |
+|-------------|----------|--------------|
+| `/quit` then Enter | OpenCode TUI graceful exit | `send-keys -t shared "/quit" Enter` |
+| `q` then Enter | OpenCode compact exit command | `send-keys -t shared "q" Enter` |
+| Ctrl+C | Interrupt ongoing response | `send-keys -t shared C-c ""` |
+| Ctrl+D | EOF signal (some CLIs) | `send-keys -t shared C-d ""` |
+| Process kill | Last resort — may leave tmux pane in bad state | `tmux send-keys -t shared C-c ""` then verify |
 
 ---
 
 ## MVP Definition
 
-### Launch With (v1.1)
+### Launch With (v1.2)
 
-Minimum to close all BROWSER and CLAUDE requirements from PROJECT.md.
+Minimum to satisfy TERM-01..05 and CLI-01..04, CLI-06 from PROJECT.md.
 
-- [ ] BROWSER-04 verified: `startup.sh` has `--remote-allow-origins=*` and a CDP health-check confirms it — *prerequisite for everything else*
-- [ ] BROWSER-01: CDP navigate with post-navigate `document.readyState` polling (wait until `complete` or 3s timeout) — *core reliability fix*
-- [ ] BROWSER-02: Screenshot step codified as mandatory first step in skill workflow — *already in SKILL.md, needs skill update to make it the lead instruction*
-- [ ] BROWSER-03: URL/title verify step after every navigation — *one `Runtime.evaluate` call, add to skill template*
-- [ ] BROWSER-05: Observe→Act→Verify section promoted to top of SKILL.md as the primary workflow — *skill edit, no code change*
-- [ ] env-u CLAUDECODE fix: all claude invocations in the skill use `env -u CLAUDECODE` prefix — *one-line fix, blocks everything else*
-- [ ] CLAUDE-01/02/03: Single-turn pattern: `env -u CLAUDECODE claude --print --output-format json "prompt"` — *subprocess, reads output on exit*
-- [ ] CLAUDE-04: Multi-turn pattern: tmux `send-keys` to shared session + capture-pane polling for completion — *tmux commands, no new infrastructure*
-- [ ] CLAUDE-05: `usr/skills/claude-cli/SKILL.md` documenting all patterns with working code examples
+- [ ] **TERM-01:** `tmux_tool` with `send` action — sends text + Enter to shared pane
+- [ ] **TERM-02:** `tmux_tool` with `send_literal` action — sends text without Enter (literal characters)
+- [ ] **TERM-03:** `tmux_tool` with `send_key` action — sends named special keys (C-c, C-d, Escape, Tab, Up, Down)
+- [ ] **TERM-04:** `tmux_tool` with `capture` action — returns current pane content (last N lines of scrollback)
+- [ ] **TERM-05:** `tmux_tool` with `send_and_wait` action — sends text + Enter then polls capture-pane for prompt pattern or idle timeout
+- [ ] **CLI-01..04:** `send_and_wait` action handles the start/interact/read/interrupt lifecycle for generic interactive CLIs
+- [ ] **CLI-05:** `opencode_session()` helper in `python/helpers/opencode_cli.py` — uses `opencode run` subprocess (not TUI) following `ClaudeSession` pattern
+- [ ] **CLI-06:** `usr/skills/cli-orchestration/SKILL.md` — documents tmux_tool API, generic orchestration loop, OpenCode patterns, and per-CLI prompt/exit reference
 
 ### Add After Validation (v1.x)
 
-- [ ] `/api/navigate` in `app.py` gains an optional `wait_for_load: bool` parameter — add only if Agent Zero frequently calls navigate via HTTP rather than direct Python CDP. Trigger: if skill-based CDP direct calls are cumbersome for certain workflows.
-- [ ] `--session-id` based session tracking in the claude CLI skill — add when multi-agent coordination is needed. Trigger: second agent needs to join a claude session started by the first.
+- [ ] **TUI-mode opencode interaction** — only if `opencode run` session memory proves unreliable. Trigger: need for stateful multi-turn with opencode where `--continue` fails.
+- [ ] **Multi-pane targeting** — only if parallel CLI sessions become a use case. Trigger: need to run two CLIs simultaneously.
+- [ ] **Scrollback depth parameter** — expose `-S -N` as a parameter in capture action. Trigger: verbose CLI output truncated.
 
 ### Future Consideration (v2+)
 
-- [ ] Streaming output from claude via `--output-format stream-json` piped back to Agent Zero in real-time — complex integration, defer until single-turn and multi-turn are stable and the use case is validated.
-- [ ] Browser action library (click by text, fill form field, wait for element) built on top of CDP — defer until the basic Observe→Act→Verify loop is proven reliable in practice.
+- [ ] **MCP-based tmux control** — structured tmux MCP servers (bnomei/tmux-mcp, Jonrad/tmux-mcp) provide typed APIs over raw shell commands. Defer until raw tmux approach proves insufficient.
+- [ ] **OpenCode streaming JSON** — `opencode run -f json` streams structured events. Complex to pipe in real-time. Defer until streaming output to Agent Zero UI is a validated need.
+- [ ] **Other interactive CLI wrappers** — aider, Codex CLI, custom REPLs. Defer until the generic pattern is proven and a specific tool is needed.
 
 ---
 
@@ -138,57 +239,62 @@ Minimum to close all BROWSER and CLAUDE requirements from PROJECT.md.
 
 | Feature | User Value | Implementation Cost | Priority |
 |---------|------------|---------------------|----------|
-| env -u CLAUDECODE fix | HIGH | LOW | P1 — unblocks all CLAUDE features |
-| BROWSER-04 CDP health-check | HIGH | LOW | P1 — unblocks all BROWSER features |
-| CDP navigate with load wait (BROWSER-01) | HIGH | LOW | P1 — core reliability |
-| CLAUDE single-turn --print pattern (CLAUDE-01/02/03) | HIGH | LOW | P1 — core use case |
-| URL/title verify after navigate (BROWSER-03) | HIGH | LOW | P1 — required for BROWSER-05 |
-| Observe→Act→Verify skill update (BROWSER-02/05) | MEDIUM | LOW | P1 — no code, skill edit only |
-| Multi-turn tmux pattern (CLAUDE-04) | MEDIUM | MEDIUM | P2 — depends on P1 CLAUDE |
-| claude-cli SKILL.md (CLAUDE-05) | HIGH | LOW | P1 — but last, after others validated |
-| `/api/navigate` load-wait option | LOW | LOW | P3 — only if direct CDP insufficient |
-| `--session-id` tracking | LOW | LOW | P3 — future multi-agent |
+| TERM-01: send text + Enter | HIGH | LOW | P1 — foundational, everything depends on it |
+| TERM-04: capture pane | HIGH | LOW | P1 — agent's eyes on the terminal |
+| TERM-05: prompt detection / idle wait | HIGH | HIGH | P1 — required for safe interaction |
+| TERM-02: send without Enter | MEDIUM | LOW | P1 — needed for inline prompt responses |
+| TERM-03: send special keys | MEDIUM | LOW | P1 — needed for CLI-04 interrupt/exit |
+| CLI-01: start interactive CLI | HIGH | LOW | P1 — depends on TERM-01 + TERM-05 |
+| CLI-02: send prompts + read | HIGH | MEDIUM | P1 — core orchestration loop |
+| CLI-03: detect completion | HIGH | HIGH | P1 — without this, agent sends blind |
+| CLI-04: interrupt/exit | MEDIUM | LOW | P1 — prevents orphan processes |
+| CLI-05: opencode_session() | HIGH | MEDIUM | P2 — ClaudeSession pattern, after generic works |
+| CLI-06: SKILL.md | HIGH | LOW | P1 — but last, after all patterns validated |
+| ANSI stripping utility | MEDIUM | LOW | P1 — needed before TERM-05 can work |
+| Multi-pane targeting | LOW | LOW | P3 — future parallel sessions |
+| TUI-mode opencode | LOW | HIGH | P3 — non-interactive mode is sufficient |
 
 **Priority key:**
-- P1: Must have for v1.1 launch
-- P2: Should have, add when possible
+- P1: Must have for v1.2 launch
+- P2: Should have, add when core is proven
 - P3: Nice to have, future consideration
 
 ---
 
-## Existing Infrastructure (Dependencies Already Satisfied)
+## Existing Infrastructure Dependencies
 
-These are Agent Zero capabilities this milestone depends on — all confirmed present:
+All of these must be present and working for v1.2. All confirmed present from v1.0/v1.1.
 
-| Capability | Where | Status |
-|------------|-------|--------|
-| CDP WebSocket Python helper (websocket-client) | SKILL.md + app.py uses websockets lib | Present |
-| `Page.captureScreenshot` via CDP | app.py `/api/screenshot`, SKILL.md | Present |
-| `Page.navigate` via CDP | app.py `/api/navigate`, SKILL.md | Present |
-| `Runtime.evaluate` for JS execution | SKILL.md | Present |
-| Chromium headless with `--remote-allow-origins=*` | apps/shared-browser/startup.sh line 39 | Present |
-| tmux `shared` session | apps/shared-terminal/startup.sh | Present |
-| `code_execution_tool` terminal runtime | python/tools/code_execution_tool.py | Present |
-| claude CLI binary | /Users/rgv250cc/.local/bin/claude v2.1.55 | Present |
-| `--print` non-interactive mode | claude --help output | Present |
-| `--output-format json` for structured output | claude --help output | Present |
-| `--continue` / `--resume UUID` for multi-turn | claude --help output | Present |
+| Capability | Where | Required By |
+|------------|-------|-------------|
+| tmux `shared` session | `apps/shared-terminal/startup.sh` | All TERM-* and CLI-* features |
+| `tmux send-keys` available in Agent Zero environment | Host PATH (or Docker) | TERM-01..03 |
+| `tmux capture-pane` available | Host PATH (or Docker) | TERM-04..05 |
+| `code_execution_tool.py` prompt patterns + idle detection | `python/tools/code_execution_tool.py` | Reference implementation for TERM-05 |
+| `TTYSession` idle-timeout pattern | `python/helpers/tty_session.py` | Reference for CLI-02/03 collection loop |
+| `ClaudeSession` subprocess.run pattern | `python/helpers/claude_cli.py` | Reference for CLI-05 opencode wrapper |
+| opencode binary available on host PATH | `~/.local/bin/opencode` or `opencode` on PATH | CLI-05 |
+| `CLAUDECODE` env fix pattern | `python/helpers/claude_cli.py` | N/A for opencode (not claude — different env check) |
 
 ---
 
 ## Sources
 
-- `/Users/rgv250cc/Documents/Projects/agent-zero/usr/skills/shared-browser/SKILL.md` — existing skill v3.0 (live file)
-- `/Users/rgv250cc/Documents/Projects/agent-zero/apps/shared-browser/startup.sh` — Chromium startup configuration (live file)
-- `/Users/rgv250cc/Documents/Projects/agent-zero/apps/shared-browser/app.py` — Flask CDP proxy (live file)
-- `/Users/rgv250cc/Documents/Projects/agent-zero/apps/shared-terminal/startup.sh` — tmux session setup (live file)
-- `/Users/rgv250cc/Documents/Projects/agent-zero/python/tools/code_execution_tool.py` — Agent Zero terminal session patterns (live file)
-- `/Users/rgv250cc/Documents/Projects/agent-zero/.planning/PROJECT.md` — milestone requirements (live file)
-- `claude --help` output — v2.1.55, direct CLI interrogation, confirmed `--print`, `--output-format`, `--continue`, `--resume` flags
-- Direct env inspection — confirmed `CLAUDECODE=1` is set, which blocks nested invocations; `env -u CLAUDECODE` is the fix
-- CDP protocol knowledge (HIGH confidence from training) — `Page.navigate` return semantics, `loadEventFired`, `Runtime.evaluate` for `document.readyState`
+- `/Users/rgv250cc/Documents/Projects/agent-zero/python/tools/terminal_agent.py` — existing tmux tool, shows send-keys + sentinel pattern (live file)
+- `/Users/rgv250cc/Documents/Projects/agent-zero/python/tools/code_execution_tool.py` — prompt detection patterns, idle timeout, dialog detection (live file)
+- `/Users/rgv250cc/Documents/Projects/agent-zero/python/helpers/tty_session.py` — TTYSession read_chunks_until_idle pattern (live file)
+- `/Users/rgv250cc/Documents/Projects/agent-zero/python/helpers/claude_cli.py` — ClaudeSession pattern to replicate for opencode_session (live file)
+- `/Users/rgv250cc/Documents/Projects/agent-zero/usr/skills/claude-cli/SKILL.md` — Observe→Act→Verify analog for CLI interaction (live file)
+- `/Users/rgv250cc/Documents/Projects/agent-zero/.planning/PROJECT.md` — v1.2 milestone requirements TERM-01..05, CLI-01..06 (live file)
+- [OpenCode CLI docs](https://opencode.ai/docs/cli/) — non-interactive mode, -q flag, --continue, --session flags (MEDIUM confidence)
+- [OpenCode GitHub Issue #917: Session memory in non-interactive](https://github.com/sst/opencode/issues/917) — confirms session memory risk (MEDIUM confidence)
+- [OpenCode GitHub Issue #11891: subprocess.Popen hang with JSON format](https://github.com/anomalyco/opencode/issues/11891) — confirms use subprocess.run not Popen (MEDIUM confidence)
+- [ForgeFlow: AI CLI automation in tmux](https://dev.to/kingson4ng/forgeflow-engineering-grade-automation-for-ai-clis-inside-tmux-36fj) — validates ANSI-aware prompt detection approach (MEDIUM confidence)
+- [tmux send-keys key names](https://tao-of-tmux.readthedocs.io/en/latest/manuscript/10-scripting.html) — C-c, Escape, Up/Down syntax confirmed (HIGH confidence)
+- [GitHub: Kingson4Wu/ForgeFlow](https://github.com/Kingson4Wu/ForgeFlow) — adapter+rules architecture for interactive CLI orchestration (MEDIUM confidence)
+- [Claude Code Agent Farm](https://github.com/Dicklesworthstone/claude_code_agent_farm) — --idle-timeout pattern for tmux-based agent orchestration (MEDIUM confidence)
 
 ---
 
-*Feature research for: Agent Zero v1.1 — Browser reliability + Claude CLI control*
+*Feature research for: Agent Zero v1.2 — tmux terminal interaction + interactive CLI orchestration*
 *Researched: 2026-02-25*
