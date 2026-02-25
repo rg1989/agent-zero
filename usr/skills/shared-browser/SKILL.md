@@ -2,7 +2,7 @@
 
 ## Metadata
 - name: shared-browser
-- version: 4.0
+- version: 4.3
 - description: Control and observe the shared Chromium browser on Xvfb :99 via CDP WebSocket and xdotool — with navigate-with-verification and Observe-Act-Verify workflow
 - tags: browser, chromium, cdp, xdotool, automation, shared
 - author: agent-zero
@@ -112,6 +112,119 @@ def take_screenshot(ws, path='/tmp/shared_browser.png'):
     with open(path, 'wb') as f:
         f.write(base64.b64decode(result['result']['data']))
     return path
+
+def click_selector(ws, selector):
+    """Click element by CSS selector using CDP Input events (works with trusted event handlers)."""
+    js = "(() => { const el = document.querySelector('" + selector + "'); if (!el) return null; const rect = el.getBoundingClientRect(); return {x: rect.left + rect.width/2, y: rect.top + rect.height/2, found: true}; })()"
+    result = send(ws, 'Runtime.evaluate', {'expression': js, 'returnByValue': True})
+    coords = result.get('result', {}).get('result', {}).get('value')
+    if not coords or not coords.get('found'):
+        return False
+    x, y = coords['x'], coords['y']
+    send(ws, 'Input.dispatchMouseEvent', {'type': 'mousePressed', 'x': x, 'y': y, 'button': 'left', 'clickCount': 1})
+    send(ws, 'Input.dispatchMouseEvent', {'type': 'mouseReleased', 'x': x, 'y': y, 'button': 'left', 'clickCount': 1})
+    return True
+
+def eval_js(ws, code, return_value=True):
+    """Evaluate JavaScript in page context."""
+    result = send(ws, 'Runtime.evaluate', {'expression': code, 'returnByValue': return_value})
+    if return_value:
+        return result.get('result', {}).get('result', {}).get('value')
+    return result
+
+def type_text(ws, text):
+    """Type text into focused element via CDP (alternative to xdotool)."""
+    for char in text:
+        send(ws, 'Input.dispatchKeyEvent', {'type': 'keyDown', 'text': char})
+        send(ws, 'Input.dispatchKeyEvent', {'type': 'keyUp', 'text': char})
+        time.sleep(0.05)
+
+def wait_for_selector(ws, selector, timeout=10):
+    """Wait until element matching CSS selector exists in DOM. Essential for SPAs."""
+    js = f"document.querySelector('{selector}') !== null"
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        result = send(ws, 'Runtime.evaluate', {'expression': js, 'returnByValue': True})
+        if result.get('result', {}).get('result', {}).get('value'):
+            return True
+        time.sleep(0.3)
+    return False
+
+def get_cookies(ws):
+    """Get all cookies for current page."""
+    result = send(ws, 'Network.getCookies')
+    return result.get('result', {}).get('cookies', [])
+
+def set_cookies(ws, cookies):
+    """Set cookies. cookies = [{'name': 'x', 'value': 'y', 'domain': 'example.com'}, ...]"""
+    send(ws, 'Network.setCookies', {'cookies': cookies})
+
+def set_user_agent(ws, user_agent):
+    """Set custom User-Agent to mimic devices or avoid bot detection."""
+    send(ws, 'Emulation.setUserAgentOverride', {'userAgent': user_agent})
+
+def capture_console_logs(ws, duration=2):
+    """Enable console capture and collect logs for duration seconds."""
+    send(ws, 'Log.enable')
+    logs = []
+    ws.settimeout(duration)
+    try:
+        while True:
+            msg = json.loads(ws.recv())
+            if msg.get('method') == 'Log.entryAdded':
+                entry = msg['params']['entry']
+                logs.append({'level': entry['level'], 'text': entry['text']})
+    except:
+        pass
+    ws.settimeout(None)
+    return logs
+
+def capture_network_traffic(ws, duration=2):
+    """Enable network capture and collect requests for duration seconds."""
+    send(ws, 'Network.enable')
+    requests = []
+    ws.settimeout(duration)
+    try:
+        while True:
+            msg = json.loads(ws.recv())
+            if msg.get('method') == 'Network.requestWillBeSent':
+                req = msg['params']['request']
+                requests.append({'url': req['url'], 'method': req['method']})
+    except:
+        pass
+    ws.settimeout(None)
+    return requests
+
+def on_console_message(ws, duration=2):
+    """Capture real-time console messages (Console domain — includes stack traces)."""
+    send(ws, 'Console.enable')
+    messages = []
+    ws.settimeout(duration)
+    try:
+        while True:
+            msg = json.loads(ws.recv())
+            if msg.get('method') == 'Console.messageAdded':
+                m = msg['params']['message']
+                messages.append({'level': m.get('level'), 'text': m.get('text'), 'url': m.get('url')})
+    except:
+        pass
+    ws.settimeout(None)
+    return messages
+
+def get_performance_metrics(ws):
+    """Get browser performance metrics (JSHeapUsedSize, NavigationStart, etc.)."""
+    send(ws, 'Performance.enable')
+    result = send(ws, 'Performance.getMetrics')
+    metrics = result.get('result', {}).get('metrics', [])
+    return {m['name']: m['value'] for m in metrics}
+
+def capture_dom_snapshot(ws):
+    """Capture full DOM snapshot with layout and styling info (more than outerHTML)."""
+    result = send(ws, 'DOMSnapshot.captureSnapshot', {
+        'computedStyles': ['display', 'visibility', 'opacity', 'color', 'background-color'],
+        'includeDOMRects': True
+    })
+    return result.get('result', {})
 ```
 
 ### Full Navigate Workflow (Observe-Act-Verify)
@@ -283,15 +396,21 @@ DISPLAY=:99 xdotool key ctrl+shift+j    # Console
 | Task | Best Method |
 |---|---|
 | Navigate to URL | CDP `navigate_and_wait()` |
-| Get console logs | CDP `Log.enable` + events |
-| Capture network requests | CDP `Network.enable` + events |
+| Wait for element (SPA) | CDP `wait_for_selector()` |
+| Get console logs | CDP `capture_console_logs()` |
+| Capture network requests | CDP `capture_network_traffic()` |
 | Get page resources | CDP `Runtime.evaluate` + Performance API |
-| Run JavaScript | CDP `Runtime.evaluate` |
-| Click by selector | CDP `Runtime.evaluate` + `.click()` |
+| Run JavaScript | CDP `eval_js()` |
+| Click by selector | CDP `click_selector()` (uses Input events — works with trusted handlers) |
 | Click by coordinates | Either (CDP `Input.*` or xdotool) |
 | Scroll | xdotool `Page_Down` or `click 4/5` |
 | Switch tabs | xdotool `ctrl+NUMBER` |
-| Type text | xdotool `type` |
+| Type text | CDP `type_text()` or xdotool `type` |
+| Session/cookies | CDP `get_cookies()` / `set_cookies()` |
+| Spoof user agent | CDP `set_user_agent()` |
+| Console messages (with stack) | CDP `on_console_message()` |
+| Performance metrics | CDP `get_performance_metrics()` |
+| Full DOM snapshot | CDP `capture_dom_snapshot()` |
 | Open DevTools | xdotool `ctrl+shift+j` |
 
 ---
@@ -316,9 +435,10 @@ DISPLAY=:99 scrot /tmp/shared_browser.png -o
 **2. ACT**
 Choose the appropriate action:
 - Navigate: `navigate_and_wait(ws, url)` — NEVER `Page.navigate` + `time.sleep()`
-- Click by selector: `send(ws, 'Runtime.evaluate', {'expression': 'document.querySelector("selector").click()'})`
+- Click by selector: `click_selector(ws, 'selector')` — uses CDP Input events (works with trusted handlers)
 - Click by coordinates: `send(ws, 'Input.dispatchMouseEvent', ...)` or `xdotool mousemove X Y click 1`
-- Type text: `xdotool type 'text'`
+- Type text: `type_text(ws, 'text')` (CDP) or `xdotool type 'text'`
+- Run JavaScript: `eval_js(ws, 'code')`
 - Scroll: `xdotool key Page_Down`
 
 **3. VERIFY**
@@ -344,7 +464,7 @@ print(f"{title} — {url}")
 ## Common Pitfalls
 
 ### Pitfall 1: navigate_and_wait returns True but screenshot shows blank or spinner
-SPA pages (React, Vue, etc.) set `document.readyState = 'complete'` when initial HTML loads, but actual content is rendered by JavaScript after that. Always screenshot and `vision_load` after navigate — visual confirmation catches what readyState misses.
+SPA pages (React, Vue, etc.) set `document.readyState = 'complete'` when initial HTML loads, but actual content is rendered by JavaScript after that. Use `wait_for_selector()` to poll for a key element, then screenshot and `vision_load` — visual confirmation catches what readyState misses.
 
 **Warning signs:** `navigate_and_wait` returns `True` but screenshot shows a blank or spinner page.
 
