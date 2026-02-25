@@ -95,7 +95,10 @@ Plans:
   1. `usr/skills/claude-cli/SKILL.md` exists and documents the single-turn pattern (`env -u CLAUDECODE claude --print --output-format json`), multi-turn `--resume UUID` pattern, ANSI stripping, and completion detection — all patterns validated in Phases 8-9
   2. The skill documents the `--session-id` / `--resume UUID` options for multi-agent session coordination
   3. The skill includes security notes covering API key handling and subprocess scope of the env var fix
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 10-01-PLAN.md — Create usr/skills/claude-cli/SKILL.md with all validated patterns and validate structure
 
 ## Progress
 
