@@ -10,13 +10,19 @@ Use this tool to orchestrate interactive CLI sessions — NOT for simple shell c
 !!! `send` types text + Enter; `keys` sends key sequences WITHOUT Enter; `read` captures what is on screen
 !!! No sentinel markers are ever injected — screen capture is the only observation mechanism
 !!! Both `terminal_agent` and `tmux_tool` share the same `shared` session — coordinate use
+!!! Always call `wait_ready` after `send` before injecting the next input
+!!! Default timeout is 10s — use timeout: 120 when waiting for AI CLI responses (OpenCode, claude)
+!!! `wait_ready` returns current pane content in its response (same as `read`)
+!!! prompt_pattern matches last non-blank line only — sub-prompts like "Continue? [y/N]" do NOT trigger ready
 
 #### Arguments:
-* `action` (string, required) — `send` | `keys` | `read`
+* `action` (string, required) — `send` | `keys` | `read` | `wait_ready`
 * `text` (string) — for `send`: the text to type (Enter is added automatically)
 * `keys` (string or list) — for `keys`: tmux key names space-separated, e.g. `"C-c"`, `"Tab"`, `"Escape"`, `"Up"`
 * `pane` (string, optional) — tmux pane target (default: `"shared"`)
 * `lines` (number, optional) — for `read`: scrollback lines to capture (default: 100)
+* `timeout` (number, optional) — for `wait_ready`: seconds before giving up (default: 10). Use 120 when waiting on AI CLI responses.
+* `prompt_pattern` (string, optional) — for `wait_ready`: regex anchored to line-end (default: `"[$#>%]\\s*$"` — matches bash/zsh/sh/node prompts). Override for non-standard shells.
 
 #### Special key names:
 `C-c` (Ctrl+C), `C-d` (Ctrl+D), `Tab`, `BTab` (Shift+Tab), `Escape`, `Enter`,
@@ -48,4 +54,19 @@ Use this tool to orchestrate interactive CLI sessions — NOT for simple shell c
 #### Usage: read current terminal screen
 ```json
 { "tool_name": "tmux_tool", "tool_args": { "action": "read" } }
+```
+
+#### Usage: wait for terminal to be ready after sending a command
+```json
+{ "tool_name": "tmux_tool", "tool_args": { "action": "wait_ready" } }
+```
+
+#### Usage: wait with longer timeout (for AI CLI tools that take 30-120s)
+```json
+{ "tool_name": "tmux_tool", "tool_args": { "action": "wait_ready", "timeout": 120 } }
+```
+
+#### Usage: wait with custom prompt pattern (for non-standard CLI prompts)
+```json
+{ "tool_name": "tmux_tool", "tool_args": { "action": "wait_ready", "prompt_pattern": "opencode> $" } }
 ```
