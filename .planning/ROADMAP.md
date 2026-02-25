@@ -41,7 +41,7 @@
 - [x] **Phase 11: tmux Primitive Infrastructure** - New `tmux_tool` Python Tool with `send`, `keys`, `read`, and `wait_ready` actions targeting the shared tmux session; Docker bind mounts and copy_A0.sh fixed for live-reload deployment (completed 2026-02-25)
 - [x] **Phase 12: Readiness Detection** - ANSI stripping utility and dual-strategy `wait_ready` (prompt pattern + idle timeout) validated against real pane output (completed 2026-02-25)
 - [x] **Phase 13: Interactive CLI Session Lifecycle** - Empirical observation of OpenCode in Docker; CLI-01..04 implemented with verified prompt patterns and exit sequences (completed 2026-02-25)
-- [ ] **Phase 14: OpenCode Session Wrapper** - `OpenCodeSession` class in `python/helpers/opencode_cli.py` with clean `.start()` / `.send(prompt)` / `.exit()` interface
+- [x] **Phase 14: OpenCode Session Wrapper** - `OpenCodeSession` class in `python/helpers/opencode_cli.py` with clean `.start()` / `.send(prompt)` / `.exit()` interface (completed 2026-02-25)
 - [ ] **Phase 15: CLI Orchestration Skill Documentation** - `usr/skills/cli-orchestration/SKILL.md` documenting the Read-Detect-Write-Verify cycle and all confirmed patterns
 
 ## Phase Details
@@ -100,7 +100,7 @@ Plans:
   1. Agent Zero skill code can start an OpenCode session, send a prompt, receive the response, and exit using only `.start()`, `.send()`, and `.exit()` — without any direct tmux subcommand calls in the skill code
   2. `OpenCodeSession` correctly applies the empirically verified OpenCode prompt patterns and exit sequences from Phase 13 — it encodes observed reality, not documentation assumptions
   3. If the OpenCode version is affected by the `opencode run` hang regression (v0.15+), the wrapper applies a hard timeout with `process.terminate()` on expiry and surfaces a clear error rather than hanging indefinitely
-**Plans:** 1 plan
+**Plans:** 1/1 plans complete
 
 Plans:
 - [ ] 14-01-PLAN.md — Create python/helpers/opencode_cli.py with OpenCodeSession class; validate against installed OpenCode binary
@@ -139,5 +139,5 @@ Phases 11 → 12 → 13 → 14 → 15 (strictly sequential — each phase depend
 | 11. tmux Primitive Infrastructure | 2/2 | Complete    | 2026-02-25 | 2026-02-25 |
 | 12. Readiness Detection | 1/1 | Complete    | 2026-02-25 | - |
 | 13. Interactive CLI Session Lifecycle | 2/2 | Complete    | 2026-02-25 | - |
-| 14. OpenCode Session Wrapper | v1.2 | 0/1 | Not started | - |
+| 14. OpenCode Session Wrapper | 1/1 | Complete   | 2026-02-25 | - |
 | 15. CLI Orchestration Skill Documentation | v1.2 | 0/1 | Not started | - |

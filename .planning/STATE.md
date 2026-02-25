@@ -5,16 +5,16 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 13 — Interactive CLI Session Lifecycle (v1.2)
+**Current focus:** Phase 14 — OpenCode Session Wrapper (v1.2)
 
 ## Current Position
 
-Phase: 13 of 15 (Interactive CLI Session Lifecycle)
-Plan: 2 of 2 complete — Phase 13 DONE
-Status: Phase 13 complete — OPENCODE_PROMPT_PATTERN constant, Docker install, lifecycle validated; human-verified
-Last activity: 2026-02-25 — Phase 13 Plan 02 human checkpoint approved; all CLI-01..04 requirements satisfied
+Phase: 14 of 15 (OpenCode Session Wrapper)
+Plan: 1 of 1 complete — Phase 14 DONE
+Status: Phase 14 complete — OpenCodeSession class implemented and validated end-to-end against OpenCode v1.2.14; CLI-05 satisfied
+Last activity: 2026-02-25 — Phase 14 Plan 01 complete; OpenCodeSession multi-turn validated in Docker
 
-Progress: [█████████████░░░░░░░] 70% (13-02 complete — Phase 13 done, Phase 14 next)
+Progress: [██████████████░░░░░░] 75% (14-01 complete — Phase 14 done, Phase 15 next)
 
 ## Performance Metrics
 
@@ -30,6 +30,7 @@ Progress: [█████████████░░░░░░░] 70% (13
 | 11-tmux-primitive-infrastructure | 2 | 14 min | 7 min |
 | 12-readiness-detection | 1 | 2 min | 2 min |
 | 13-interactive-cli-session-lifecycle | 2 | 20 min | 10 min |
+| 14-opencode-session-wrapper | 1 | 2 min | 2 min |
 
 *Updated after each plan completion*
 
@@ -50,6 +51,9 @@ Progress: [█████████████░░░░░░░] 70% (13
 - [Phase 13-01]: OpenCode v1.2.14 installed in Docker at /root/.opencode/bin/opencode; /exit exits cleanly in 1-2s (no hang regression); startup ~1.5s; prompt_pattern: r'^(?:\s*/a0\s+\d+\.\d+\.\d+\s*$|(?!.*esc interrupt).*ctrl\+t variants\s+tab agents)'
 - [Phase 13-02]: CLI-04 exit via Ctrl+P palette + type 'exit' + Enter (not direct /exit send which triggers agent picker in v1.2.14)
 - [Phase 13-02]: OPENCODE_PROMPT_PATTERN two-branch regex: startup (/a0 + version) OR post-response (ctrl+t without esc interrupt) — exported from tmux_tool.py for Phase 14
+- [Phase 14-01]: OpenCodeSession constants (ANSI_RE, OPENCODE_PROMPT_PATTERN, OPENCODE_START_TIMEOUT) copied into opencode_cli.py with source comment — direct import from tmux_tool fails because agent.py dependency pulls nest_asyncio which is absent in standalone Python contexts
+- [Phase 14-01]: OpenCodeSession is a sync class with time.sleep polling — asyncio is in Tool dispatch layer only; helper modules run synchronously matching claude_cli.py pattern
+- [Phase 14-01]: send() returns full ANSI-stripped pane content (300 lines); differential response extraction deferred to Phase 15 SKILL.md
 
 ### Carried from v1.1
 
@@ -68,5 +72,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 13-02-PLAN.md — Phase 13 done; next is Phase 14 (OpenCode Session Wrapper)
+Stopped at: Completed 14-01-PLAN.md — Phase 14 done; next is Phase 15 (OpenCode SKILL.md documentation)
 Resume file: None
