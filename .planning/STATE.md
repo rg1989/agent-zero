@@ -5,29 +5,29 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 11 — tmux Primitive Infrastructure (v1.2 start)
+**Current focus:** Phase 12 — Readiness Detection (v1.2)
 
 ## Current Position
 
 Phase: 11 of 15 (tmux Primitive Infrastructure)
-Plan: 1 of 1 in current phase
-Status: Phase 11 complete — ready for Phase 12
-Last activity: 2026-02-25 — Phase 11 Plan 01 executed; TmuxTool created
+Plan: 2 of 2 in current phase
+Status: Phase 11 complete (both plans) — ready for Phase 12
+Last activity: 2026-02-25 — Phase 11 Plan 02 executed; Docker deployment gap closed; TmuxTool verified end-to-end
 
-Progress: [██████████░░░░░░░░░░] 53% (11/15 phases complete across all milestones; 1/5 v1.2 phases)
+Progress: [██████████░░░░░░░░░░] 53% (11/15 phases complete across all milestones; 2/5 v1.2 plans)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v1.2)
-- Average duration: 4 min
-- Total execution time: 4 min
+- Total plans completed: 2 (v1.2)
+- Average duration: 7 min
+- Total execution time: 14 min
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 11-tmux-primitive-infrastructure | 1 | 4 min | 4 min |
+| 11-tmux-primitive-infrastructure | 2 | 14 min | 7 min |
 
 *Updated after each plan completion*
 
@@ -42,6 +42,7 @@ Progress: [██████████░░░░░░░░░░] 53% (11
 - Phase 13 is empirical-first: must observe installed OpenCode binary before writing any detection regex
 - OpenCode hang regression risk: v0.15+ confirmed to hang on process exit; must check `opencode --version` at Phase 13 start
 - [Phase 11]: ANSI_RE OSC branch must precede 2-char branch: ] (0x5D) falls in \-_ range so ordering matters
+- [Phase 11-02]: Docker live-reload pattern: bind mount ./python:/a0/python and ./prompts:/a0/prompts so tool/prompt changes reach container without rebuild; copy_A0.sh uses cp -ru (update-newer) without presence-check guard
 
 ### Carried from v1.1
 
@@ -61,5 +62,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 11-01-PLAN.md — Phase 11 done, ready to plan Phase 12
+Stopped at: Completed 11-02-PLAN.md — Phase 11 fully done (gap closure verified), ready for Phase 12
 Resume file: None
