@@ -27,7 +27,7 @@
 - [x] **Phase 6: CDP Startup Health-Check** - Replace fragile `sleep 2` with a polling loop that confirms Chromium CDP is ready before any agent connects
 - [x] **Phase 7: Browser Navigate-with-Verification** - Rewrite shared-browser skill with mandatory Observe-Act-Verify workflow and CDP navigate-wait-verify pattern (completed 2026-02-25)
 - [x] **Phase 8: Claude CLI Single-Turn + Env Fix** - Validate `env -u CLAUDECODE` fix and `claude --print` single-turn pattern with ANSI stripping and clean completion detection (completed 2026-02-25)
-- [ ] **Phase 9: Claude CLI Multi-Turn Sessions** - Implement `--resume UUID` multi-turn sessions using repeated `subprocess.run` calls; each turn returns a complete response, session UUID is tracked automatically, and dead sessions are detected and recovered
+- [x] **Phase 9: Claude CLI Multi-Turn Sessions** - Implement `--resume UUID` multi-turn sessions using repeated `subprocess.run` calls; each turn returns a complete response, session UUID is tracked automatically, and dead sessions are detected and recovered (completed 2026-02-25)
 - [ ] **Phase 10: Claude CLI Skill Documentation** - Write `usr/skills/claude-cli/SKILL.md` capturing all validated invocation patterns
 
 ## Phase Details
@@ -85,7 +85,7 @@ Plans:
 **Plans**: 1 plan
 
 Plans:
-- [ ] 09-01-PLAN.md — Add claude_turn(), ClaudeSession, claude_turn_with_recovery() to claude_cli.py with live validation
+- [x] 09-01-PLAN.md — Add claude_turn(), ClaudeSession, claude_turn_with_recovery() to claude_cli.py with live validation
 
 ### Phase 10: Claude CLI Skill Documentation
 **Goal**: A dedicated skill document captures every validated claude CLI interaction pattern so any Agent Zero session can invoke claude correctly without re-discovering these patterns
@@ -112,5 +112,5 @@ Phases 6 → 7 (browser stream). Phases 8 → 9 → 10 (claude stream, independe
 | 6. CDP Startup Health-Check | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 7. Browser Navigate-with-Verification | 1/1 | Complete   | 2026-02-25 | - |
 | 8. Claude CLI Single-Turn + Env Fix | 1/1 | Complete   | 2026-02-25 | - |
-| 9. Claude CLI Multi-Turn Sessions | v1.1 | 0/TBD | Not started | - |
+| 9. Claude CLI Multi-Turn Sessions | 1/1 | Complete   | 2026-02-25 | 2026-02-25 |
 | 10. Claude CLI Skill Documentation | v1.1 | 0/TBD | Not started | - |

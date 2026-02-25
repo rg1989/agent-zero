@@ -5,23 +5,23 @@
 See: .planning/PROJECT.md (updated 2026-02-25)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Phase 8 — Claude CLI Single-Turn + Env Fix (complete) → Phase 9 next
+**Current focus:** Phase 9 — Claude CLI Multi-Turn Sessions (complete) → Phase 10 next
 
 ## Current Position
 
-Phase: 8 of 10 (Claude CLI Single-Turn + Env Fix)
+Phase: 9 of 10 (Claude CLI Multi-Turn Sessions)
 Plan: 1 of 1 in current phase (complete)
-Status: Phase 8 complete — ready for Phase 9
-Last activity: 2026-02-25 — Completed 08-01 (claude_cli.py single-turn helper with CLAUDECODE env fix)
+Status: Phase 9 complete — ready for Phase 10
+Last activity: 2026-02-25 — Completed 09-01 (claude_turn, ClaudeSession, claude_turn_with_recovery multi-turn helpers)
 
-Progress: [█████░░░░░] 40% (v1.0 complete; Phases 6-8 complete; v1.1 phases 9-10 remaining)
+Progress: [█████████░] 90% (v1.0 complete; Phases 6-9 complete; v1.1 phase 10 remaining)
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 3 (v1.1)
-- Average duration: 5.7 min
-- Total execution time: 17 min
+- Total plans completed: 4 (v1.1)
+- Average duration: 5.0 min
+- Total execution time: 20 min
 
 **By Phase:**
 
@@ -30,9 +30,11 @@ Progress: [█████░░░░░] 40% (v1.0 complete; Phases 6-8 comple
 | 06-cdp-startup-health-check | 1 | 1min | 1min |
 | 07-browser-navigate-with-verification | 1 | 2min | 2min |
 | 08-claude-cli-single-turn-env-fix | 1 | 14min | 14min |
-| v1.1 phases 9-10 | TBD | - | - |
+| 09-claude-cli-multi-turn-sessions | 1 | 3min | 3min |
+| v1.1 phase 10 | TBD | - | - |
 
 *Updated after each plan completion*
+| Phase 09-claude-cli-multi-turn-sessions P01 | 3 | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -50,6 +52,8 @@ Progress: [█████░░░░░] 40% (v1.0 complete; Phases 6-8 comple
 - [Phase 7] send() signature updated to send(ws, method, params) with explicit ws arg to enable try/finally cleanup pattern
 - [Phase 7] Bare Page.navigate + time.sleep(2) pattern fully eliminated from SKILL.md — replaced with navigate_and_wait() everywhere
 - [Phase 08-claude-cli-single-turn-env-fix]: Use subprocess.run capture_output=True (not PTY) for clean stdout; per-call env_clean dict for CLAUDECODE fix; claude_single_turn() with --output-format json; claude_single_turn_text() with --output-format text
+- [Phase 09-claude-cli-multi-turn-sessions]: Use --resume UUID (not --continue) for multi-turn to avoid cwd race conditions; ClaudeSession delegates to claude_turn() — single source of truth; was_recovered bool signals context loss to callers
+- [Phase 09]: Use --resume UUID (not --continue) for multi-turn to avoid cwd race conditions; ClaudeSession delegates to claude_turn(); was_recovered bool signals context loss to callers
 
 ### Pending Todos
 
@@ -58,11 +62,11 @@ None yet.
 ### Blockers/Concerns
 
 - [RESOLVED - Phase 8] claude_single_turn() uses subprocess.run capture_output=True — avoids PTY entirely; prompt marker irrelevant for single-turn; ANSI stripping confirmed defensive only
-- [Phase 9] Idle-timeout calibration for multi-turn requires profiling claude's natural pause durations (1-2s thinking pauses can trigger false "done" signals)
+- [RESOLVED - Phase 9] Idle-timeout calibration concern eliminated — --resume --print approach uses process returncode only, no idle-timeout needed
 - [RESOLVED - Phase 7] `websocket-client>=1.9.0` added to requirements.txt — will be installed on Docker image rebuild
 
 ## Session Continuity
 
 Last session: 2026-02-25
-Stopped at: Completed 08-01-PLAN.md (claude CLI single-turn helper)
+Stopped at: Completed 09-01-PLAN.md (claude CLI multi-turn session helpers)
 Resume file: None

@@ -20,7 +20,7 @@ Requirements for the Reliability milestone. Each maps to roadmap phases 6–10.
 - [x] **CLAUDE-01**: Agent Zero can launch the `claude` CLI by unsetting `CLAUDECODE` in the subprocess environment (`env -u CLAUDECODE claude ...`), resolving the "cannot launch inside another Claude Code session" error
 - [x] **CLAUDE-02**: Agent Zero can send a prompt to `claude` using `--print` / `-p` mode and receive the complete response from stdout
 - [x] **CLAUDE-03**: Agent Zero can detect when a `claude --print` invocation has finished (process exit, clean stdout capture) and extract the response text free of ANSI escape sequences
-- [ ] **CLAUDE-04**: Agent Zero can run a multi-turn `claude` conversation using repeated `subprocess.run` calls with `--print --resume UUID`, where each turn returns a complete, parseable response and the session UUID is propagated automatically across turns — no PTY, no idle-timeout, no prompt-pattern detection required (process `returncode` is the unambiguous completion signal). Dead/expired sessions are detected via `returncode 1` + `"No conversation found"` in stderr and recovered by restarting with `session_id=None`.
+- [x] **CLAUDE-04**: Agent Zero can run a multi-turn `claude` conversation using repeated `subprocess.run` calls with `--print --resume UUID`, where each turn returns a complete, parseable response and the session UUID is propagated automatically across turns — no PTY, no idle-timeout, no prompt-pattern detection required (process `returncode` is the unambiguous completion signal). Dead/expired sessions are detected via `returncode 1` + `"No conversation found"` in stderr and recovered by restarting with `session_id=None`.
 - [ ] **CLAUDE-05**: A dedicated `claude-cli` skill (`usr/skills/claude-cli/SKILL.md`) documents the validated invocation patterns: single-turn (`--print`), multi-turn (`--resume UUID`), env fix, ANSI stripping, and completion detection
 
 ## v2 Requirements
@@ -63,7 +63,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | CLAUDE-01 | Phase 8 | Complete |
 | CLAUDE-02 | Phase 8 | Complete |
 | CLAUDE-03 | Phase 8 | Complete |
-| CLAUDE-04 | Phase 9 | Pending |
+| CLAUDE-04 | Phase 9 | Complete |
 | CLAUDE-05 | Phase 10 | Pending |
 
 **Coverage:**
