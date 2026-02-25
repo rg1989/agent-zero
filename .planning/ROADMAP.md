@@ -68,7 +68,10 @@ Plans:
   1. Agent Zero launches `claude` CLI without the "Cannot be launched inside another Claude Code session" error — the `CLAUDECODE` env var is unset in the subprocess environment only
   2. Agent Zero sends a prompt to `claude --print` and receives the complete response from stdout as structured output
   3. Agent Zero detects that the `claude --print` invocation has finished via process exit, and the captured response text is free of ANSI escape sequences
-**Plans**: TBD
+**Plans**: 1 plan
+
+Plans:
+- [ ] 08-01-PLAN.md — Create python/helpers/claude_cli.py with validated single-turn pattern and end-to-end verification
 
 ### Phase 9: Claude CLI Multi-Turn Sessions
 **Goal**: Agent Zero can conduct a multi-turn conversation with claude CLI using a persistent PTY session, sending follow-up prompts and reliably detecting when each response is complete
@@ -104,6 +107,6 @@ Phases 6 → 7 (browser stream). Phases 8 → 9 → 10 (claude stream, independe
 | 5. Scaffolding + Skills | v1.0 | - | Complete | 2026-02-25 |
 | 6. CDP Startup Health-Check | v1.1 | 1/1 | Complete | 2026-02-25 |
 | 7. Browser Navigate-with-Verification | 1/1 | Complete   | 2026-02-25 | - |
-| 8. Claude CLI Single-Turn + Env Fix | v1.1 | 0/TBD | Not started | - |
+| 8. Claude CLI Single-Turn + Env Fix | v1.1 | 0/1 | Not started | - |
 | 9. Claude CLI Multi-Turn Sessions | v1.1 | 0/TBD | Not started | - |
 | 10. Claude CLI Skill Documentation | v1.1 | 0/TBD | Not started | - |
