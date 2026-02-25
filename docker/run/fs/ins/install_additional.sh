@@ -42,6 +42,12 @@ curl -fsSL -o /usr/local/bin/ttyd \
 chmod +x /usr/local/bin/ttyd
 echo "Shared-terminal system dependencies installed (ttyd $(ttyd --version 2>&1 || echo '?'))."
 
+# ── OpenCode CLI ──────────────────────────────────────────────────────────
+echo "Installing OpenCode CLI..."
+curl -fsSL https://opencode.ai/install | bash
+echo 'export PATH=/root/.opencode/bin:$PATH' >> /root/.bashrc
+echo "OpenCode installed ($(/root/.opencode/bin/opencode --version 2>&1 || echo 'version unknown'))."
+
 # ── Shared Browser: bake noVNC into the image ──────────────────────────────
 # This clone ends up at /git/agent-zero/apps/shared-browser/static/noVNC.
 # startup.sh copies from here on first run so no internet access is needed.

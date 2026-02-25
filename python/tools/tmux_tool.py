@@ -10,6 +10,16 @@ _TMUX_SESSION = "shared"
 # Covers: 2-char ESC sequences, CSI color/cursor, OSC title sequences
 ANSI_RE = re.compile(r'\x1b(?:\][^\x07]*\x07|[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
+# OpenCode TUI ready-state prompt pattern — empirically verified in Phase 13 (13-01-OBSERVATION.md)
+# Use this with: tmux_tool(action="wait_ready", prompt_pattern=OPENCODE_PROMPT_PATTERN, timeout=120)
+# Matches two states:
+#   1. Initial startup: status bar shows "/a0  ...  1.2.14" at bottom-right
+#   2. Post-response: hints bar shows "ctrl+t variants  tab agents" WITHOUT "esc interrupt" (busy indicator)
+OPENCODE_PROMPT_PATTERN = r'^(?:\s*/a0\s+\d+\.\d+\.\d+\s*$|(?!.*esc interrupt).*ctrl\+t variants\s+tab agents)'
+
+# Timeout for OpenCode TUI startup (seconds) — observed startup ~1.5s; 10x safety buffer
+OPENCODE_START_TIMEOUT = 15  # seconds
+
 
 class TmuxTool(Tool):
     """
