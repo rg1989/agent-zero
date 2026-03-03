@@ -95,7 +95,10 @@ Plans:
   2. `apps/_templates/_GUIDE.md` is updated with a decision tree that covers all seven templates (three existing + four new) with clear "pick this when..." criteria
   3. When a user requests an app, the agent auto-selects the best-matching template based on the request and tells the user which template was chosen before proceeding -- the selection is visible in the conversation
   4. If the user asks to use a different template than the one auto-selected, the agent switches without friction -- override is a simple conversation, not a restart
-**Plans**: TBD
+**Plans**: 2 plans
+Plans:
+- [ ] 18-01-PLAN.md -- Template catalog file + _GUIDE.md decision tree update for all 7 templates
+- [ ] 18-02-PLAN.md -- SKILL.md auto-selection logic with keyword matching, user notification, and override handling
 
 ## Progress
 
@@ -121,4 +124,4 @@ Phases 16 and 17 can run in parallel (no dependencies between them). Phase 18 de
 | 15. CLI Orchestration Skill Documentation | v1.2 | 1/1 | Complete | 2026-02-25 |
 | 16. Skill Reliability Core | 1/1 | Complete    | 2026-03-03 | - |
 | 17. Template Library Expansion | 3/3 | Complete    | 2026-03-03 | - |
-| 18. Template Catalog and Auto-Selection | v1.3 | 0/? | Not started | - |
+| 18. Template Catalog and Auto-Selection | v1.3 | 0/2 | Not started | - |
