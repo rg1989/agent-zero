@@ -5,25 +5,28 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** v1.3 App Builder -- Phase 16 (Skill Reliability Core)
+**Current focus:** v1.3 App Builder -- Phase 17 (Template Library Expansion)
 
 ## Current Position
 
-Phase: 16 of 18 (Skill Reliability Core)
-Plan: 1 of 1 in current phase
-Status: Phase 16 complete
-Last activity: 2026-03-03 -- Completed 16-01: web-app-builder skill rewrite
+Phase: 17 of 18 (Template Library Expansion)
+Plan: 3 of 3 in current phase
+Status: Phase 17 complete
+Last activity: 2026-03-03 -- Completed 17-03: file-tool template (upload, listing, download, convert)
 
-Progress: [██░░░░░░░░] 20%
+Progress: [████░░░░░░] 40%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1 (v1.3)
+- Total plans completed: 4 (v1.3)
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
 | 16-skill-reliability-core | 01 | 15min | 2 | 2 |
+| 17-template-library-expansion | 01 | 5min | 2 | 5 |
+| 17-template-library-expansion | 02 | 3min | 2 | 9 |
+| 17-template-library-expansion | 03 | 3min | 2 | 6 |
 
 *Updated after each plan completion*
 
@@ -39,6 +42,9 @@ Progress: [██░░░░░░░░] 20%
 - [16-01] Name validation goes first (Step 1) before resource allocation -- fail fast, no cleanup needed
 - [16-01] Health check uses curl -sf bash loop (20x0.5s) -- shell-native, no Python imports required
 - [16-01] Reserved names list in skill exactly matches app_proxy.py _RESERVED to prevent documentation drift
+- [17-01] utility-spa template: single-page Alpine.js tool with base href pattern, no build step
+- [17-02] crud-app template: Flask + SQLite with full REST CRUD, dark-theme data-table, shared form pattern (item=None/item), get_db()/close_db() via flask.g, parameterized SQL, 404.html added for correct error handling
+- [17-03] file-tool template: multipart upload, format conversion pipeline, drag-and-drop UI, file-card grid
 
 ### Carried from v1.2
 
@@ -57,5 +63,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 16-01-PLAN.md (web-app-builder skill rewrite)
+Stopped at: Completed 17-03-PLAN.md (file-tool template — upload, listing, download, convert)
 Resume file: None
