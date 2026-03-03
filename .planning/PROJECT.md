@@ -2,7 +2,7 @@
 
 ## What This Is
 
-A personal fork of [Agent Zero](https://github.com/frdel/agent-zero) — a general-purpose agentic AI framework — extended with an Apps System for running and managing web applications, a Neon UI theme, GSD skill packs, and core built-in apps (shared browser via VNC, shared terminal via tmux). The fork is designed for local/Docker use as a personal AI workstation with first-class web app hosting capabilities.
+A personal fork of [Agent Zero](https://github.com/frdel/agent-zero) — a general-purpose agentic AI framework — extended with an Apps System for running and managing web applications, a Neon UI theme, GSD skill packs, and core built-in apps (shared browser via VNC, shared terminal via tmux). The agent reliably creates web apps from a library of 7 templates with automatic selection, mandatory verification steps, and health-check polling. The fork is designed for local/Docker use as a personal AI workstation with first-class web app hosting capabilities.
 
 ## Core Value
 
@@ -35,12 +35,18 @@ Agent Zero can build, run, and persist web applications directly within its own 
 - ✓ Interactive CLI lifecycle: start, send, detect readiness, exit cleanly — v1.2
 - ✓ OpenCode session wrapper: `OpenCodeSession` class with `.start()/.send()/.exit()` — v1.2
 - ✓ CLI orchestration skill: `usr/skills/cli-orchestration/SKILL.md` with Read-Detect-Write-Verify cycle — v1.2
+- ✓ web-app-builder SKILL.md v3.0.0 with mandatory 8-step sequence, name validation, health-check polling — v1.3
+- ✓ System prompt routing: agent always uses Apps System for app creation requests — v1.3
+- ✓ 4 new templates: utility SPA, real-time dashboard (SSE + Chart.js), CRUD app (Flask + SQLite), file/media tool — v1.3
+- ✓ Template catalog (_CATALOG.md) with structured metadata for all 7 templates — v1.3
+- ✓ _GUIDE.md decision tree covering all 7 templates with selection criteria — v1.3
+- ✓ Auto-selection in SKILL.md Step 2 with keyword matching and user override — v1.3
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-(Defined in REQUIREMENTS.md — v1.3 App Builder)
+(No active milestone — run `/gsd:new-milestone` to start next)
 
 ### Out of Scope
 
@@ -49,17 +55,23 @@ Agent Zero can build, run, and persist web applications directly within its own 
 - Upstream Agent Zero core changes — this is a fork; upstream changes are pulled separately
 - Mobile app — web-first, desktop/Docker target
 - Multi-user / auth system — single-user personal assistant
+- Database migration tooling — templates use simple SQLite; no schema versioning needed
+- CI/CD for apps — apps are quick prototypes, not production deployments
 
 ## Context
 
 - Fork of [frdel/agent-zero](https://github.com/frdel/agent-zero) — upstream divergence managed manually
 - Runs via Docker or local Python; accessed at `http://localhost:50000`
 - `apps/` directory holds all web apps; core apps are `shared-browser` and `shared-terminal`
-- `apps/_templates/` provides scaffolding for new apps
+- `apps/_templates/` provides 7 scaffolding templates (flask-basic, flask-dashboard, static-html, utility-spa, dashboard-realtime, crud-app, file-tool)
+- `apps/_templates/_CATALOG.md` — machine-readable template catalog
+- `apps/_templates/_GUIDE.md` — decision tree for template selection
+- `usr/skills/web-app-builder/SKILL.md` — mandatory 8-step app creation workflow (v3.0.0)
 - `usr/skills/` holds custom skills; `skills/` holds GSD skill pack
 - `webui/` is the frontend (vanilla JS/HTML/CSS with Alpine.js)
 - Registry persisted in `apps/.app_registry.json`
 - Python backend: FastAPI-based, `python/` module
+- Shipped v1.3 with ~2,400 LOC added across 28 code files
 
 ## Constraints
 
@@ -75,16 +87,12 @@ Agent Zero can build, run, and persist web applications directly within its own 
 | noVNC for shared browser | Zero install, browser-based VNC client | ✓ Good |
 | Registry in JSON file | Simple, survives restarts, no DB dependency | ✓ Good |
 | SKILL.md standard for GSD skills | Compatible with Claude Code, Cursor, Codex | ✓ Good |
-
-## Current Milestone: v1.3 App Builder
-
-**Goal:** Agent Zero reliably creates, configures, and manages web apps using the Apps System — every time, not just sometimes — with a rich template library for instant scaffolding
-
-**Target features:**
-- Bulletproof web-app-builder skill rewrite with mandatory verification steps
-- System prompt integration so the agent always knows about the Apps System
-- Expanded template library: dashboards, file/media tools, CRUD apps, utilities
-- Template auto-selection with user override capability
+| SKILL.md v3 full rewrite over patching v2 | v2 had no validation, no health check, underscore examples — patching wasn't viable | ✓ Good |
+| Name validation before resource allocation | Fail fast, no cleanup needed for invalid names | ✓ Good |
+| HTTP poll health check (curl loop) | Shell-native, no Python imports, 10s timeout with clear HEALTHY/FAILED branches | ✓ Good |
+| YAML-in-markdown catalog format | Machine-readable without parser, human-readable in terminal | ✓ Good |
+| SSE + polling fallback for dashboard | SSE simpler than WebSockets, degrades gracefully | ✓ Good |
+| flask-basic as default for ambiguous requests | Most flexible template, fewest assumptions | ✓ Good |
 
 ---
-*Last updated: 2026-03-03 after milestone v1.3 started*
+*Last updated: 2026-03-03 after v1.3 milestone*

@@ -2,30 +2,48 @@
 
 ## v1.3 -- App Builder
 
-**Status:** In Progress
+**Shipped:** 2026-03-03
 **Focus:** Agent Zero reliably creates, configures, and manages web apps using the Apps System with a rich template library and intelligent template selection
 
-### Target
+### What Shipped
 
 | Feature | Status |
 |---------|--------|
-| web-app-builder SKILL.md rewrite (mandatory sequence) | Pending |
-| System prompt integration (app request routing) | Pending |
-| Name validation and health verification | Pending |
-| Dashboard template | Pending |
-| File/media tool template | Pending |
-| CRUD app template | Pending |
-| Utility SPA template | Pending |
-| Template catalog and decision guide | Pending |
-| Auto-selection with user override | Pending |
+| web-app-builder SKILL.md v3.0.0 rewrite (mandatory 8-step sequence) | Shipped |
+| System prompt integration (app request routing) | Shipped |
+| Name validation and health-check polling | Shipped |
+| Real-time dashboard template (SSE + Chart.js) | Shipped |
+| File/media tool template (drag-drop + conversion) | Shipped |
+| CRUD app template (Flask + SQLite) | Shipped |
+| Utility SPA template (minimal skeleton) | Shipped |
+| Template catalog (_CATALOG.md) with structured metadata | Shipped |
+| _GUIDE.md decision tree for all 7 templates | Shipped |
+| Auto-selection with keyword matching and user override | Shipped |
+
+### Stats
+
+- **Phases:** 16-18 (3 phases, 6 plans, 11 tasks)
+- **Requirements:** 11/11 satisfied (SKILL-01–05, TMPL-01–06)
+- **Git range:** 228f1e3 → 5cdf132
+- **Code:** ~2,400 lines added across 28 files
+- **Audit:** TECH DEBT — 6 info-level items, zero runtime blockers
+
+### Key Accomplishments
+
+1. Rewrote web-app-builder SKILL.md v3.0.0 with mandatory 8-step sequence, name validation, and post-start health-check polling
+2. Added system prompt routing so the agent always uses the Apps System for app requests
+3. Built 4 new production-quality templates: utility SPA, real-time dashboard, CRUD app, file/media tool
+4. Created machine-readable template catalog with structured metadata for all 7 templates
+5. Updated decision tree covering all 7 templates with clear selection criteria
+6. Added auto-selection logic with keyword matching and user override
 
 ### Phases
 
 | Phase | Name | Status |
 |-------|------|--------|
-| 16 | Skill Reliability Core | Not started |
-| 17 | Template Library Expansion | Not started |
-| 18 | Template Catalog and Auto-Selection | Not started |
+| 16 | Skill Reliability Core | Complete |
+| 17 | Template Library Expansion | Complete |
+| 18 | Template Catalog and Auto-Selection | Complete |
 
 ---
 
@@ -118,4 +136,5 @@
 *Milestone v1.0 archived: 2026-02-25*
 *Milestone v1.1 archived: 2026-02-25*
 *Milestone v1.2 archived: 2026-02-25*
-*Milestone v1.3 started: 2026-03-03*
+*Milestone v1.3 archived: 2026-03-03*
+

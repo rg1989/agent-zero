@@ -53,7 +53,7 @@ Every app creation MUST follow these steps in order. No step may be skipped.
 Before anything else, validate the chosen name:
 
 **Rules:**
-- Lowercase letters, digits, and hyphens only (regex: `^[a-z][a-z0-9-]{1,28}[a-z0-9]$`)
+- Lowercase letters, digits, and hyphens only (regex: `^[a-z][a-z0-9-]{0,28}[a-z0-9]$`)
 - Minimum 2 characters, maximum 30 characters
 - Must start with a letter, must end with a letter or digit
 - No underscores (use hyphens instead)
@@ -155,6 +155,26 @@ Edit the copied files to implement what the user requested. Key rules that MUST 
 - `app.js` → replace `DATA` with real data or a fetch call
 - `index.html` → swap Chart.js CDN for D3/Plotly if needed
 
+**For `dashboard-realtime`:**
+- `app.py` → edit `generate_data()` to produce your metrics/chart data
+- SSE streams every 2s; adjust interval in the generator loop
+- Three chart types available: line, bar, doughnut
+
+**For `utility-spa`:**
+- `app.js` → replace transform functions with your tool logic
+- Layout: textarea input, action buttons, output area
+- Start command is `python serve.py` (not `app.py`)
+
+**For `crud-app`:**
+- `app.py` → edit the Item model section: change `CREATE_TABLE_SQL` fields and queries
+- Routes handle list/detail/create/edit/delete automatically based on the model
+- SQLite database auto-creates on first request
+
+**For `file-tool`:**
+- `app.py` → edit `ALLOWED_EXTENSIONS` and `MAX_CONTENT_LENGTH` for your needs
+- Add conversions: extend `CONVERSIONS` dict in `app.py` + `CONVERT_OPTIONS` in `app.js`
+- Uploads stored in `uploads/` directory (auto-created)
+
 ---
 
 ### Step 6 — Register the app
@@ -244,7 +264,7 @@ curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
 | App unreachable | Confirm `host="0.0.0.0"` in app code |
 | Port conflict | Use `alloc_port` — it skips used ports |
 | Health check fails | Check `ps aux | grep python`; look for import errors |
-| Name rejected | Must match `^[a-z][a-z0-9-]{1,28}[a-z0-9]$`; no underscores |
+| Name rejected | Must match `^[a-z][a-z0-9-]{0,28}[a-z0-9]$`; no underscores |
 
 ---
 
