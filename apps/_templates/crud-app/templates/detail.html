@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}{{ item.name }}{% endblock %}
+{% block heading %}{{ item.name }}{% endblock %}
+
+{% block content %}
+
+  <section class="card">
+    <div class="section-header">
+      <h2 class="card-title">{{ item.name }}</h2>
+      <span class="badge badge-{{ item.status }}">{{ item.status }}</span>
+    </div>
+
+    <div class="detail-body">
+
+      {% if item.description %}
+        <p class="detail-description">{{ item.description }}</p>
+      {% else %}
+        <p class="text-muted"><em>No description.</em></p>
+      {% endif %}
+
+      <dl class="detail-meta">
+        <dt>Status</dt>
+        <dd><span class="badge badge-{{ item.status }}">{{ item.status }}</span></dd>
+        <dt>Created</dt>
+        <dd class="text-muted">{{ item.created_at[:16] if item.created_at else '—' }}</dd>
+        <dt>ID</dt>
+        <dd class="text-muted">#{{ item.id }}</dd>
+      </dl>
+
+    </div>
+
+    <div class="form-actions">
+      <a href="items/{{ item.id }}/edit" class="btn">Edit</a>
+      <form method="POST" action="items/{{ item.id }}/delete" style="display:inline;">
+        <button type="submit" class="btn btn-red" data-confirm="Delete {{ item.name }}?">Delete</button>
+      </form>
+      <a href="items" class="btn">Back to List</a>
+    </div>
+  </section>
+
+{% endblock %}

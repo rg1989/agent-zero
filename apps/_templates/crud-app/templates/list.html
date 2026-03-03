@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Items{% endblock %}
+{% block heading %}Items{% endblock %}
+
+{% block content %}
+
+  <section class="card">
+    <div class="section-header">
+      <h2 class="card-title">All Items</h2>
+      {% if items %}
+        <span class="text-muted">{{ items|length }} item{{ 's' if items|length != 1 }}</span>
+      {% endif %}
+    </div>
+
+    {% if not items %}
+      <div class="empty-state">
+        <p>No items yet.</p>
+        <a href="items/new" class="btn btn-green">Create first item</a>
+      </div>
+    {% else %}
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Status</th>
+              <th>Created</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for item in items %}
+              <tr>
+                <td>
+                  <a href="items/{{ item.id }}" class="item-link">{{ item.name }}</a>
+                </td>
+                <td>
+                  <span class="badge badge-{{ item.status }}">{{ item.status }}</span>
+                </td>
+                <td class="text-muted">{{ item.created_at[:16] if item.created_at else '—' }}</td>
+                <td class="actions-cell">
+                  <a href="items/{{ item.id }}/edit" class="btn btn-sm">Edit</a>
+                  <form method="POST" action="items/{{ item.id }}/delete" style="display:inline;">
+                    <button type="submit" class="btn btn-sm btn-red" data-confirm="Delete {{ item.name }}?">Delete</button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% endif %}
+  </section>
+
+{% endblock %}
