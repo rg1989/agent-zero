@@ -1,7 +1,7 @@
 ---
 name: "web-app-builder"
 description: "Build, deploy, and manage local web applications within Agent Zero. Use when the user asks to build a dashboard, visualisation, web app, or anything best served as a browser-based interface. Apps are served at localhost:50000/{app_name}/ with no extra port forwarding required."
-version: "2.0.0"
+version: "3.0.0"
 author: "Agent Zero"
 tags: ["webapp", "dashboard", "visualisation", "flask", "server", "deploy", "monitor", "apps"]
 trigger_patterns:
@@ -28,8 +28,7 @@ trigger_patterns:
 
 # Web App Builder
 
-Build and host local web applications accessible at `localhost:50000/{app_name}/`.
-No extra port forwarding needed. Apps persist across Docker rebuilds.
+CRITICAL: Follow the MANDATORY SEQUENCE below exactly. Do NOT skip steps. If any step fails, STOP and report the failure to the user — never proceed with a broken app.
 
 ---
 
@@ -39,49 +38,94 @@ No extra port forwarding needed. Apps persist across Docker rebuilds.
 Browser → localhost:50000/{app_name}/... → (proxy inside container) → localhost:{PORT}/...
 ```
 
-The proxy is built into Agent Zero's server. You just start the app on any port in 9000–9099.
+The proxy is built into Agent Zero's server. You just start the app on any port in 9000–9099. No extra port forwarding needed. Apps persist across Docker rebuilds.
 
 ---
 
-## Step 1 — Choose a template
+## MANDATORY SEQUENCE
 
-**Always start from a template.** This saves setup time and ensures correct routing.
-
-Read `/a0/apps/_templates/_GUIDE.md` for full details. Quick decision:
-
-| Task | Template |
-|------|----------|
-| Charts, metrics, live data | `flask-dashboard` |
-| Web app with Python logic, forms, multiple pages | `flask-basic` |
-| Pure front-end visualisation, no Python needed | `static-html` |
+Every app creation MUST follow these steps in order. No step may be skipped.
 
 ---
 
-## Step 2 — Allocate a port
+### Step 1 — Validate the app name
+
+Before anything else, validate the chosen name:
+
+**Rules:**
+- Lowercase letters, digits, and hyphens only (regex: `^[a-z][a-z0-9-]{1,28}[a-z0-9]$`)
+- Minimum 2 characters, maximum 30 characters
+- Must start with a letter, must end with a letter or digit
+- No underscores (use hyphens instead)
+
+**Proxy-reserved names (blocked by `app_proxy.py` `_RESERVED`) — MUST NOT be used:**
+`login`, `logout`, `health`, `dev-ping`, `socket.io`, `static`, `message`, `poll`, `settings_get`, `settings_set`, `csrf_token`, `chat_create`, `chat_load`, `upload`, `webapp`, `mcp`, `a2a`
+
+**Built-in app names (occupied by core apps) — also avoid:**
+`shared-browser`, `shared-terminal`
+
+**Validation command (run this before proceeding):**
+```bash
+APP_NAME="chosen-name"
+# Check format
+echo "$APP_NAME" | grep -qP '^[a-z][a-z0-9-]{0,28}[a-z0-9]$' && echo "VALID" || echo "INVALID: must be lowercase alphanumeric + hyphens, 2-30 chars, start with letter"
+# Check not reserved or occupied
+BLOCKED="login logout health dev-ping socket.io static message poll settings_get settings_set csrf_token chat_create chat_load upload webapp mcp a2a shared-browser shared-terminal"
+echo "$BLOCKED" | tr ' ' '\n' | grep -qx "$APP_NAME" && echo "BLOCKED: choose a different name" || echo "NAME AVAILABLE"
+```
+
+If the name is INVALID or RESERVED, tell the user and ask for a different name. Do NOT proceed.
+
+---
+
+### Step 2 — Choose a template
+
+Read `/a0/apps/_templates/_GUIDE.md` for the decision tree. Quick reference:
+
+| Need | Template | Start command |
+|------|----------|---------------|
+| Charts, metrics, live data | `flask-dashboard` | `python app.py` |
+| Web app with Python logic | `flask-basic` | `python app.py` |
+| Pure front-end, no Python | `static-html` | `python serve.py` |
+
+Tell the user which template you chose and why.
+
+---
+
+### Step 3 — Allocate a port
 
 ```bash
 PORT=$(curl -s "http://localhost/webapp?action=alloc_port" | python3 -c "import sys,json; print(json.load(sys.stdin)['port'])")
-echo "Port: $PORT"
+echo "Allocated port: $PORT"
 ```
+
+If this fails or returns empty, STOP and report the error.
 
 ---
 
-## Step 3 — Copy the template
+### Step 4 — Copy the template
 
 ```bash
-cp -r /a0/apps/_templates/{CHOSEN_TEMPLATE} /a0/apps/{app_name}
+cp -r /a0/apps/_templates/{TEMPLATE} /a0/apps/{APP_NAME}
 ```
 
-Example:
+Verify the copy succeeded:
 ```bash
-cp -r /a0/apps/_templates/flask-dashboard /a0/apps/my_dashboard
+ls /a0/apps/{APP_NAME}/app.py || ls /a0/apps/{APP_NAME}/serve.py
 ```
+
+If the directory doesn't exist or is empty, STOP and report the error.
 
 ---
 
-## Step 4 — Customise the app
+### Step 5 — Customize the app
 
-Edit the copied files. The key things to change:
+Edit the copied files to implement what the user requested. Key rules that MUST NOT change:
+- Always `host="0.0.0.0"` (not 127.0.0.1)
+- Always read port from env: `PORT = int(os.environ.get("PORT", 9000))`
+- Always read app name from env: `APP_NAME = os.environ.get("APP_NAME", "")`
+- Always use relative asset URLs (the `<base>` tag handles sub-path routing)
+- Never hardcode port numbers
 
 **For `flask-dashboard`:**
 - `app.py` → replace the sample data in `/api/data` with real data (files, psutil, DB, etc.)
@@ -95,31 +139,55 @@ Edit the copied files. The key things to change:
 - `app.js` → replace `DATA` with real data or a fetch call
 - `index.html` → swap Chart.js CDN for D3/Plotly if needed
 
-**Rules that must not change:**
-- Always `host="0.0.0.0"` (not 127.0.0.1)
-- Always read port from env: `PORT = int(os.environ.get("PORT", 9000))`
-- Always read app name from env: `APP_NAME = os.environ.get("APP_NAME", "")`
-- Always use relative asset URLs (the `<base>` tag handles sub-path routing)
+---
+
+### Step 6 — Register the app
+
+```bash
+curl -s -X POST http://localhost/webapp \
+  -H "Content-Type: application/json" \
+  -d "{\"action\":\"register\",\"name\":\"{APP_NAME}\",\"port\":$PORT,\"cmd\":\"{START_CMD}\",\"cwd\":\"/a0/apps/{APP_NAME}\",\"description\":\"{DESCRIPTION}\"}"
+```
+
+Check the response for `"error"` — if present, STOP and report it.
 
 ---
 
-## Step 5 — Register and start
+### Step 7 — Start the app
 
 ```bash
-# Register
 curl -s -X POST http://localhost/webapp \
   -H "Content-Type: application/json" \
-  -d "{\"action\":\"register\",\"name\":\"{app_name}\",\"port\":$PORT,\"cmd\":\"python app.py\",\"cwd\":\"/a0/apps/{app_name}\",\"description\":\"{short description}\"}"
-
-# Start
-curl -s -X POST http://localhost/webapp \
-  -H "Content-Type: application/json" \
-  -d "{\"action\":\"start\",\"name\":\"{app_name}\"}"
+  -d "{\"action\":\"start\",\"name\":\"{APP_NAME}\"}"
 ```
 
-For `static-html`, the start command is `python serve.py` instead of `python app.py`.
+Check the response for `"error"` — if present, STOP and report it.
 
-The app is now live at **`localhost:50000/{app_name}/`**.
+---
+
+### Step 8 — Verify the app is running (REQUIRED)
+
+Poll the app's port until it responds. Do NOT skip this step.
+
+```bash
+# Wait up to 10 seconds for the app to start responding
+for i in $(seq 1 20); do
+  if curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then
+    echo "HEALTHY: App is responding on port $PORT"
+    break
+  fi
+  if [ "$i" -eq 20 ]; then
+    echo "FAILED: App not responding after 10 seconds"
+    echo "Check logs or process status:"
+    echo "  ps aux | grep '$APP_NAME'"
+    echo "  curl -v http://127.0.0.1:$PORT/"
+  fi
+  sleep 0.5
+done
+```
+
+- If HEALTHY: Tell the user the app is live at `localhost:50000/{APP_NAME}/` and open it with `open_app`.
+- If FAILED: Tell the user the app failed to start. Check for Python errors, port conflicts, or missing dependencies. Do NOT say "your app is ready".
 
 ---
 
@@ -133,50 +201,20 @@ curl -s "http://localhost/webapp?action=list"
 
 # Stop
 curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"stop","name":"my_app"}'
+  -d '{"action":"stop","name":"my-app"}'
 
 # Restart
 curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"restart","name":"my_app"}'
+  -d '{"action":"restart","name":"my-app"}'
 
 # Enable autostart (survives container restarts)
 curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"autostart","name":"my_app","enabled":true}'
+  -d '{"action":"autostart","name":"my-app","enabled":true}'
 
 # Remove
 curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"remove","name":"my_app"}'
+  -d '{"action":"remove","name":"my-app"}'
 ```
-
----
-
-## Monitoring
-
-```bash
-# Check if port is responding
-python3 -c "import socket; s=socket.socket(); s.settimeout(1); print('UP' if not s.connect_ex(('127.0.0.1', PORT)) else 'DOWN'); s.close()"
-
-# View logs (if you registered with log redirect)
-tail -f /a0/apps/{app_name}/app.log
-
-# Running processes
-ps aux | grep python
-```
-
-To log output, register with:
-```
-"cmd": "python app.py >> /a0/apps/{app_name}/app.log 2>&1"
-```
-
----
-
-## Naming rules
-
-- Lowercase, digits, hyphens, underscores only
-- Do NOT use: `login`, `logout`, `health`, `message`, `poll`, `upload`,
-  `settings_get`, `settings_set`, `csrf_token`, `chat_create`, `mcp`, `a2a`,
-  `webapp`, `socket.io`, `static`
-- Good names: `dashboard`, `sales_viz`, `monitor`, `log_viewer`, `data_explorer`
 
 ---
 
@@ -189,3 +227,23 @@ To log output, register with:
 | Static assets 404 | Ensure `<base>` tag present; use relative paths |
 | App unreachable | Confirm `host="0.0.0.0"` in app code |
 | Port conflict | Use `alloc_port` — it skips used ports |
+| Health check fails | Check `ps aux | grep python`; look for import errors |
+| Name rejected | Must match `^[a-z][a-z0-9-]{1,28}[a-z0-9]$`; no underscores |
+
+---
+
+## Template customization quick reference
+
+**`flask-dashboard`** — metrics + charts:
+- Edit `/api/data` route in `app.py` to return your data
+- Use `psutil` for system metrics (pre-installed)
+- Add/remove `datasets` in the chart config in `index.html`
+
+**`flask-basic`** — general web app:
+- Add routes to `app.py`; extend `base.html` for new pages
+- Use `templates/index.html` as the main page template
+
+**`static-html`** — pure front-end:
+- Replace sample `DATA` in `app.js` with a `fetch()` call or static values
+- Start command is `python serve.py` (not `app.py`)
+- No Python backend — serve.py only serves static files
