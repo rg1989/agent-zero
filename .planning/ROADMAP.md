@@ -53,7 +53,7 @@
 **Milestone Goal:** Agent Zero reliably creates, configures, and manages web apps using the Apps System -- every time, not just sometimes -- with a rich template library for instant scaffolding and intelligent template selection.
 
 - [x] **Phase 16: Skill Reliability Core** - Rewrite web-app-builder SKILL.md with mandatory sequence enforcement, name validation, health verification, and system prompt integration so the agent always routes app requests correctly (completed 2026-03-03)
-- [ ] **Phase 17: Template Library Expansion** - Four new app templates (dashboard, file/media tool, CRUD app, utility SPA) built and working in apps/_templates/
+- [x] **Phase 17: Template Library Expansion** - Four new app templates (dashboard, file/media tool, CRUD app, utility SPA) built and working in apps/_templates/ (completed 2026-03-03)
 - [ ] **Phase 18: Template Catalog and Auto-Selection** - Template catalog file, updated decision guide, and auto-selection logic so the agent picks the right template for each request
 
 ## Phase Details
@@ -120,5 +120,5 @@ Phases 16 and 17 can run in parallel (no dependencies between them). Phase 18 de
 | 14. OpenCode Session Wrapper | v1.2 | 1/1 | Complete | 2026-02-25 |
 | 15. CLI Orchestration Skill Documentation | v1.2 | 1/1 | Complete | 2026-02-25 |
 | 16. Skill Reliability Core | 1/1 | Complete    | 2026-03-03 | - |
-| 17. Template Library Expansion | 2/3 | In Progress|  | - |
+| 17. Template Library Expansion | 3/3 | Complete   | 2026-03-03 | - |
 | 18. Template Catalog and Auto-Selection | v1.3 | 0/? | Not started | - |
