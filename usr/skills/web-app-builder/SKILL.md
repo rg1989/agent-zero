@@ -142,6 +142,7 @@ Edit the copied files to implement what the user requested. Key rules that MUST 
 - Always read app name from env: `APP_NAME = os.environ.get("APP_NAME", "")`
 - Always use relative asset URLs (the `<base>` tag handles sub-path routing)
 - Never hardcode port numbers
+- **Mobile-responsive**: Keep the viewport meta tag, media queries, and flexible layouts from the template. All apps MUST work on mobile screens. Use `max-width` containers, CSS Grid/Flexbox, and test that nothing overflows on narrow viewports.
 
 **For `flask-dashboard`:**
 - `app.py` → replace the sample data in `/api/data` with real data (files, psutil, DB, etc.)
