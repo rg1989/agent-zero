@@ -67,7 +67,9 @@
   2. The skill enforces a mandatory sequence (allocate port, copy template, customize, register, start, verify) and no step can be skipped -- if any step fails, the agent reports the failure instead of proceeding with a broken app
   3. Before registering an app, the agent validates the app name against reserved paths (`shared-browser`, `shared-terminal`, `webapp`, `ws`, etc.) and naming rules (lowercase, alphanumeric + hyphens) -- invalid names are rejected with a clear message
   4. After starting an app, the agent polls the app's allocated port (HTTP request) until it gets a response before declaring success to the user -- no more "your app is ready" when the process crashed on startup
-**Plans**: TBD
+**Plans**: 1 plan
+Plans:
+- [ ] 16-01-PLAN.md -- System prompt routing + SKILL.md rewrite with mandatory sequence, name validation, and health check
 
 ### Phase 17: Template Library Expansion
 **Goal**: Four new production-quality app templates exist in `apps/_templates/` covering the most common app creation requests -- dashboards, file tools, CRUD apps, and lightweight utilities -- so the agent has a rich scaffolding library beyond the original three templates
