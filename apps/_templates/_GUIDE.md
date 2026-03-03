@@ -188,25 +188,25 @@ echo "Using port $PORT"
 
 ### 2. Copy the template
 ```bash
-cp -r /a0/apps/_templates/flask-dashboard /a0/apps/my_app
+cp -r /a0/apps/_templates/flask-dashboard /a0/apps/my-app
 ```
 
 ### 3. Register + start
 ```bash
 curl -s -X POST http://localhost/webapp \
   -H "Content-Type: application/json" \
-  -d "{\"action\":\"register\",\"name\":\"my_app\",\"port\":$PORT,\"cmd\":\"python app.py\",\"cwd\":\"/a0/apps/my_app\",\"description\":\"My dashboard\"}"
+  -d "{\"action\":\"register\",\"name\":\"my-app\",\"port\":$PORT,\"cmd\":\"python app.py\",\"cwd\":\"/a0/apps/my-app\",\"description\":\"My dashboard\"}"
 
 curl -s -X POST http://localhost/webapp \
   -H "Content-Type: application/json" \
-  -d "{\"action\":\"start\",\"name\":\"my_app\"}"
+  -d "{\"action\":\"start\",\"name\":\"my-app\"}"
 ```
 
 ### 4. Open in browser
-`localhost:50000/my_app/`
+`localhost:50000/my-app/`
 
 ### 5. Customise
-Edit `/a0/apps/my_app/app.py` and the templates/static files.
+Edit `/a0/apps/my-app/app.py` and the templates/static files.
 The app manager auto-sets `PORT` and `APP_NAME` env vars — read them in your code.
 
 ---
