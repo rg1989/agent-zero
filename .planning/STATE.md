@@ -42,7 +42,7 @@ Progress: [████░░░░░░] 40%
 - [16-01] Name validation goes first (Step 1) before resource allocation -- fail fast, no cleanup needed
 - [16-01] Health check uses curl -sf bash loop (20x0.5s) -- shell-native, no Python imports required
 - [16-01] Reserved names list in skill exactly matches app_proxy.py _RESERVED to prevent documentation drift
-- [17-01] utility-spa template: single-page Alpine.js tool with base href pattern, no build step
+- [17-01] utility-spa uses serve.py static pattern + vanilla JS (no framework); dashboard-realtime uses SSE primary + polling fallback, 3 Chart.js charts (line/bar/doughnut)
 - [17-02] crud-app template: Flask + SQLite with full REST CRUD, dark-theme data-table, shared form pattern (item=None/item), get_db()/close_db() via flask.g, parameterized SQL, 404.html added for correct error handling
 - [17-03] file-tool template: multipart upload, format conversion pipeline, drag-and-drop UI, file-card grid
 
@@ -63,5 +63,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 17-03-PLAN.md (file-tool template — upload, listing, download, convert)
+Stopped at: Completed 17-01-PLAN.md (utility-spa + dashboard-realtime templates)
 Resume file: None
