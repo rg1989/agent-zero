@@ -1,3 +1,9 @@
+# ============================================================
+# CUSTOMIZATION GUIDE
+# Lines marked "# CUSTOMIZE:" → change these for your entity
+# Lines marked "# DO NOT CHANGE" → required for routing/proxy
+# Everything else → leave as-is unless you know what you're doing
+# ============================================================
 """
 crud-app — Flask + SQLite CRUD data management starter.
 
@@ -25,8 +31,8 @@ from flask import (
 app = Flask(__name__)
 app.secret_key = "change-me-in-production"
 
-PORT     = int(os.environ.get("PORT", 9000))
-APP_NAME = os.environ.get("APP_NAME", "")
+PORT     = int(os.environ.get("PORT", 9000))   # DO NOT CHANGE — required for proxy routing
+APP_NAME = os.environ.get("APP_NAME", "")       # DO NOT CHANGE — required for proxy routing
 
 
 # ── Model Definition ──────────────────────────────────────────────────────────
@@ -41,8 +47,10 @@ APP_NAME = os.environ.get("APP_NAME", "")
 # To adapt: change the table name, columns, and form fields.
 # The CRUD routes follow the same pattern for any model.
 
-DATABASE = os.path.join(os.path.dirname(__file__), "data.db")
+DATABASE = os.path.join(os.path.dirname(__file__), "data.db")  # CUSTOMIZE: change filename if desired
 
+# CUSTOMIZE: Change table name, column names, and types below.
+# Keep 'id INTEGER PRIMARY KEY AUTOINCREMENT' and 'created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP'.
 CREATE_TABLE_SQL = """
 CREATE TABLE IF NOT EXISTS items (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -84,26 +92,29 @@ def index():
 @app.route("/items")
 def items_list():
     db    = get_db()
+    # CUSTOMIZE: change "items" to your table name
     items = db.execute("SELECT * FROM items ORDER BY created_at DESC").fetchall()
-    return render_template("list.html", app_name=APP_NAME, items=items)
+    return render_template("list.html", app_name=APP_NAME, items=items)  # DO NOT CHANGE template names — list.html, form.html, detail.html, 404.html must match files in templates/
 
 
 @app.route("/items/<int:item_id>")
 def items_detail(item_id):
     db   = get_db()
+    # CUSTOMIZE: change "items" to your table name
     item = db.execute("SELECT * FROM items WHERE id = ?", (item_id,)).fetchone()
     if item is None:
-        return render_template("404.html", app_name=APP_NAME), 404
-    return render_template("detail.html", app_name=APP_NAME, item=item)
+        return render_template("404.html", app_name=APP_NAME), 404  # DO NOT CHANGE template names — list.html, form.html, detail.html, 404.html must match files in templates/
+    return render_template("detail.html", app_name=APP_NAME, item=item)  # DO NOT CHANGE template names — list.html, form.html, detail.html, 404.html must match files in templates/
 
 
 @app.route("/items/new")
 def items_new():
-    return render_template("form.html", app_name=APP_NAME, item=None)
+    return render_template("form.html", app_name=APP_NAME, item=None)  # DO NOT CHANGE template names — list.html, form.html, detail.html, 404.html must match files in templates/
 
 
 @app.route("/items", methods=["POST"])
 def items_create():
+    # CUSTOMIZE: change column names in INSERT to match your CREATE_TABLE_SQL
     name        = request.form.get("name", "").strip()
     description = request.form.get("description", "").strip()
     status      = request.form.get("status", "active")
@@ -114,6 +125,7 @@ def items_create():
 
     db = get_db()
     cur = db.execute(
+        # CUSTOMIZE: change column names in INSERT to match your CREATE_TABLE_SQL
         "INSERT INTO items (name, description, status) VALUES (?, ?, ?)",
         (name, description, status),
     )
@@ -125,14 +137,16 @@ def items_create():
 @app.route("/items/<int:item_id>/edit")
 def items_edit(item_id):
     db   = get_db()
+    # CUSTOMIZE: change "items" to your table name
     item = db.execute("SELECT * FROM items WHERE id = ?", (item_id,)).fetchone()
     if item is None:
-        return render_template("404.html", app_name=APP_NAME), 404
-    return render_template("form.html", app_name=APP_NAME, item=item)
+        return render_template("404.html", app_name=APP_NAME), 404  # DO NOT CHANGE template names — list.html, form.html, detail.html, 404.html must match files in templates/
+    return render_template("form.html", app_name=APP_NAME, item=item)  # DO NOT CHANGE template names — list.html, form.html, detail.html, 404.html must match files in templates/
 
 
 @app.route("/items/<int:item_id>/edit", methods=["POST"])
 def items_update(item_id):
+    # CUSTOMIZE: change column names in UPDATE to match your CREATE_TABLE_SQL
     name        = request.form.get("name", "").strip()
     description = request.form.get("description", "").strip()
     status      = request.form.get("status", "active")
@@ -143,6 +157,7 @@ def items_update(item_id):
 
     db = get_db()
     db.execute(
+        # CUSTOMIZE: change column names in UPDATE to match your CREATE_TABLE_SQL
         "UPDATE items SET name = ?, description = ?, status = ? WHERE id = ?",
         (name, description, status, item_id),
     )
@@ -154,6 +169,7 @@ def items_update(item_id):
 @app.route("/items/<int:item_id>/delete", methods=["POST"])
 def items_delete(item_id):
     db   = get_db()
+    # CUSTOMIZE: change "items" to your table name
     item = db.execute("SELECT name FROM items WHERE id = ?", (item_id,)).fetchone()
     if item:
         db.execute("DELETE FROM items WHERE id = ?", (item_id,))
@@ -167,6 +183,7 @@ def items_delete(item_id):
 @app.route("/api/items")
 def api_items_list():
     db    = get_db()
+    # CUSTOMIZE: change "items" to your table name
     items = db.execute("SELECT * FROM items ORDER BY created_at DESC").fetchall()
     return jsonify([dict(row) for row in items])
 
@@ -174,6 +191,7 @@ def api_items_list():
 @app.route("/api/items/<int:item_id>", methods=["DELETE"])
 def api_items_delete(item_id):
     db = get_db()
+    # CUSTOMIZE: change "items" to your table name
     db.execute("DELETE FROM items WHERE id = ?", (item_id,))
     db.commit()
     return jsonify({"ok": True})
@@ -181,6 +199,7 @@ def api_items_delete(item_id):
 
 # ── Entry point ───────────────────────────────────────────────────────────────
 
+# DO NOT CHANGE — host must be 0.0.0.0 for proxy routing
 if __name__ == "__main__":
     print(f"Starting {APP_NAME or 'crud-app'} on port {PORT}")
     app.run(host="0.0.0.0", port=PORT, debug=False)
