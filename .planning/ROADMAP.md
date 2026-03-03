@@ -80,7 +80,11 @@ Plans:
   2. A file/media tool template exists with drag-and-drop upload UI, a file listing page, download endpoints, and at least one format conversion capability -- copying and starting produces a working file manager
   3. A CRUD app template exists with SQLite database integration, a model definition pattern, and list/detail/create/edit/delete views -- copying and starting produces a working data management app with sample model
   4. A utility/tool SPA template exists as a minimal single-page skeleton suitable for calculators, text tools, viewers, and similar lightweight apps -- copying and starting produces a working single-page app with a sample tool
-**Plans**: TBD
+**Plans**: 3 plans
+Plans:
+- [ ] 17-01-PLAN.md -- Utility SPA template + real-time dashboard template (SSE + multi-chart)
+- [ ] 17-02-PLAN.md -- CRUD app template (SQLite + list/detail/create/edit/delete views)
+- [ ] 17-03-PLAN.md -- File/media tool template (drag-drop upload, listing, download, conversion)
 
 ### Phase 18: Template Catalog and Auto-Selection
 **Goal**: The agent intelligently selects the best template for each user request using a catalog of all available templates and a decision guide -- and the user can override the selection if they prefer a different starting point
@@ -116,5 +120,5 @@ Phases 16 and 17 can run in parallel (no dependencies between them). Phase 18 de
 | 14. OpenCode Session Wrapper | v1.2 | 1/1 | Complete | 2026-02-25 |
 | 15. CLI Orchestration Skill Documentation | v1.2 | 1/1 | Complete | 2026-02-25 |
 | 16. Skill Reliability Core | v1.3 | 0/? | Not started | - |
-| 17. Template Library Expansion | v1.3 | 0/? | Not started | - |
+| 17. Template Library Expansion | v1.3 | 0/3 | Not started | - |
 | 18. Template Catalog and Auto-Selection | v1.3 | 0/? | Not started | - |
