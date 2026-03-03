@@ -217,18 +217,101 @@ Key rules that MUST NOT change:
 - Layout: textarea input, action buttons, output area
 - Start command is `python serve.py` (not `app.py`)
 
-**For `crud-app`:**
-After copying, your app directory contains these files — do NOT create or delete any:
-`app.py`, `templates/base.html`, `templates/list.html`, `templates/form.html`, `templates/detail.html`, `static/style.css`, `static/app.js`, `requirements.txt`
+**For `crud-app` — READ THIS CAREFULLY:**
 
-**DO NOT rewrite app.py or create new template files.** The template already has working HTML, CSS, routing, and CRUD operations. Only make these targeted changes:
+**WARNING:** The #1 failure mode is rewriting app.py or templates from scratch. NEVER do this.
+The template already has working CRUD routes, database helpers, flash messages, error handling, and 4 HTML templates (list.html, form.html, detail.html, 404.html). Your job is to make SMALL TARGETED EDITS to adapt the "Item" model to the user's entity.
 
-1. **Edit `CREATE_TABLE_SQL`** in app.py — change the `items` table columns to match your entity (e.g., `title TEXT`, `author TEXT`, `genre TEXT`)
-2. **Update SQL queries** in each route function to match your new column names
-3. **Update `templates/list.html`** — change table column headers and `{{ item.field }}` references to your columns
-4. **Update `templates/form.html`** — change form field labels and input names to your columns
-5. **Update `templates/detail.html`** — change displayed field labels and values to your columns
-6. **Rename entity** — use `sed -i 's/items/yourentity/g; s/item/yourentity/g'` across app.py and templates (adjust for plural/singular)
+After copying, your app directory has these files — do NOT create, delete, or rewrite any:
+- `app.py` — Flask server with CRUD routes (look for `# CUSTOMIZE:` markers)
+- `templates/base.html` — shared layout with topbar, flash messages, CSS/JS includes
+- `templates/list.html` — data table listing all records
+- `templates/form.html` — create/edit form (shared, uses item=None for create)
+- `templates/detail.html` — single record detail view
+- `templates/404.html` — not-found page
+- `static/style.css` — dark theme styles
+- `static/app.js` — delete confirmation, flash dismiss
+- `requirements.txt` — Flask dependency
+
+**Customization steps (do ALL 6 in order):**
+
+1. **Edit `CREATE_TABLE_SQL` in app.py** — change the table name and columns.
+   Find the line `CREATE TABLE IF NOT EXISTS items (` and change `items` to your entity (plural).
+   Replace the column definitions (keep `id` and `created_at`).
+
+2. **Update SQL in route functions** — in each route function in app.py, update:
+   - Table name in every SQL query (e.g., `items` → `books`)
+   - Column names in INSERT and UPDATE queries to match your new columns
+   - Column names in `request.form.get(...)` calls to match your form fields
+
+3. **Update `templates/list.html`** — change:
+   - Table header `<th>` labels to your column names
+   - `{{ item.fieldname }}` references to your column names
+   - Keep the `{% for item in items %}` loop variable name as `item`
+
+4. **Update `templates/form.html`** — change:
+   - Form field labels and `name=` attributes to your columns
+   - `{{ item.fieldname }}` references in value attributes
+
+5. **Update `templates/detail.html`** — change:
+   - `<dt>` labels and `{{ item.fieldname }}` references to your columns
+
+6. **Update display text** — change "Item"/"Items" in page titles and headings:
+   Use targeted sed: `sed -i 's/Items/Books/g; s/Item/Book/g; s/item/book/g' templates/*.html`
+   Then manually check app.py flash messages and route docstring.
+
+**Worked example — Bookshelf app:**
+
+Step 1: Edit CREATE_TABLE_SQL in app.py:
+```python
+# Change from:
+CREATE TABLE IF NOT EXISTS items (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    name        TEXT    NOT NULL,
+    description TEXT,
+    status      TEXT    DEFAULT 'active',
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+# Change to:
+CREATE TABLE IF NOT EXISTS books (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    title       TEXT    NOT NULL,
+    author      TEXT    NOT NULL,
+    genre       TEXT    DEFAULT 'fiction',
+    rating      INTEGER DEFAULT 0,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+)
+```
+
+Step 2: Update SQL queries — example for items_create route:
+```python
+# Change from:
+name        = request.form.get("name", "").strip()
+description = request.form.get("description", "").strip()
+status      = request.form.get("status", "active")
+# ...
+"INSERT INTO items (name, description, status) VALUES (?, ?, ?)",
+(name, description, status),
+
+# Change to:
+title  = request.form.get("title", "").strip()
+author = request.form.get("author", "").strip()
+genre  = request.form.get("genre", "fiction")
+rating = int(request.form.get("rating", 0))
+# ...
+"INSERT INTO books (title, author, genre, rating) VALUES (?, ?, ?, ?)",
+(title, author, genre, rating),
+```
+
+Step 3: Update list.html table headers + cells:
+```html
+<!-- Change: -->
+<th>Name</th><th>Status</th>
+{{ item.name }}  {{ item.status }}
+<!-- To: -->
+<th>Title</th><th>Author</th><th>Genre</th>
+{{ item.title }}  {{ item.author }}  {{ item.genre }}
+```
 
 **For `file-tool`:**
 - `app.py` → edit `ALLOWED_EXTENSIONS` and `MAX_CONTENT_LENGTH` for your needs
@@ -356,9 +439,10 @@ curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
 - No Python backend — serve.py only serves static files
 
 **`crud-app`** — data management app:
-- Edit the Item model section in `app.py` to define your fields and CREATE_TABLE_SQL
-- Routes handle list/detail/create/edit/delete automatically based on the model
-- SQLite database auto-creates on first request
+- Look for `# CUSTOMIZE:` markers in `app.py` — change table name, columns, form fields
+- Template has 4 HTML files (list/form/detail/404) — update field references, do NOT delete or recreate
+- Routes handle list/detail/create/edit/delete; update SQL queries to match your columns
+- See the worked example in Step 5 above for a complete walkthrough
 
 **`file-tool`** — file upload and conversion:
 - Edit ALLOWED_EXTENSIONS and MAX_CONTENT_LENGTH in `app.py` for your needs
