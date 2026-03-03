@@ -31,22 +31,16 @@ Agent Zero can build, run, and persist web applications directly within its own 
 - ✓ Claude CLI single-turn: `claude_single_turn()` with CLAUDECODE env fix — v1.1
 - ✓ Claude CLI multi-turn: `ClaudeSession` with `--resume UUID`, session recovery — v1.1
 - ✓ Claude CLI skill: `usr/skills/claude-cli/SKILL.md` documents complete interaction pattern — v1.1
+- ✓ tmux primitives: send text/keys, read screen, wait_ready with prompt detection + idle fallback — v1.2
+- ✓ Interactive CLI lifecycle: start, send, detect readiness, exit cleanly — v1.2
+- ✓ OpenCode session wrapper: `OpenCodeSession` class with `.start()/.send()/.exit()` — v1.2
+- ✓ CLI orchestration skill: `usr/skills/cli-orchestration/SKILL.md` with Read-Detect-Write-Verify cycle — v1.2
 
 ### Active
 
 <!-- Current scope. Building toward these. -->
 
-- [ ] TERM-01: Agent Zero can send text + Enter to a named tmux pane (shared terminal)
-- [ ] TERM-02: Agent Zero can send text without Enter (partial input to interactive prompt)
-- [ ] TERM-03: Agent Zero can send special keys to tmux pane (Ctrl+C, Ctrl+D, Tab, arrows)
-- [ ] TERM-04: Agent Zero can capture current terminal screen content (tmux capture-pane)
-- [ ] TERM-05: Agent Zero can detect when terminal is ready for input (prompt detection + idle fallback)
-- [ ] CLI-01: Agent Zero can start an interactive CLI session in the shared terminal
-- [ ] CLI-02: Agent Zero can send prompts to a running interactive CLI and read responses
-- [ ] CLI-03: Agent Zero can detect when a CLI has finished responding and is ready for next input
-- [ ] CLI-04: Agent Zero can gracefully interrupt or exit an interactive CLI session
-- [ ] CLI-05: Pre-built OpenCode CLI orchestration wrapper (`opencode_session()`)
-- [ ] CLI-06: Generic CLI orchestration skill documents the complete pattern for any CLI tool
+(Defined in REQUIREMENTS.md — v1.3 App Builder)
 
 ### Out of Scope
 
@@ -82,15 +76,15 @@ Agent Zero can build, run, and persist web applications directly within its own 
 | Registry in JSON file | Simple, survives restarts, no DB dependency | ✓ Good |
 | SKILL.md standard for GSD skills | Compatible with Claude Code, Cursor, Codex | ✓ Good |
 
-## Current Milestone: v1.2 Terminal Orchestration
+## Current Milestone: v1.3 App Builder
 
-**Goal:** Agent Zero can interact with the shared terminal and interactive CLIs as a human would — type, read screen, send special keys, detect readiness — enabling orchestration of any CLI agent
+**Goal:** Agent Zero reliably creates, configures, and manages web apps using the Apps System — every time, not just sometimes — with a rich template library for instant scaffolding
 
 **Target features:**
-- tmux_tool: new Python tool for sending/reading shared terminal (tmux send-keys + capture-pane)
-- Prompt detection: poll-based readiness check with prompt pattern + idle timeout fallback
-- OpenCode CLI wrapper: `opencode_session()` following ClaudeSession pattern from v1.1
-- CLI orchestration skill: `usr/skills/cli-orchestration/SKILL.md` for generic + tool-specific patterns
+- Bulletproof web-app-builder skill rewrite with mandatory verification steps
+- System prompt integration so the agent always knows about the Apps System
+- Expanded template library: dashboards, file/media tools, CRUD apps, utilities
+- Template auto-selection with user override capability
 
 ---
-*Last updated: 2026-02-25 after milestone v1.2 started*
+*Last updated: 2026-03-03 after milestone v1.3 started*
