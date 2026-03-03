@@ -31,6 +31,8 @@ usr/**
 !usr/**/
 !usr/skills/
 !usr/skills/**
+!usr/bin/
+!usr/bin/**
 
 # Handle knowledge directory
 

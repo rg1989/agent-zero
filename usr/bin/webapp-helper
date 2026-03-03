@@ -1,0 +1,321 @@
+#!/usr/bin/env bash
+# webapp-helper — CLI wrapper for Agent Zero webapp API operations.
+#
+# Usage: webapp-helper <subcommand> [args...]
+#
+# Subcommands:
+#   validate-name <name>                      Validate app name format and reserved list
+#   alloc-port                                Allocate next available port (prints port)
+#   init <app-name> <template>               Copy template + install dependencies
+#   register <app-name> <port> <cmd> [desc]  Register app with the API
+#   start <app-name>                          Start a registered app
+#   stop <app-name>                           Stop a running app
+#   health-check <port> [timeout_seconds]    Poll port until healthy (default 10s)
+#   status [app-name]                         Show app status or list all apps
+#
+# All output is single-line and machine-parseable.
+# Exit codes: 0 = success, 1 = error.
+
+set -euo pipefail
+
+# ---------------------------------------------------------------------------
+# Constants — hardcoded once here; never reconstructed in subcommands
+# ---------------------------------------------------------------------------
+API_URL="http://localhost/webapp"
+APPS_DIR="/a0/apps"
+TEMPLATES_DIR="/a0/apps/_templates"
+
+# Reserved path segments from app_proxy.py _RESERVED + built-in app names
+RESERVED="login logout health dev-ping socket.io static message poll settings_get settings_set csrf_token chat_create chat_load upload webapp mcp a2a shared-browser shared-terminal"
+
+# ---------------------------------------------------------------------------
+# usage — print help and exit 1
+# ---------------------------------------------------------------------------
+usage() {
+    cat >&2 <<'EOF'
+webapp-helper — CLI wrapper for Agent Zero webapp API operations
+
+Usage: /a0/usr/bin/webapp-helper <subcommand> [args...]
+
+Subcommands:
+  validate-name <name>
+      Check name format (^[a-z][a-z0-9-]{0,28}[a-z0-9]$) and reserved list.
+      Output: VALID | ERROR: <reason>
+
+  alloc-port
+      Allocate the next available port from the webapp API.
+      Output: <port-number>
+
+  init <app-name> <template>
+      Copy template directory to /a0/apps/<app-name> and install requirements.
+      Output: OK: App initialized at /a0/apps/<app-name>/ | ERROR: <reason>
+
+  register <app-name> <port> <start-cmd> [description]
+      Register app with webapp API (does not start it).
+      Output: OK: Registered | ERROR: <reason>
+
+  start <app-name>
+      Start a registered app via webapp API.
+      Output: OK: Started | ERROR: <reason>
+
+  stop <app-name>
+      Stop a running app via webapp API.
+      Output: OK: Stopped | ERROR: <reason>
+
+  health-check <port> [timeout_seconds]
+      Poll http://127.0.0.1:<port>/ until healthy. Default timeout: 10 seconds.
+      Output: HEALTHY | FAILED: not responding after <N>s
+
+  status [app-name]
+      If app-name given: show single app status JSON.
+      If omitted: list all apps JSON.
+
+EOF
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# _check_api_error <response> — print error and exit 1 if response has error key
+# ---------------------------------------------------------------------------
+_check_api_error() {
+    local response="$1"
+    local err
+    err=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('error',''))" 2>/dev/null || echo "")
+    if [ -n "$err" ]; then
+        echo "ERROR: $err"
+        exit 1
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: validate-name
+# ---------------------------------------------------------------------------
+cmd_validate_name() {
+    if [ $# -lt 1 ]; then
+        echo "ERROR: usage: webapp-helper validate-name <name>" >&2
+        exit 1
+    fi
+    local name="$1"
+
+    # Regex check — must be at least 2 chars (start letter, end letter/digit)
+    if [[ ! "$name" =~ ^[a-z][a-z0-9-]{0,28}[a-z0-9]$ ]]; then
+        echo "ERROR: Invalid name '${name}' — must match ^[a-z][a-z0-9-]{0,28}[a-z0-9]$. Use lowercase letters, digits, hyphens only. Min 2 chars, max 30 chars. Must start with a letter and end with a letter or digit."
+        exit 1
+    fi
+
+    # Reserved blocklist check
+    for reserved_name in $RESERVED; do
+        if [ "$name" = "$reserved_name" ]; then
+            echo "ERROR: Name '${name}' is reserved and cannot be used as an app name."
+            exit 1
+        fi
+    done
+
+    echo "VALID"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: alloc-port
+# ---------------------------------------------------------------------------
+cmd_alloc_port() {
+    local response
+    response=$(curl -sf "${API_URL}?action=alloc_port") || { echo "ERROR: API request failed"; exit 1; }
+
+    # Check for error key in response
+    local err
+    err=$(echo "$response" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('error',''))" 2>/dev/null || echo "")
+    if [ -n "$err" ]; then
+        echo "ERROR: $err"
+        exit 1
+    fi
+
+    # Extract and print port
+    local port
+    port=$(echo "$response" | python3 -c "import sys,json; print(json.load(sys.stdin)['port'])" 2>/dev/null) || {
+        echo "ERROR: Could not parse port from API response: $response"
+        exit 1
+    }
+    echo "$port"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: init
+# ---------------------------------------------------------------------------
+cmd_init() {
+    if [ $# -lt 2 ]; then
+        echo "ERROR: usage: webapp-helper init <app-name> <template>" >&2
+        exit 1
+    fi
+    local app_name="$1"
+    local template="$2"
+
+    # Template name must not start with _ (those are internal files like _CATALOG.md)
+    if [[ "$template" == _* ]]; then
+        echo "ERROR: Template name must not start with '_'"
+        exit 1
+    fi
+
+    local template_path="${TEMPLATES_DIR}/${template}"
+    if [ ! -d "$template_path" ]; then
+        echo "ERROR: Template '${template}' not found at ${template_path}"
+        exit 1
+    fi
+
+    local app_path="${APPS_DIR}/${app_name}"
+    if [ -d "$app_path" ]; then
+        echo "ERROR: App directory already exists at ${app_path}"
+        exit 1
+    fi
+
+    # Copy template
+    cp -r "$template_path" "$app_path" || { echo "ERROR: Failed to copy template to ${app_path}"; exit 1; }
+
+    # Install dependencies if requirements.txt present
+    if [ -f "${app_path}/requirements.txt" ]; then
+        pip3 install --break-system-packages -q -r "${app_path}/requirements.txt" 2>/dev/null || true
+    fi
+
+    echo "OK: App initialized at ${app_path}/"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: register
+# ---------------------------------------------------------------------------
+cmd_register() {
+    if [ $# -lt 3 ]; then
+        echo "ERROR: usage: webapp-helper register <app-name> <port> <start-cmd> [description]" >&2
+        exit 1
+    fi
+    local app_name="$1"
+    local port="$2"
+    local start_cmd="$3"
+    local description="${4:-}"
+    local cwd="${APPS_DIR}/${app_name}"
+
+    # Build JSON payload using python3 to avoid quoting issues with special chars
+    local payload
+    payload=$(python3 -c "
+import json, sys
+d = {
+    'action': 'register',
+    'name': sys.argv[1],
+    'port': int(sys.argv[2]),
+    'cmd': sys.argv[3],
+    'cwd': sys.argv[4],
+    'description': sys.argv[5],
+}
+print(json.dumps(d))
+" "$app_name" "$port" "$start_cmd" "$cwd" "$description") || { echo "ERROR: Failed to build JSON payload"; exit 1; }
+
+    local response
+    response=$(curl -sf -X POST "$API_URL" -H "Content-Type: application/json" -d "$payload") || { echo "ERROR: API request failed"; exit 1; }
+
+    _check_api_error "$response"
+    echo "OK: Registered"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: start
+# ---------------------------------------------------------------------------
+cmd_start() {
+    if [ $# -lt 1 ]; then
+        echo "ERROR: usage: webapp-helper start <app-name>" >&2
+        exit 1
+    fi
+    local app_name="$1"
+    local payload
+    payload=$(python3 -c "import json,sys; print(json.dumps({'action':'start','name':sys.argv[1]}))" "$app_name")
+
+    local response
+    response=$(curl -sf -X POST "$API_URL" -H "Content-Type: application/json" -d "$payload") || { echo "ERROR: API request failed"; exit 1; }
+
+    _check_api_error "$response"
+    echo "OK: Started"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: stop
+# ---------------------------------------------------------------------------
+cmd_stop() {
+    if [ $# -lt 1 ]; then
+        echo "ERROR: usage: webapp-helper stop <app-name>" >&2
+        exit 1
+    fi
+    local app_name="$1"
+    local payload
+    payload=$(python3 -c "import json,sys; print(json.dumps({'action':'stop','name':sys.argv[1]}))" "$app_name")
+
+    local response
+    response=$(curl -sf -X POST "$API_URL" -H "Content-Type: application/json" -d "$payload") || { echo "ERROR: API request failed"; exit 1; }
+
+    _check_api_error "$response"
+    echo "OK: Stopped"
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: health-check
+# ---------------------------------------------------------------------------
+cmd_health_check() {
+    if [ $# -lt 1 ]; then
+        echo "ERROR: usage: webapp-helper health-check <port> [timeout_seconds]" >&2
+        exit 1
+    fi
+    local port="$1"
+    local timeout_secs="${2:-10}"
+    local max_attempts
+    max_attempts=$(python3 -c "print(int(${timeout_secs} / 0.5))")
+    local i=1
+
+    while [ "$i" -le "$max_attempts" ]; do
+        if curl -sf -o /dev/null "http://127.0.0.1:${port}/"; then
+            echo "HEALTHY"
+            exit 0
+        fi
+        i=$((i + 1))
+        sleep 0.5
+    done
+
+    echo "FAILED: not responding after ${timeout_secs}s"
+    exit 1
+}
+
+# ---------------------------------------------------------------------------
+# Subcommand: status
+# ---------------------------------------------------------------------------
+cmd_status() {
+    if [ $# -ge 1 ]; then
+        local app_name="$1"
+        local response
+        response=$(curl -sf "${API_URL}?action=status&name=${app_name}") || { echo "ERROR: API request failed"; exit 1; }
+        echo "$response"
+    else
+        local response
+        response=$(curl -sf "${API_URL}?action=list") || { echo "ERROR: API request failed"; exit 1; }
+        echo "$response"
+    fi
+}
+
+# ---------------------------------------------------------------------------
+# Main dispatch
+# ---------------------------------------------------------------------------
+if [ $# -lt 1 ] || [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
+    usage
+fi
+
+SUBCOMMAND="$1"
+shift
+
+case "$SUBCOMMAND" in
+    validate-name)  cmd_validate_name "$@" ;;
+    alloc-port)     cmd_alloc_port "$@" ;;
+    init)           cmd_init "$@" ;;
+    register)       cmd_register "$@" ;;
+    start)          cmd_start "$@" ;;
+    stop)           cmd_stop "$@" ;;
+    health-check)   cmd_health_check "$@" ;;
+    status)         cmd_status "$@" ;;
+    *)
+        echo "ERROR: Unknown subcommand '${SUBCOMMAND}'" >&2
+        usage
+        ;;
+esac
