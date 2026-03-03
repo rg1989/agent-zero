@@ -37,6 +37,41 @@ CRITICAL: Follow the MANDATORY SEQUENCE below exactly. Do NOT skip steps. If any
 
 ---
 
+## TOOL USAGE — READ THIS FIRST
+
+All bash commands in this skill MUST be executed using `code_execution_tool` with `runtime: "terminal"`.
+
+DO NOT use `runtime: "python"` for any step. DO NOT import any Python modules (there is no `python.helpers.webapp_manager` or `python/helpers/webapp.py`). The webapp API is HTTP-only — all interactions use `curl` commands via the terminal.
+
+Correct tool call format for every bash step:
+~~~json
+{
+    "thoughts": ["Executing step N of web-app-builder skill..."],
+    "headline": "Step N: <description>",
+    "tool_name": "code_execution_tool",
+    "tool_args": {
+        "runtime": "terminal",
+        "session": 0,
+        "reset": false,
+        "code": "<bash commands from the step>"
+    }
+}
+~~~
+
+---
+
+## EXECUTION FLOW — DO NOT STOP
+
+Execute ALL 8 steps in a single uninterrupted sequence. After announcing your template selection in Step 2, IMMEDIATELY proceed to Step 3 (allocate port) in the same response. Do NOT wait for user confirmation between steps.
+
+The only acceptable reasons to stop mid-sequence are:
+- A step returns an error (STOP and report it)
+- The app name is invalid or reserved in Step 1 (STOP and ask for a new name)
+
+Do NOT stop to ask "shall I proceed?" or "would you like me to continue?" — just execute.
+
+---
+
 ## How routing works
 
 ```
@@ -105,6 +140,7 @@ If the name is INVALID or RESERVED, tell the user and ask for a different name. 
 
 3. **Tell the user your selection:** Before proceeding to Step 3, always say something like:
    > "I'll use the **{template-name}** template for this — it's the best fit because {brief reason}. If you'd prefer a different template, just let me know."
+   Then immediately continue to Step 3 without waiting for user input. Only stop if the user actively interrupts.
 
 4. **Handle override:** If the user asks to use a different template (now or later):
    - Acknowledge the change
@@ -116,6 +152,7 @@ If the name is INVALID or RESERVED, tell the user and ask for a different name. 
 ### Step 3 — Allocate a port
 
 ```bash
+# Use code_execution_tool with runtime: "terminal" for this command
 PORT=$(curl -s "http://localhost/webapp?action=alloc_port" | python3 -c "import sys,json; print(json.load(sys.stdin)['port'])")
 echo "Allocated port: $PORT"
 ```
