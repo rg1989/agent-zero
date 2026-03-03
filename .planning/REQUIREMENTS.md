@@ -19,7 +19,7 @@ Requirements for the App Builder milestone. Each maps to roadmap phases 16+.
 ### Template Library
 
 - [ ] **TMPL-01**: Real-time dashboard template exists with periodic data refresh and Chart.js or Plotly charts in a responsive grid layout
-- [ ] **TMPL-02**: File/media tool template exists with drag-and-drop upload, file listing, download endpoints, and format conversion support
+- [x] **TMPL-02**: File/media tool template exists with drag-and-drop upload, file listing, download endpoints, and format conversion support
 - [ ] **TMPL-03**: CRUD app template exists with SQLite database, model definition, and list/detail/create/edit/delete views
 - [ ] **TMPL-04**: Utility/tool single-page app template exists as a minimal skeleton for calculators, viewers, text tools, and similar lightweight apps
 - [ ] **TMPL-05**: Template catalog file lists all available templates with descriptions, use cases, and when to pick each one
@@ -81,7 +81,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKILL-04 | Phase 16 | Complete |
 | SKILL-05 | Phase 18 | Pending |
 | TMPL-01 | Phase 17 | Pending |
-| TMPL-02 | Phase 17 | Pending |
+| TMPL-02 | Phase 17 | Complete |
 | TMPL-03 | Phase 17 | Pending |
 | TMPL-04 | Phase 17 | Pending |
 | TMPL-05 | Phase 18 | Pending |
