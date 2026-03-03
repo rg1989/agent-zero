@@ -1,18 +1,20 @@
-# State
+# Project State
 
 ## Project Reference
 
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** Defining requirements for v1.3 App Builder
+**Current focus:** v1.3 App Builder -- Phase 16 (Skill Reliability Core)
 
 ## Current Position
 
-Phase: Not started (defining requirements)
-Plan: —
-Status: Defining requirements
-Last activity: 2026-03-03 — Milestone v1.3 started
+Phase: 16 of 18 (Skill Reliability Core)
+Plan: 0 of ? in current phase
+Status: Ready to plan
+Last activity: 2026-03-03 -- Roadmap created for v1.3 App Builder
+
+Progress: [░░░░░░░░░░] 0%
 
 ## Performance Metrics
 
@@ -25,14 +27,14 @@ Last activity: 2026-03-03 — Milestone v1.3 started
 
 ### Decisions
 
-- v1.2 architecture: New `tmux_tool` Python class for shared terminal interaction; `code_execution_tool` and `terminal_agent.py` left untouched
-- Prompt detection strategy: prompt pattern first, idle timeout fallback (10s minimum for AI CLI response times)
-- No sentinel injection: shared terminal is user-visible; only stability polling + prompt matching are allowed
-- ANSI stripping required before any capture-pane parsing: `re.sub(r'\x1b(?:\][^\x07]*\x07|[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', text)` — OSC branch must come FIRST (2-char branch range includes `]`)
+- v1.3 phase structure: 3 phases (16-18). Phases 16 and 17 are independent (can run in parallel). Phase 18 depends on both.
+- Existing web-app-builder SKILL.md exists but is unreliable -- Phase 16 is a rewrite, not a patch
+- Three templates already exist (flask-basic, flask-dashboard, static-html) -- Phase 17 adds four more
+- _GUIDE.md already exists -- Phase 18 updates it to cover all seven templates
 
 ### Carried from v1.2
 
-- CLAUDECODE fix is per-subprocess env only — never globally unset
+- CLAUDECODE fix is per-subprocess env only -- never globally unset
 - `ClaudeSession` uses `--resume UUID` for multi-turn
 - `websocket-client>=1.9.0` required in requirements.txt
 
@@ -47,5 +49,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Starting milestone v1.3 App Builder
+Stopped at: Roadmap created for v1.3 App Builder
 Resume file: None

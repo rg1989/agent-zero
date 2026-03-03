@@ -75,22 +75,22 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| SKILL-01 | — | Pending |
-| SKILL-02 | — | Pending |
-| SKILL-03 | — | Pending |
-| SKILL-04 | — | Pending |
-| SKILL-05 | — | Pending |
-| TMPL-01 | — | Pending |
-| TMPL-02 | — | Pending |
-| TMPL-03 | — | Pending |
-| TMPL-04 | — | Pending |
-| TMPL-05 | — | Pending |
-| TMPL-06 | — | Pending |
+| SKILL-01 | Phase 16 | Pending |
+| SKILL-02 | Phase 16 | Pending |
+| SKILL-03 | Phase 16 | Pending |
+| SKILL-04 | Phase 16 | Pending |
+| SKILL-05 | Phase 18 | Pending |
+| TMPL-01 | Phase 17 | Pending |
+| TMPL-02 | Phase 17 | Pending |
+| TMPL-03 | Phase 17 | Pending |
+| TMPL-04 | Phase 17 | Pending |
+| TMPL-05 | Phase 18 | Pending |
+| TMPL-06 | Phase 18 | Pending |
 
 **Coverage:**
 - v1.3 requirements: 11 total
-- Mapped to phases: 0
-- Unmapped: 11 ⚠️
+- Mapped to phases: 11
+- Unmapped: 0
 
 ---
 
@@ -121,7 +121,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 - [x] **BROWSER-02**: Agent Zero takes a screenshot via CDP before every browser interaction to observe current state
 - [x] **BROWSER-03**: Agent Zero verifies navigation succeeded by checking current URL and page title after navigate-and-wait
 - [x] **BROWSER-04**: Shared browser Chromium startup replaces fragile `sleep 2` with a CDP WebSocket health-check poll
-- [x] **BROWSER-05**: Agent Zero uses a consistent Observe → Act → Verify workflow for all browser interactions
+- [x] **BROWSER-05**: Agent Zero uses a consistent Observe -> Act -> Verify workflow for all browser interactions
 
 ### Claude CLI Control
 
@@ -135,4 +135,4 @@ Which phases cover which requirements. Updated during roadmap creation.
 *v1.3 requirements defined: 2026-03-03*
 *v1.2 requirements completed: 2026-02-25*
 *v1.1 requirements completed: 2026-02-25*
-*Last updated: 2026-03-03 after milestone v1.3 start*
+*Last updated: 2026-03-03 after roadmap creation*
