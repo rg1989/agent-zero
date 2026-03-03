@@ -63,7 +63,7 @@ class AutoLoadTriggeredSkills(Extension):
                 f"Proceed IMMEDIATELY with the skill's mandatory sequence. "
                 f"Execute ALL steps end-to-end without stopping — do not just describe what you will do, actually do it."
             )
-            loop_data.extras_temporary["auto_loaded_skills_directive"] = directive
+            loop_data.extras_persistent["auto_loaded_skills_directive"] = directive
 
 
 def _get_last_user_text(loop_data: LoopData) -> str:
