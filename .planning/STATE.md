@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 Phase: 18 of 18 (all milestones complete through v1.3)
 Plan: N/A — between milestones
 Status: v1.3 App Builder shipped 2026-03-03
-Last activity: 2026-03-03 - Completed quick task 3: Fix app creation flow — skill loading and agent execution
+Last activity: 2026-03-03 - Completed quick task 4: Fix remaining app creation errors — runtime enforcement hook, crud-app guidance
 
 Progress: [██████████] 100% (v1.0–v1.3)
 
@@ -38,9 +38,10 @@ None.
 |---|-------------|------|--------|-----------|
 | 1 | Fix v1.3 post-ship issues: auto-load extension, SKILL.md updates, Flask install, requirements.txt, Dockerfile | 2026-03-03 | 23583b7 | [1-fix-v1-3-post-ship-issues-auto-load-exte](./quick/1-fix-v1-3-post-ship-issues-auto-load-exte/) |
 | 3 | Fix app creation flow: SKILL.md TOOL USAGE + EXECUTION FLOW directives, extras_persistent directive | 2026-03-03 | e189508 | [3-fix-app-creation-flow-skill-loading-agen](./quick/3-fix-app-creation-flow-skill-loading-agen/) |
+| 4 | Fix remaining app creation errors: move runtime enforcement hook to python/extensions/, improve crud-app SKILL.md guidance | 2026-03-03 | 0ec3797 | [4-fix-remaining-app-creation-errors-auto-l](./quick/4-fix-remaining-app-creation-errors-auto-l/) |
 
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed quick task 3: Fix app creation flow — skill loading and agent execution
+Stopped at: Completed quick task 4: Fix remaining app creation errors — runtime enforcement hook, crud-app guidance
 Resume file: None
