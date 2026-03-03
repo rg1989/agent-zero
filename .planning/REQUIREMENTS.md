@@ -4,30 +4,42 @@
 
 ---
 
-## v1.2 Requirements
+## v1.3 Requirements
 
-Requirements for the Terminal Orchestration milestone. Each maps to roadmap phases 11–15.
+Requirements for the App Builder milestone. Each maps to roadmap phases 16+.
 
-### Terminal Tool
+### Skill Reliability
 
-- [x] **TERM-01**: Agent Zero can send text + Enter to a named tmux pane in the shared terminal
-- [x] **TERM-02**: Agent Zero can send text without Enter to a named tmux pane (partial input for inline prompts like `y/N`)
-- [x] **TERM-03**: Agent Zero can send special keys to a named tmux pane (Ctrl+C, Ctrl+D, Tab, Escape, arrow keys)
-- [x] **TERM-04**: Agent Zero can capture and read current terminal screen content from a tmux pane
-- [x] **TERM-05**: Agent Zero can detect when a terminal pane is ready for input using prompt pattern matching with idle timeout fallback
+- [ ] **SKILL-01**: Agent always recognizes app creation requests and routes to the web-app-builder skill — no ad-hoc Flask scripts outside the Apps System
+- [ ] **SKILL-02**: web-app-builder SKILL.md enforces a mandatory sequence: allocate port, copy template, customize code, register, start, verify — with no steps skippable
+- [ ] **SKILL-03**: App name is validated against reserved paths and naming rules before registration attempt
+- [ ] **SKILL-04**: After starting an app, the agent polls the app's port until it responds (HTTP 200) before declaring success to the user
+- [ ] **SKILL-05**: Agent auto-selects the best template based on the user's request, tells the user which one was chosen, and allows override if asked
 
-### CLI Orchestration
+### Template Library
 
-- [x] **CLI-01**: Agent Zero can start an interactive CLI tool in the shared terminal and wait for its initial ready prompt
-- [x] **CLI-02**: Agent Zero can send a prompt to a running interactive CLI and read its response
-- [x] **CLI-03**: Agent Zero can detect when an interactive CLI has finished responding and is ready for next input
-- [x] **CLI-04**: Agent Zero can interrupt or exit an interactive CLI session cleanly (Ctrl+C, Ctrl+D, or tool-specific exit command)
-- [x] **CLI-05**: Agent Zero can use a pre-built `OpenCodeSession` wrapper with `.start()` / `.send(prompt)` / `.exit()` interface, mirroring `ClaudeSession`
-- [x] **CLI-06**: Agent Zero can follow documented orchestration patterns for any interactive CLI via `usr/skills/cli-orchestration/SKILL.md`
+- [ ] **TMPL-01**: Real-time dashboard template exists with periodic data refresh and Chart.js or Plotly charts in a responsive grid layout
+- [ ] **TMPL-02**: File/media tool template exists with drag-and-drop upload, file listing, download endpoints, and format conversion support
+- [ ] **TMPL-03**: CRUD app template exists with SQLite database, model definition, and list/detail/create/edit/delete views
+- [ ] **TMPL-04**: Utility/tool single-page app template exists as a minimal skeleton for calculators, viewers, text tools, and similar lightweight apps
+- [ ] **TMPL-05**: Template catalog file lists all available templates with descriptions, use cases, and when to pick each one
+- [ ] **TMPL-06**: _GUIDE.md decision tree updated to cover all new templates with clear selection criteria
 
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
+
+### App Management Enhancements
+
+- **MGMT-01**: Health check daemon periodically verifies running apps are still responding
+- **MGMT-02**: App logs are captured and viewable from the My Apps UI
+- **MGMT-03**: App resource usage (CPU, memory) visible in the My Apps panel
+
+### Advanced Templates
+
+- **TMPL-07**: WebSocket chat/messaging template
+- **TMPL-08**: Kanban/task board template
+- **TMPL-09**: API testing/webhook receiver template
 
 ### Apps
 
@@ -47,14 +59,13 @@ Deferred to future release. Tracked but not in current roadmap.
 
 ## Out of Scope
 
-Explicitly excluded. Documented to prevent scope creep.
-
 | Feature | Reason |
 |---------|--------|
+| App marketplace / sharing | Single-user system; no multi-user distribution needed |
+| Custom domain routing | Docker/localhost deployment only |
+| Database migration tooling | Templates use simple SQLite; no schema versioning needed for v1.3 |
+| CI/CD for apps | Apps are quick prototypes, not production deployments |
 | Modify `code_execution_tool` | Sentinel pattern is correct for shell commands; interactive CLIs need separate tool |
-| `libtmux` dependency | Blocking-only API, version drift risk, just wraps 2-line subprocess calls |
-| `pexpect` dependency | Duplicates TTYSession + tmux approach; unnecessary dependency |
-| `TTYSession` for shared terminal | Creates isolated PTY subprocess — not connected to user-visible tmux session |
 | Playwright for shared browser | Explicitly banned — spawns separate Chromium, creates persistent UI loader |
 | Upstream Agent Zero core changes | Fork-only — upstream changes pulled separately |
 
@@ -64,24 +75,43 @@ Which phases cover which requirements. Updated during roadmap creation.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| TERM-01 | Phase 11 | Complete |
-| TERM-02 | Phase 11 | Complete |
-| TERM-03 | Phase 11 | Complete |
-| TERM-04 | Phase 11 | Complete |
-| TERM-05 | Phase 12 | Complete |
-| CLI-01 | Phase 13 | Complete |
-| CLI-02 | Phase 13 | Complete |
-| CLI-03 | Phase 13 | Complete |
-| CLI-04 | Phase 13 | Complete |
-| CLI-05 | Phase 14 | Complete |
-| CLI-06 | Phase 15 | Complete |
+| SKILL-01 | — | Pending |
+| SKILL-02 | — | Pending |
+| SKILL-03 | — | Pending |
+| SKILL-04 | — | Pending |
+| SKILL-05 | — | Pending |
+| TMPL-01 | — | Pending |
+| TMPL-02 | — | Pending |
+| TMPL-03 | — | Pending |
+| TMPL-04 | — | Pending |
+| TMPL-05 | — | Pending |
+| TMPL-06 | — | Pending |
 
 **Coverage:**
-- v1.2 requirements: 11 total
-- Mapped to phases: 11
-- Unmapped: 0 ✓
+- v1.3 requirements: 11 total
+- Mapped to phases: 0
+- Unmapped: 11 ⚠️
 
 ---
+
+## Completed: v1.2 Requirements
+
+### Terminal Tool
+
+- [x] **TERM-01**: Agent Zero can send text + Enter to a named tmux pane in the shared terminal
+- [x] **TERM-02**: Agent Zero can send text without Enter to a named tmux pane (partial input for inline prompts like `y/N`)
+- [x] **TERM-03**: Agent Zero can send special keys to a named tmux pane (Ctrl+C, Ctrl+D, Tab, Escape, arrow keys)
+- [x] **TERM-04**: Agent Zero can capture and read current terminal screen content from a tmux pane
+- [x] **TERM-05**: Agent Zero can detect when a terminal pane is ready for input using prompt pattern matching with idle timeout fallback
+
+### CLI Orchestration
+
+- [x] **CLI-01**: Agent Zero can start an interactive CLI tool in the shared terminal and wait for its initial ready prompt
+- [x] **CLI-02**: Agent Zero can send a prompt to a running interactive CLI and read its response
+- [x] **CLI-03**: Agent Zero can detect when an interactive CLI has finished responding and is ready for next input
+- [x] **CLI-04**: Agent Zero can interrupt or exit an interactive CLI session cleanly (Ctrl+C, Ctrl+D, or tool-specific exit command)
+- [x] **CLI-05**: Agent Zero can use a pre-built `OpenCodeSession` wrapper with `.start()` / `.send(prompt)` / `.exit()` interface, mirroring `ClaudeSession`
+- [x] **CLI-06**: Agent Zero can follow documented orchestration patterns for any interactive CLI via `usr/skills/cli-orchestration/SKILL.md`
 
 ## Completed: v1.1 Requirements
 
@@ -102,6 +132,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 - [x] **CLAUDE-05**: A dedicated `claude-cli` skill (`usr/skills/claude-cli/SKILL.md`) documents all validated invocation patterns
 
 ---
-*v1.2 requirements defined: 2026-02-25*
+*v1.3 requirements defined: 2026-03-03*
+*v1.2 requirements completed: 2026-02-25*
 *v1.1 requirements completed: 2026-02-25*
-*Last updated: 2026-02-25 after milestone v1.2 start*
+*Last updated: 2026-03-03 after milestone v1.3 start*
