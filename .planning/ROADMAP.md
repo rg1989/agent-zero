@@ -119,6 +119,6 @@ Phases 16 and 17 can run in parallel (no dependencies between them). Phase 18 de
 | 13. Interactive CLI Session Lifecycle | v1.2 | 2/2 | Complete | 2026-02-25 |
 | 14. OpenCode Session Wrapper | v1.2 | 1/1 | Complete | 2026-02-25 |
 | 15. CLI Orchestration Skill Documentation | v1.2 | 1/1 | Complete | 2026-02-25 |
-| 16. Skill Reliability Core | 1/1 | Complete   | 2026-03-03 | - |
+| 16. Skill Reliability Core | 1/1 | Complete    | 2026-03-03 | - |
 | 17. Template Library Expansion | v1.3 | 0/3 | Not started | - |
 | 18. Template Catalog and Auto-Selection | v1.3 | 0/? | Not started | - |
