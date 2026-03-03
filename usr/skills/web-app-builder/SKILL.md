@@ -1,6 +1,6 @@
 ---
 name: "web-app-builder"
-description: "Build, deploy, and manage local web applications within Agent Zero. Use when the user asks to build a dashboard, visualisation, web app, or anything best served as a browser-based interface. Apps are served at localhost:50000/{app_name}/ with no extra port forwarding required."
+description: "Build, deploy, and manage local web applications within Agent Zero. Use when the user asks to build a dashboard, visualisation, web app, or anything best served as a browser-based interface. Apps are served to the user at localhost:50000/{app_name}/. Internal API calls use http://localhost/webapp (not port 50000)."
 version: "3.0.0"
 author: "Agent Zero"
 tags: ["webapp", "dashboard", "visualisation", "flask", "server", "deploy", "monitor", "apps"]
@@ -69,6 +69,37 @@ The only acceptable reasons to stop mid-sequence are:
 - The app name is invalid or reserved in Step 1 (STOP and ask for a new name)
 
 Do NOT stop to ask "shall I proceed?" or "would you like me to continue?" — just execute.
+
+---
+
+## INTERNAL vs EXTERNAL URLs — READ THIS CAREFULLY
+
+You are running INSIDE a Docker container. The web server runs on port 80 inside the container.
+
+| Context | URL | Example |
+|---------|-----|---------|
+| YOUR curl commands (inside container) | `http://localhost/webapp` | `curl -s "http://localhost/webapp?action=list"` |
+| User's browser (outside container) | `localhost:50000/{app_name}/` | Tell user: "Your app is at localhost:50000/my-app/" |
+
+**WARNING:** `localhost:50000` is the HOST-side port mapping. If you curl localhost:50000 from inside the container, you will get `Connection refused`. Always use `http://localhost/webapp` (no port number) for all API calls.
+
+---
+
+## FALLBACK FORBIDDEN
+
+If ANY step in the sequence below fails:
+1. STOP immediately
+2. Report the exact error to the user
+3. Do NOT attempt to "work around" the failure
+
+Specifically, you MUST NEVER:
+- Write your own Flask app from scratch (e.g., `from flask import Flask; app = Flask(__name__)`)
+- Pick your own port number (5000, 8000, 8080, etc.)
+- Save an app to the workdir or any path outside `/a0/apps/`
+- Skip the template copy step and write code from scratch
+- Ignore errors and continue to the next step
+
+These actions bypass the Apps System and produce broken apps that cannot be managed, proxied, or persisted. The ONLY correct path is the 8-step sequence below.
 
 ---
 
