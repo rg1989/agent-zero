@@ -1,6 +1,6 @@
 ---
 name: "web-app-builder"
-description: "Build, deploy, and manage local web applications within Agent Zero. Use when the user asks to build a dashboard, visualisation, web app, or anything best served as a browser-based interface. Apps are served to the user at localhost:50000/{app_name}/. Internal API calls use http://localhost/webapp (not port 50000)."
+description: "Build, deploy, and manage local web applications within Agent Zero. Use when the user asks to build a dashboard, visualisation, web app, or anything best served as a browser-based interface. Apps are served to the user at localhost:50000/{app_name}/. Internal API calls use http://localhost/webapp (not port 50000). Uses webapp-helper CLI for API interactions."
 version: "3.0.0"
 author: "Agent Zero"
 tags: ["webapp", "dashboard", "visualisation", "flask", "server", "deploy", "monitor", "apps"]
@@ -123,29 +123,23 @@ Every app creation MUST follow these steps in order. No step may be skipped.
 
 Before anything else, validate the chosen name:
 
-**Rules:**
+**Rules (for reference):**
 - Lowercase letters, digits, and hyphens only (regex: `^[a-z][a-z0-9-]{0,28}[a-z0-9]$`)
 - Minimum 2 characters, maximum 30 characters
 - Must start with a letter, must end with a letter or digit
 - No underscores (use hyphens instead)
 
-**Proxy-reserved names (blocked by `app_proxy.py` `_RESERVED`) — MUST NOT be used:**
-`login`, `logout`, `health`, `dev-ping`, `socket.io`, `static`, `message`, `poll`, `settings_get`, `settings_set`, `csrf_token`, `chat_create`, `chat_load`, `upload`, `webapp`, `mcp`, `a2a`
-
-**Built-in app names (occupied by core apps) — also avoid:**
-`shared-browser`, `shared-terminal`
+**Proxy-reserved names (blocked) — MUST NOT be used:**
+`login`, `logout`, `health`, `dev-ping`, `socket.io`, `static`, `message`, `poll`, `settings_get`, `settings_set`, `csrf_token`, `chat_create`, `chat_load`, `upload`, `webapp`, `mcp`, `a2a`, `shared-browser`, `shared-terminal`
 
 **Validation command (run this before proceeding):**
 ```bash
 APP_NAME="chosen-name"
-# Check format
-echo "$APP_NAME" | grep -qP '^[a-z][a-z0-9-]{0,28}[a-z0-9]$' && echo "VALID" || echo "INVALID: must be lowercase alphanumeric + hyphens, 2-30 chars, start with letter"
-# Check not reserved or occupied
-BLOCKED="login logout health dev-ping socket.io static message poll settings_get settings_set csrf_token chat_create chat_load upload webapp mcp a2a shared-browser shared-terminal"
-echo "$BLOCKED" | tr ' ' '\n' | grep -qx "$APP_NAME" && echo "BLOCKED: choose a different name" || echo "NAME AVAILABLE"
+/a0/usr/bin/webapp-helper validate-name "$APP_NAME"
 ```
 
-If the name is INVALID or RESERVED, tell the user and ask for a different name. Do NOT proceed.
+- If output is `VALID` — proceed to Step 2.
+- If output is `ERROR: ...` — tell the user and ask for a different name. Do NOT proceed.
 
 ---
 
@@ -183,34 +177,23 @@ If the name is INVALID or RESERVED, tell the user and ask for a different name. 
 ### Step 3 — Allocate a port
 
 ```bash
-# Use code_execution_tool with runtime: "terminal" for this command
-PORT=$(curl -s "http://localhost/webapp?action=alloc_port" | python3 -c "import sys,json; print(json.load(sys.stdin)['port'])")
+PORT=$(/a0/usr/bin/webapp-helper alloc-port)
 echo "Allocated port: $PORT"
 ```
 
-If this fails or returns empty, STOP and report the error.
+If exit code is non-zero or PORT is empty, STOP and report the error.
 
 ---
 
 ### Step 4 — Copy the template
 
 ```bash
-cp -r /a0/apps/_templates/{TEMPLATE} /a0/apps/{APP_NAME}
+/a0/usr/bin/webapp-helper init "$APP_NAME" "{TEMPLATE}"
 ```
 
-Verify the copy succeeded:
-```bash
-ls /a0/apps/{APP_NAME}/app.py || ls /a0/apps/{APP_NAME}/serve.py
-```
+This copies the template to `/a0/apps/$APP_NAME/`, verifies the directory exists, and installs pip dependencies automatically.
 
-If the directory doesn't exist or is empty, STOP and report the error.
-
-**Install dependencies:**
-```bash
-pip3 install --break-system-packages -q -r /a0/apps/{APP_NAME}/requirements.txt 2>/dev/null || true
-```
-
-This ensures Flask and any extra packages the template needs are available. Always run this after copying.
+If output is `ERROR: ...` or exit code is non-zero, STOP and report the error.
 
 ---
 
@@ -350,24 +333,20 @@ Step 3: Update list.html table headers + cells:
 ### Step 6 — Register the app
 
 ```bash
-curl -s -X POST http://localhost/webapp \
-  -H "Content-Type: application/json" \
-  -d "{\"action\":\"register\",\"name\":\"{APP_NAME}\",\"port\":$PORT,\"cmd\":\"{START_CMD}\",\"cwd\":\"/a0/apps/{APP_NAME}\",\"description\":\"{DESCRIPTION}\"}"
+/a0/usr/bin/webapp-helper register "$APP_NAME" "$PORT" "{START_CMD}" "{DESCRIPTION}"
 ```
 
-Check the response for `"error"` — if present, STOP and report it.
+The `cwd` is derived automatically as `/a0/apps/$APP_NAME`. If output is `ERROR: ...` or exit code is non-zero, STOP and report it.
 
 ---
 
 ### Step 7 — Start the app
 
 ```bash
-curl -s -X POST http://localhost/webapp \
-  -H "Content-Type: application/json" \
-  -d "{\"action\":\"start\",\"name\":\"{APP_NAME}\"}"
+/a0/usr/bin/webapp-helper start "$APP_NAME"
 ```
 
-Check the response for `"error"` — if present, STOP and report it.
+If output is `ERROR: ...` or exit code is non-zero, STOP and report it.
 
 ---
 
@@ -376,39 +355,44 @@ Check the response for `"error"` — if present, STOP and report it.
 Poll the app's port until it responds. Do NOT skip this step.
 
 ```bash
-# Wait up to 10 seconds for the app to start responding
-for i in $(seq 1 20); do
-  if curl -sf -o /dev/null "http://127.0.0.1:$PORT/"; then
-    echo "HEALTHY: App is responding on port $PORT"
-    break
-  fi
-  if [ "$i" -eq 20 ]; then
-    echo "FAILED: App not responding after 10 seconds"
-    echo "Check logs or process status:"
-    echo "  ps aux | grep '$APP_NAME'"
-    echo "  curl -v http://127.0.0.1:$PORT/"
-  fi
-  sleep 0.5
-done
+/a0/usr/bin/webapp-helper health-check "$PORT"
 ```
 
-- If HEALTHY: Tell the user the app is live at `localhost:50000/{APP_NAME}/` and open it with `open_app`.
-- If FAILED: Tell the user the app failed to start. Check for Python errors, port conflicts, or missing dependencies. Do NOT say "your app is ready".
+- If output is `HEALTHY`: Tell the user the app is live at `localhost:50000/{APP_NAME}/` and open it with `open_app`.
+- If output is `FAILED: ...`: Tell the user the app failed to start. Check for Python errors, port conflicts, or missing dependencies. Do NOT say "your app is ready".
+
+On failure, investigate with:
+```bash
+ps aux | grep "$APP_NAME"
+curl -v "http://127.0.0.1:$PORT/"
+```
 
 ---
 
 ## Management commands
 
-All via `POST http://localhost/webapp` with JSON body, or GET for reads.
+Use `/a0/usr/bin/webapp-helper` for common operations:
 
 ```bash
 # List all apps
-curl -s "http://localhost/webapp?action=list"
+/a0/usr/bin/webapp-helper status
 
-# Stop
-curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
-  -d '{"action":"stop","name":"my-app"}'
+# Stop an app
+/a0/usr/bin/webapp-helper stop my-app
 
+# Start an app
+/a0/usr/bin/webapp-helper start my-app
+
+# Health check (check if app is responding)
+/a0/usr/bin/webapp-helper health-check 9003
+
+# Show status of a single app
+/a0/usr/bin/webapp-helper status my-app
+```
+
+**Raw API** (for operations not covered by webapp-helper — restart, autostart, remove):
+
+```bash
 # Restart
 curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
   -d '{"action":"restart","name":"my-app"}'
