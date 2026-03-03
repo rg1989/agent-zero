@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** v1.3 App Builder -- Phase 18 (Template Catalog Auto-Selection)
+**Current focus:** v1.3 App Builder -- Phase 18 complete (all plans done)
 
 ## Current Position
 
 Phase: 18 of 18 (Template Catalog Auto-Selection)
-Plan: 1 of 1 in current phase
-Status: Phase 18 Plan 1 complete
-Last activity: 2026-03-03 -- Completed 18-01: template catalog (_CATALOG.md) + updated _GUIDE.md decision tree for all 7 templates
+Plan: 2 of 2 in current phase
+Status: Phase 18 complete (all plans done) — v1.3 milestone complete
+Last activity: 2026-03-03 -- Completed 18-02: SKILL.md auto-selection Step 2 + 7-template customization reference
 
-Progress: [█████████░] 90%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 5 (v1.3)
+- Total plans completed: 6 (v1.3)
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -28,6 +28,7 @@ Progress: [█████████░] 90%
 | 17-template-library-expansion | 02 | 3min | 2 | 9 |
 | 17-template-library-expansion | 03 | 3min | 2 | 6 |
 | 18-template-catalog-auto-selection | 01 | 2min | 2 | 2 |
+| 18-template-catalog-auto-selection | 02 | 1min | 1 | 1 |
 
 *Updated after each plan completion*
 
@@ -49,6 +50,9 @@ Progress: [█████████░] 90%
 - [18-01] YAML-in-markdown catalog format: parseable as plain text, no parser required, human-readable in terminal
 - [18-01] decision tree: store-data as first branch (crud-app is most distinct — only one with DB); then backend yes/no, then specialization
 - [18-01] Quick reference table added to _GUIDE.md header (not in plan spec): 7-row table with backend/DB flags for fast scanning
+- [Phase 18-02]: Step 2 reads _CATALOG.md first (catalog from 18-01 is primary); _GUIDE.md is fallback for decision tree edge cases
+- [Phase 18-02]: Override handling continues from Step 3 (not Step 1) — name already validated, no need to re-run validation
+- [Phase 18-02]: Ambiguous requests default to flask-basic — most flexible template, fewest assumptions
 
 ### Carried from v1.2
 
@@ -67,5 +71,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 18-01-PLAN.md (template catalog + _GUIDE.md update for all 7 templates)
+Stopped at: Completed 18-02-PLAN.md (SKILL.md auto-selection Step 2 + 7-template customization reference)
 Resume file: None

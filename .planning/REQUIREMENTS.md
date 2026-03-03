@@ -14,7 +14,7 @@ Requirements for the App Builder milestone. Each maps to roadmap phases 16+.
 - [x] **SKILL-02**: web-app-builder SKILL.md enforces a mandatory sequence: allocate port, copy template, customize code, register, start, verify — with no steps skippable
 - [x] **SKILL-03**: App name is validated against reserved paths and naming rules before registration attempt
 - [x] **SKILL-04**: After starting an app, the agent polls the app's port until it responds (HTTP 200) before declaring success to the user
-- [ ] **SKILL-05**: Agent auto-selects the best template based on the user's request, tells the user which one was chosen, and allows override if asked
+- [x] **SKILL-05**: Agent auto-selects the best template based on the user's request, tells the user which one was chosen, and allows override if asked
 
 ### Template Library
 
@@ -79,7 +79,7 @@ Which phases cover which requirements. Updated during roadmap creation.
 | SKILL-02 | Phase 16 | Complete |
 | SKILL-03 | Phase 16 | Complete |
 | SKILL-04 | Phase 16 | Complete |
-| SKILL-05 | Phase 18 | Pending |
+| SKILL-05 | Phase 18 | Complete |
 | TMPL-01 | Phase 17 | Complete |
 | TMPL-02 | Phase 17 | Complete |
 | TMPL-03 | Phase 17 | Complete |
