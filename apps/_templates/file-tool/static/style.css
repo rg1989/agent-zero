@@ -1,0 +1,167 @@
+/* ── Reset & Variables ──────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:       #0d0d0d;
+  --surface:  #161616;
+  --surface2: #1f1f1f;
+  --border:   #2a2a2a;
+  --text:     #e2e2e2;
+  --muted:    #777;
+  --accent:   #00f2fe;
+  --green:    #00ff9d;
+  --orange:   #ff9500;
+  --red:      #ff4444;
+  --radius:   10px;
+  --font:     'Segoe UI', system-ui, sans-serif;
+  --mono:     'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+}
+
+/* ── Base ───────────────────────────────────────────────────────────────── */
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 15px; line-height: 1.6; }
+
+/* ── Layout ─────────────────────────────────────────────────────────────── */
+.layout  { display: flex; flex-direction: column; min-height: 100vh; }
+.main    { flex: 1; padding: 1.5rem; max-width: 1100px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; gap: 1.2rem; }
+
+/* ── Topbar ─────────────────────────────────────────────────────────────── */
+.topbar  { display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1.5rem; background: var(--surface); border-bottom: 1px solid var(--border); }
+.topbar-brand { display: flex; align-items: center; gap: 0.5rem; }
+.topbar-icon  { color: var(--accent); font-size: 1.2rem; }
+.topbar-title { font-weight: 600; font-size: 1rem; letter-spacing: 0.02em; color: var(--text); }
+.topbar-nav   { display: flex; gap: 0.75rem; }
+.topbar-nav a { color: var(--muted); text-decoration: none; font-size: 0.9rem; transition: color 0.2s; }
+.topbar-nav a:hover { color: var(--accent); }
+
+/* ── Cards ──────────────────────────────────────────────────────────────── */
+.card        { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem 1.5rem; }
+.card-title  { font-size: 1rem; font-weight: 600; margin-bottom: 0.75rem; color: var(--accent); }
+
+/* ── Text helpers ───────────────────────────────────────────────────────── */
+.text-muted  { color: var(--muted); font-size: 0.9rem; }
+p            { margin-bottom: 0.6rem; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+.btn         { display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.45rem 1rem; border: 1px solid var(--accent); background: transparent; color: var(--accent); border-radius: 7px; cursor: pointer; font-size: 0.88rem; font-family: var(--font); transition: all 0.18s; }
+.btn:hover   { background: var(--accent); color: #000; }
+.btn-green   { border-color: var(--green); color: var(--green); }
+.btn-green:hover { background: var(--green); color: #000; }
+.btn-red     { border-color: var(--red); color: var(--red); }
+.btn-red:hover { background: var(--red); color: #fff; }
+.btn-sm      { padding: 0.3rem 0.65rem; font-size: 0.8rem; }
+.btn-icon    { padding: 0.3rem 0.5rem; font-size: 0.85rem; min-width: 2rem; justify-content: center; margin: 0; }
+
+/* ── Drop zone ──────────────────────────────────────────────────────────── */
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+  user-select: none;
+}
+.dropzone:hover,
+.dropzone:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+.dropzone.dragover {
+  border-color: var(--accent);
+  background: rgba(0, 242, 254, 0.05);
+}
+.dropzone-icon  { font-size: 2.5rem; display: block; margin-bottom: 0.5rem; color: var(--muted); }
+.dropzone-text  { font-size: 1rem; color: var(--text); margin-bottom: 0.35rem; }
+.dropzone-link  { color: var(--accent); text-decoration: underline; }
+
+/* ── Upload progress ────────────────────────────────────────────────────── */
+.upload-progress  { margin-top: 1rem; }
+.upload-filename  { font-size: 0.85rem; color: var(--muted); margin-bottom: 0.4rem; }
+.progress-track   { background: var(--surface2); border-radius: 4px; height: 6px; overflow: hidden; }
+.progress-bar     { height: 100%; background: var(--accent); width: 0%; transition: width 0.3s ease; border-radius: 4px; animation: pulse-bar 1.2s ease-in-out infinite; }
+@keyframes pulse-bar {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.6; }
+}
+
+/* ── File list (grid) ───────────────────────────────────────────────────── */
+.file-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1rem;
+  margin-top: 0.25rem;
+}
+
+/* ── File card ──────────────────────────────────────────────────────────── */
+.file-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  transition: border-color 0.2s;
+}
+.file-card:hover { border-color: var(--accent); }
+
+.file-icon     { font-size: 2rem; line-height: 1; }
+.file-name     { font-size: 0.9rem; font-weight: 600; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-meta     { display: flex; gap: 0.75rem; font-size: 0.78rem; color: var(--muted); flex-wrap: wrap; }
+.file-actions  { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.25rem; }
+
+/* ── Convert select ─────────────────────────────────────────────────────── */
+.convert-select {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 7px;
+  padding: 0.3rem 0.5rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.convert-select:focus { outline: 1px solid var(--accent); }
+
+/* ── Empty state ────────────────────────────────────────────────────────── */
+.empty-state {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 2.5rem 1rem;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* ── Toast container ────────────────────────────────────────────────────── */
+.toast-container {
+  position: fixed;
+  bottom: 1.5rem;
+  right: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  z-index: 9999;
+}
+.toast {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  padding: 0.75rem 1.1rem;
+  font-size: 0.88rem;
+  max-width: 320px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  animation: toast-in 0.25s ease;
+}
+.toast.success { border-left-color: var(--green); }
+.toast.error   { border-left-color: var(--red); }
+@keyframes toast-in {
+  from { opacity: 0; transform: translateX(1.5rem); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .main    { padding: 1rem; }
+  .dropzone { padding: 1.5rem 1rem; }
+  .file-list { grid-template-columns: 1fr; }
+}

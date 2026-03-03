@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block heading %}{{ title }}{% endblock %}
+
+{% block content %}
+
+  <!-- Drop zone -->
+  <section class="card">
+    <h2 class="card-title">Upload Files</h2>
+    <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-label="Drop files here or click to browse">
+      <span class="dropzone-icon">&#8683;</span>
+      <p class="dropzone-text">Drop files here or <span class="dropzone-link">click to browse</span></p>
+      <p class="text-muted" style="font-size:0.8rem;">Allowed: txt, csv, json, md, html, css, js, py, png, jpg, jpeg, gif, svg, pdf, zip &mdash; max 50 MB</p>
+      <input type="file" id="file-input" multiple accept=".txt,.csv,.json,.md,.html,.css,.js,.py,.png,.jpg,.jpeg,.gif,.svg,.pdf,.zip" style="display:none;">
+    </div>
+
+    <!-- Upload progress -->
+    <div class="upload-progress" id="upload-progress" style="display:none;">
+      <p class="upload-filename" id="upload-filename">Uploading...</p>
+      <div class="progress-track">
+        <div class="progress-bar" id="progress-bar"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- File listing -->
+  <section class="card">
+    <h2 class="card-title">Files</h2>
+    <div class="file-list" id="file-list">
+      <!-- Populated by app.js -->
+    </div>
+  </section>
+
+  <!-- Toast container -->
+  <div class="toast-container" id="toast-container"></div>
+
+{% endblock %}
