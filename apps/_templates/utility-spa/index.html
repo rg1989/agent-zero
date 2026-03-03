@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    NOTE: <base> tag is injected automatically by serve.py — do not add it here.
+    Use relative asset paths: href="style.css"  src="app.js"
+    CDN scripts are absolute URLs and always work fine.
+  -->
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Transformer</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <div class="layout">
+
+    <header class="topbar">
+      <span class="topbar-icon">◈</span>
+      <span class="topbar-title">Text Transformer</span>
+    </header>
+
+    <main class="main">
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Input</h2>
+        </div>
+        <textarea
+          class="tool-input"
+          id="tool-input"
+          placeholder="Type or paste text here..."
+          rows="6"
+        ></textarea>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Transform</h2>
+        </div>
+        <div class="tool-actions">
+          <button class="btn" id="btn-upper">UPPERCASE</button>
+          <button class="btn" id="btn-lower">lowercase</button>
+          <button class="btn" id="btn-title">Title Case</button>
+          <button class="btn" id="btn-reverse">Reverse</button>
+          <button class="btn" id="btn-count">Count Chars</button>
+          <button class="btn btn-clear" id="btn-clear">Clear</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <div class="card-header">
+          <h2 class="card-title">Output</h2>
+          <button class="btn btn-sm" id="btn-copy">Copy</button>
+        </div>
+        <div class="tool-output" id="tool-output">
+          <span class="output-placeholder">Result will appear here...</span>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
