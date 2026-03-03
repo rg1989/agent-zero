@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 Phase: 18 of 18 (all milestones complete through v1.3)
 Plan: N/A — between milestones
 Status: v1.3 App Builder shipped 2026-03-03
-Last activity: 2026-03-03 — Milestone v1.3 archived
+Last activity: 2026-03-03 - Completed quick task 1: Fix v1.3 post-ship issues
 
 Progress: [██████████] 100% (v1.0–v1.3)
 
@@ -31,6 +31,12 @@ None.
 ### Blockers/Concerns
 
 None.
+
+### Quick Tasks Completed
+
+| # | Description | Date | Commit | Directory |
+|---|-------------|------|--------|-----------|
+| 1 | Fix v1.3 post-ship issues: auto-load extension, SKILL.md updates, Flask install, requirements.txt, Dockerfile | 2026-03-03 | 23583b7 | [1-fix-v1-3-post-ship-issues-auto-load-exte](./quick/1-fix-v1-3-post-ship-issues-auto-load-exte/) |
 
 ## Session Continuity
 
