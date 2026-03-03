@@ -20,7 +20,7 @@ trigger_patterns:
   - "monitor"
   - "viewer"
   - "browser-based"
-  - "bookshelf"
+  - "catalog"
   # Management
   - "start the app"
   - "stop the app"
@@ -240,7 +240,7 @@ After copying, your app directory has these files — do NOT create, delete, or 
    Replace the column definitions (keep `id` and `created_at`).
 
 2. **Update SQL in route functions** — in each route function in app.py, update:
-   - Table name in every SQL query (e.g., `items` → `books`)
+   - Table name in every SQL query (e.g., `items` → `your_entities`)
    - Column names in INSERT and UPDATE queries to match your new columns
    - Column names in `request.form.get(...)` calls to match your form fields
 
@@ -257,14 +257,14 @@ After copying, your app directory has these files — do NOT create, delete, or 
    - `<dt>` labels and `{{ item.fieldname }}` references to your columns
 
 6. **Update display text** — change "Item"/"Items" in page titles and headings:
-   Use targeted sed: `sed -i 's/Items/Books/g; s/Item/Book/g; s/item/book/g' templates/*.html`
+   Use targeted sed: `sed -i 's/Items/YourEntities/g; s/Item/YourEntity/g' templates/*.html`
    Then manually check app.py flash messages and route docstring.
 
-**Worked example — Bookshelf app:**
+**Worked example — changing the generic template to a custom entity:**
 
-Step 1: Edit CREATE_TABLE_SQL in app.py:
+Step 1: Edit CREATE_TABLE_SQL in app.py — replace table name and columns:
 ```python
-# Change from:
+# Template default:
 CREATE TABLE IF NOT EXISTS items (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
     name        TEXT    NOT NULL,
@@ -272,45 +272,41 @@ CREATE TABLE IF NOT EXISTS items (
     status      TEXT    DEFAULT 'active',
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
-# Change to:
-CREATE TABLE IF NOT EXISTS books (
+# Your version — change table name, replace/add/remove columns (keep id and created_at):
+CREATE TABLE IF NOT EXISTS your_entities (
     id          INTEGER PRIMARY KEY AUTOINCREMENT,
-    title       TEXT    NOT NULL,
-    author      TEXT    NOT NULL,
-    genre       TEXT    DEFAULT 'fiction',
-    rating      INTEGER DEFAULT 0,
+    field_one   TEXT    NOT NULL,
+    field_two   TEXT    NOT NULL,
+    field_three TEXT    DEFAULT 'some_default',
     created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 )
 ```
 
 Step 2: Update SQL queries — example for items_create route:
 ```python
-# Change from:
+# Template default:
 name        = request.form.get("name", "").strip()
 description = request.form.get("description", "").strip()
 status      = request.form.get("status", "active")
-# ...
 "INSERT INTO items (name, description, status) VALUES (?, ?, ?)",
 (name, description, status),
 
-# Change to:
-title  = request.form.get("title", "").strip()
-author = request.form.get("author", "").strip()
-genre  = request.form.get("genre", "fiction")
-rating = int(request.form.get("rating", 0))
-# ...
-"INSERT INTO books (title, author, genre, rating) VALUES (?, ?, ?, ?)",
-(title, author, genre, rating),
+# Your version — match your new columns:
+field_one   = request.form.get("field_one", "").strip()
+field_two   = request.form.get("field_two", "").strip()
+field_three = request.form.get("field_three", "some_default")
+"INSERT INTO your_entities (field_one, field_two, field_three) VALUES (?, ?, ?)",
+(field_one, field_two, field_three),
 ```
 
 Step 3: Update list.html table headers + cells:
 ```html
-<!-- Change: -->
+<!-- Template default: -->
 <th>Name</th><th>Status</th>
 {{ item.name }}  {{ item.status }}
-<!-- To: -->
-<th>Title</th><th>Author</th><th>Genre</th>
-{{ item.title }}  {{ item.author }}  {{ item.genre }}
+<!-- Your version: -->
+<th>Field One</th><th>Field Two</th><th>Field Three</th>
+{{ item.field_one }}  {{ item.field_two }}  {{ item.field_three }}
 ```
 
 **For `file-tool`:**
