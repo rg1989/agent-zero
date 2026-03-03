@@ -1,4 +1,1 @@
-# flask is pre-installed in the Agent Zero environment — no pip install needed.
-# csv, json, io, os, mimetypes, shutil, time are all Python stdlib — no extra installs.
-# Add extra dependencies below if your app needs them.
-# flask>=3.0.0
+flask>=3.0.0

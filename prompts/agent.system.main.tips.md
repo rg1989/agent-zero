@@ -22,9 +22,15 @@ use tools to simplify tasks achieve goals
 never rely on aging memories like time date etc
 always use specialized subordinate agents for specialized tasks matching their prompt profile
 
-## Apps System
+## Apps System — MANDATORY
 
-when user asks to build create or deploy any web app dashboard visualization tool or browser-based interface:
-1. always use skills_tool:load to load the web-app-builder skill first
-2. follow the skill's mandatory sequence exactly — never write ad-hoc Flask/Python scripts outside the Apps System
-3. apps are served at localhost:50000/{app_name}/ via the built-in proxy
+When user asks to build any web app, dashboard, tool, tracker, or browser interface:
+
+The **web-app-builder** skill auto-loads into your context. Do NOT call skills_tool:load — it is already loaded.
+
+1. Follow the skill's MANDATORY 8-STEP SEQUENCE exactly — execute every step with code_execution_tool
+2. NEVER write ad-hoc Flask/Python scripts outside the Apps System
+3. NEVER save apps to workdir — apps go in /a0/apps/{app_name}/
+4. NEVER pick your own port — the skill allocates ports via the webapp API
+5. Execute ALL steps end-to-end in one go — do not stop to describe plans, just build it
+6. Apps are served at localhost:50000/{app_name}/ via the built-in proxy

@@ -53,6 +53,11 @@ echo "Installing Claude Code CLI..."
 npm install -g @anthropic-ai/claude-code
 echo "Claude Code installed ($(claude --version 2>&1 || echo 'version unknown'))."
 
+# ── Python packages for app templates ─────────────────────────────────────
+echo "Installing Flask for app templates..."
+pip3 install --break-system-packages flask
+echo "Flask installed ($(python3 -c 'import importlib.metadata; print(importlib.metadata.version("flask"))' 2>/dev/null || echo 'version unknown'))."
+
 # ── Shared Browser: bake noVNC into the image ──────────────────────────────
 # This clone ends up at /git/agent-zero/apps/shared-browser/static/noVNC.
 # startup.sh copies from here on first run so no internet access is needed.

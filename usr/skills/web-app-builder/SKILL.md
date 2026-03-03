@@ -5,25 +5,30 @@ version: "3.0.0"
 author: "Agent Zero"
 tags: ["webapp", "dashboard", "visualisation", "flask", "server", "deploy", "monitor", "apps"]
 trigger_patterns:
-  - "build me an app"
-  - "build a dashboard"
-  - "build a web app"
-  - "create a dashboard"
-  - "create a web app"
-  - "make a dashboard"
-  - "make a web app"
+  # App creation - broad patterns (word "app" in context of building)
+  - " app"
+  - "webapp"
+  - "web app"
+  - "web tool"
+  - "web interface"
+  # App types
+  - "dashboard"
   - "visualise"
   - "visualize"
-  - "show me a chart"
-  - "build a ui"
-  - "create a ui"
-  - "serve a webpage"
+  - "tracker"
+  - "manager"
+  - "monitor"
+  - "viewer"
+  - "browser-based"
+  - "bookshelf"
+  # Management
   - "start the app"
   - "stop the app"
   - "restart the app"
   - "list my apps"
   - "show my apps"
   - "app status"
+  - "my apps"
 ---
 
 # Web App Builder
@@ -132,11 +137,20 @@ ls /a0/apps/{APP_NAME}/app.py || ls /a0/apps/{APP_NAME}/serve.py
 
 If the directory doesn't exist or is empty, STOP and report the error.
 
+**Install dependencies:**
+```bash
+pip3 install --break-system-packages -q -r /a0/apps/{APP_NAME}/requirements.txt 2>/dev/null || true
+```
+
+This ensures Flask and any extra packages the template needs are available. Always run this after copying.
+
 ---
 
 ### Step 5 — Customize the app
 
-Edit the copied files to implement what the user requested. Key rules that MUST NOT change:
+Edit the copied template files **in place** using small targeted changes (sed, python string replace, or read-modify-write). Do NOT rewrite entire files from scratch — the templates already have working HTML, CSS, routing, and responsive layouts. Only change what needs to change (model fields, titles, data sources, labels).
+
+Key rules that MUST NOT change:
 - Always `host="0.0.0.0"` (not 127.0.0.1)
 - Always read port from env: `PORT = int(os.environ.get("PORT", 9000))`
 - Always read app name from env: `APP_NAME = os.environ.get("APP_NAME", "")`

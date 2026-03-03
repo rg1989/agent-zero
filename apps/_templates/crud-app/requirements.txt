@@ -1,5 +1,1 @@
-# Flask is pre-installed in the Agent Zero environment.
-# No additional packages are required for this template.
-#
-# If your app needs extra packages, add them here and run:
-#   pip install -r requirements.txt
+flask>=3.0.0

@@ -78,6 +78,7 @@ Agent Zero can build, run, and persist web applications directly within its own 
 - **Tech stack**: Python (Flask/FastAPI), vanilla JS/HTML/CSS frontend, Docker
 - **Compatibility**: Must not break upstream Agent Zero core behavior
 - **Ports**: Apps use range 9000–9099; Agent Zero itself on 50000 (Docker: 50001→80)
+- **Mobile-responsive**: All apps must work on phone screens — viewport meta, media queries, flexible layouts are mandatory
 
 ## Key Decisions
 
