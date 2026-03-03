@@ -12,7 +12,7 @@ See: .planning/PROJECT.md (updated 2026-03-03)
 Phase: 18 of 18 (all milestones complete through v1.3)
 Plan: N/A — between milestones
 Status: v1.3 App Builder shipped 2026-03-03
-Last activity: 2026-03-03 - Completed quick task 5: Fix crud-app template agent comprehension — CUSTOMIZE markers, generic worked example in SKILL.md
+Last activity: 2026-03-03 - Completed quick task 6: Fix root cause of app creation failures — correct internal URLs (localhost/webapp not :50000), standalone app prohibition
 
 Progress: [██████████] 100% (v1.0–v1.3)
 
@@ -40,9 +40,10 @@ None.
 | 3 | Fix app creation flow: SKILL.md TOOL USAGE + EXECUTION FLOW directives, extras_persistent directive | 2026-03-03 | e189508 | [3-fix-app-creation-flow-skill-loading-agen](./quick/3-fix-app-creation-flow-skill-loading-agen/) |
 | 4 | Fix remaining app creation errors: move runtime enforcement hook to python/extensions/, improve crud-app SKILL.md guidance | 2026-03-03 | 0ec3797 | [4-fix-remaining-app-creation-errors-auto-l](./quick/4-fix-remaining-app-creation-errors-auto-l/) |
 | 5 | Fix crud-app template agent comprehension: CUSTOMIZE markers in app.py, explicit 6-step SKILL.md guide, generic worked example, remove dangerous sed | 2026-03-03 | ef48846 | [5-fix-crud-app-template-issues-causing-htt](./quick/5-fix-crud-app-template-issues-causing-htt/) |
+| 6 | Fix root cause of app creation failures: correct internal URL (http://localhost/webapp not localhost:50000), FORBIDDEN standalone apps, FALLBACK FORBIDDEN in SKILL.md | 2026-03-03 | 85d4ba0 | [6-fix-root-cause-of-app-creation-failures-](./quick/6-fix-root-cause-of-app-creation-failures-/) |
 
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed quick task 5: Fix crud-app template agent comprehension — CUSTOMIZE markers, generic worked example in SKILL.md
+Stopped at: Completed quick task 6: Fix root cause of app creation failures — URL confusion + fallback prevention
 Resume file: None
