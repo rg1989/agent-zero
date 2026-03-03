@@ -78,17 +78,33 @@ If the name is INVALID or RESERVED, tell the user and ask for a different name. 
 
 ---
 
-### Step 2 — Choose a template
+### Step 2 — Auto-select a template
 
-Read `/a0/apps/_templates/_GUIDE.md` for the decision tree. Quick reference:
+1. **Read the template catalog:** Read `/a0/apps/_templates/_CATALOG.md` for the full list of templates with descriptions, use cases, and selection criteria. Also read `/a0/apps/_templates/_GUIDE.md` for the decision tree if you need more detail.
 
-| Need | Template | Start command |
-|------|----------|---------------|
-| Charts, metrics, live data | `flask-dashboard` | `python app.py` |
-| Web app with Python logic | `flask-basic` | `python app.py` |
-| Pure front-end, no Python | `static-html` | `python serve.py` |
+2. **Match the user's request to a template** using this priority order:
+   - If the user explicitly names a template (e.g., "use the crud-app template"), use that template
+   - Otherwise, match based on keywords in the user's request:
 
-Tell the user which template you chose and why.
+   | Keywords / signals in request | Template | Start command |
+   |-------------------------------|----------|---------------|
+   | "database", "CRUD", "records", "items", "manage data", "list/edit/delete" | `crud-app` | `python app.py` |
+   | "real-time", "live", "streaming", "SSE", "multiple charts" | `dashboard-realtime` | `python app.py` |
+   | "dashboard", "metrics", "monitoring", "charts" | `flask-dashboard` | `python app.py` |
+   | "upload", "download", "files", "convert", "file manager" | `file-tool` | `python app.py` |
+   | "calculator", "converter", "text tool", "utility", "simple tool" | `utility-spa` | `python serve.py` |
+   | "visualization", "D3", "Plotly", "static page", "no backend" | `static-html` | `python serve.py` |
+   | General web app, forms, pages, custom API, or unclear | `flask-basic` | `python app.py` |
+
+   If the request is ambiguous, default to `flask-basic` (most flexible).
+
+3. **Tell the user your selection:** Before proceeding to Step 3, always say something like:
+   > "I'll use the **{template-name}** template for this — it's the best fit because {brief reason}. If you'd prefer a different template, just let me know."
+
+4. **Handle override:** If the user asks to use a different template (now or later):
+   - Acknowledge the change
+   - Switch to the requested template
+   - Continue from Step 3 (allocate port) — do NOT restart from Step 1
 
 ---
 
@@ -247,3 +263,24 @@ curl -s -X POST http://localhost/webapp -H "Content-Type: application/json" \
 - Replace sample `DATA` in `app.js` with a `fetch()` call or static values
 - Start command is `python serve.py` (not `app.py`)
 - No Python backend — serve.py only serves static files
+
+**`dashboard-realtime`** — live streaming dashboard:
+- Edit `generate_data()` in `app.py` to produce your metrics/chart data
+- SSE streams every 2s; adjust interval in the generator loop
+- Three chart types available: line, bar, doughnut
+
+**`utility-spa`** — lightweight single-page tool:
+- Replace transform functions in `app.js` with your tool logic
+- Input/output layout: textarea input, action buttons, output area
+- Start command is `python serve.py` (not `app.py`)
+- No Python backend — serve.py only serves static files
+
+**`crud-app`** — data management app:
+- Edit the Item model section in `app.py` to define your fields and CREATE_TABLE_SQL
+- Routes handle list/detail/create/edit/delete automatically based on the model
+- SQLite database auto-creates on first request
+
+**`file-tool`** — file upload and conversion:
+- Edit ALLOWED_EXTENSIONS and MAX_CONTENT_LENGTH in `app.py` for your needs
+- Add conversions: extend CONVERSIONS dict in `app.py` + CONVERT_OPTIONS in `app.js`
+- Uploads stored in `uploads/` directory (auto-created)
