@@ -5,21 +5,21 @@
 See: .planning/PROJECT.md (updated 2026-03-03)
 
 **Core value:** Agent Zero can build, run, and persist web applications directly within its own UI
-**Current focus:** v1.3 App Builder -- Phase 17 (Template Library Expansion)
+**Current focus:** v1.3 App Builder -- Phase 18 (Template Catalog Auto-Selection)
 
 ## Current Position
 
-Phase: 17 of 18 (Template Library Expansion)
-Plan: 3 of 3 in current phase
-Status: Phase 17 complete
-Last activity: 2026-03-03 -- Completed 17-03: file-tool template (upload, listing, download, convert)
+Phase: 18 of 18 (Template Catalog Auto-Selection)
+Plan: 1 of 1 in current phase
+Status: Phase 18 Plan 1 complete
+Last activity: 2026-03-03 -- Completed 18-01: template catalog (_CATALOG.md) + updated _GUIDE.md decision tree for all 7 templates
 
-Progress: [████░░░░░░] 40%
+Progress: [█████████░] 90%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4 (v1.3)
+- Total plans completed: 5 (v1.3)
 
 | Phase | Plan | Duration | Tasks | Files |
 |-------|------|----------|-------|-------|
@@ -27,6 +27,7 @@ Progress: [████░░░░░░] 40%
 | 17-template-library-expansion | 01 | 5min | 2 | 5 |
 | 17-template-library-expansion | 02 | 3min | 2 | 9 |
 | 17-template-library-expansion | 03 | 3min | 2 | 6 |
+| 18-template-catalog-auto-selection | 01 | 2min | 2 | 2 |
 
 *Updated after each plan completion*
 
@@ -45,6 +46,9 @@ Progress: [████░░░░░░] 40%
 - [17-01] utility-spa uses serve.py static pattern + vanilla JS (no framework); dashboard-realtime uses SSE primary + polling fallback, 3 Chart.js charts (line/bar/doughnut)
 - [17-02] crud-app template: Flask + SQLite with full REST CRUD, dark-theme data-table, shared form pattern (item=None/item), get_db()/close_db() via flask.g, parameterized SQL, 404.html added for correct error handling
 - [17-03] file-tool template: multipart upload, format conversion pipeline, drag-and-drop UI, file-card grid
+- [18-01] YAML-in-markdown catalog format: parseable as plain text, no parser required, human-readable in terminal
+- [18-01] decision tree: store-data as first branch (crud-app is most distinct — only one with DB); then backend yes/no, then specialization
+- [18-01] Quick reference table added to _GUIDE.md header (not in plan spec): 7-row table with backend/DB flags for fast scanning
 
 ### Carried from v1.2
 
@@ -63,5 +67,5 @@ None.
 ## Session Continuity
 
 Last session: 2026-03-03
-Stopped at: Completed 17-01-PLAN.md (utility-spa + dashboard-realtime templates)
+Stopped at: Completed 18-01-PLAN.md (template catalog + _GUIDE.md update for all 7 templates)
 Resume file: None
