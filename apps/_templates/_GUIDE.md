@@ -5,16 +5,45 @@ instead of building from scratch.
 
 ---
 
-## Quick decision tree
+## Quick reference table
+
+| Template | Backend | DB | Best for |
+|---|---|---|---|
+| `flask-basic` | yes | no | General web apps, forms, custom Python logic |
+| `flask-dashboard` | yes | no | Metrics/charts dashboard with polling refresh |
+| `static-html` | no | no | Pure front-end, D3/Plotly visualizations, external APIs |
+| `utility-spa` | no | no | Input-process-output tools: calculators, converters |
+| `dashboard-realtime` | yes | no | Live data with SSE streaming, multiple chart types |
+| `crud-app` | yes | yes | Record management: create/read/update/delete with DB |
+| `file-tool` | yes | no | File upload, download, format conversion |
+
+---
+
+## Decision tree
 
 ```
-Does the app need Python logic?
-│
-├── YES → Does it need to show charts / metrics?
-│         ├── YES → flask-dashboard
-│         └── NO  → flask-basic
-│
-└── NO  → static-html
+Does the app need to store/manage data records?
+|
++-- YES --> crud-app
+|
++-- NO --> Does it need Python backend logic?
+           |
+           +-- YES --> Does it show charts/metrics with live data?
+           |          |
+           |          +-- YES --> Need real-time streaming (SSE)?
+           |          |          |
+           |          |          +-- YES --> dashboard-realtime
+           |          |          +-- NO  --> flask-dashboard
+           |          |
+           |          +-- NO  --> Does it handle file uploads?
+           |                     |
+           |                     +-- YES --> file-tool
+           |                     +-- NO  --> flask-basic
+           |
+           +-- NO  --> Is it an input-process-output tool?
+                      |
+                      +-- YES --> utility-spa
+                      +-- NO  --> static-html
 ```
 
 ---
@@ -78,6 +107,74 @@ Start command: `python serve.py`
 No extra pip installs needed.
 
 **To use with D3.js:** uncomment the D3 CDN in `index.html` and replace the Chart.js code in `app.js`.
+
+---
+
+### `utility-spa`
+**Best for:** Lightweight single-page tools — calculators, text processors, unit converters, encoding/decoding tools, local data viewers.
+
+Includes:
+- `serve.py` — Flask static file server with automatic `<base>` tag injection (same as `static-html` pattern)
+- `index.html` — input area, action button row, output area layout
+- `style.css` — dark theme with `.tool-input`, `.tool-actions`, `.tool-output` classes
+- `app.js` — sample text transformer (uppercase, lowercase, title case, reverse, char count)
+
+Start command: `python serve.py`
+No extra pip installs needed.
+
+**Tip:** Replace the sample transform functions in `app.js` with your own logic. The `processInput()` function is the main entry point — it reads the input, applies the transformation, and writes the result.
+
+---
+
+### `dashboard-realtime`
+**Best for:** Live monitoring with streaming data — process metrics, live feeds, real-time event displays, any dashboard where data changes every few seconds.
+
+Includes:
+- `app.py` — Flask app with SSE endpoint (`/api/stream`), polling fallback (`/api/data`), and shared `generate_data()` function
+- `templates/index.html` — three Chart.js charts (line time-series, bar, doughnut), metric cards, connection status indicator
+- `static/style.css` — dashboard dark theme with responsive `.charts-grid` (line full-width, bar + doughnut side-by-side)
+
+Start command: `python app.py`
+No extra pip installs needed.
+
+**Tip:** Use SSE for under 30 concurrent users; consider switching to polling-only mode (the `/api/data` endpoint) for higher load. The frontend handles SSE failure automatically by falling back to polling — no code changes needed.
+
+---
+
+### `crud-app`
+**Best for:** Data management — any app that creates, reads, updates, and deletes records. Item/task/inventory managers, simple admin tools, anything that needs a database.
+
+Includes:
+- `app.py` — Flask app with SQLite (`get_db()`/`close_db()` pattern), 7 routes (list, detail, new, create, edit, update, delete), and 2 API endpoints
+- `templates/base.html` — base layout with `<base>` tag, nav, flash message block
+- `templates/list.html` — data table with item count, empty-state, and delete confirmation
+- `templates/form.html` — shared form for create and edit (`item=None` vs `item` object)
+- `templates/detail.html` — single-item card with edit/delete/back actions
+- `templates/404.html` — not-found page for missing item IDs
+- `static/style.css` — dark theme with `.data-table`, `.badge`, `.form-group`, `.flash` styles
+- `static/app.js` — delete confirmation via `data-confirm` attribute, flash auto-dismiss
+
+Start command: `python app.py`
+No extra pip installs needed (sqlite3 is stdlib).
+
+**Tip:** Edit the Item model section in `app.py` — add your own fields to `CREATE_TABLE_SQL` and update the queries. Run the app once to auto-create the database file.
+
+---
+
+### `file-tool`
+**Best for:** File handling — upload, download, convert, process. Document processors, media tools, format converters, file managers.
+
+Includes:
+- `app.py` — Flask app with upload (`secure_filename`, extension allowlist, 50 MB limit), listing, download, delete, and format conversion endpoints
+- `templates/base.html` — base layout with `<base>` tag
+- `templates/index.html` — drag-and-drop dropzone, file-card grid, toast notification container
+- `static/style.css` — dark theme with dropzone, file-card grid, progress bar, toast styles
+- `static/app.js` — drag-drop upload, loadFiles, deleteFile, convertFile, showToast, CONVERT_OPTIONS map
+
+Start command: `python app.py`
+No extra pip installs needed (werkzeug, csv, io, mimetypes are all pre-installed or stdlib).
+
+**Tip:** Add new conversions by extending the `CONVERSIONS` dict in `app.py` and the `CONVERT_OPTIONS` map in `app.js`. The conversion pipeline is isolated in the `/convert` endpoint — add a new `(ext, target)` key to `CONVERSIONS` and return the converted bytes.
 
 ---
 
