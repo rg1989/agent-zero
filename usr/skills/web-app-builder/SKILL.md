@@ -218,9 +218,17 @@ Key rules that MUST NOT change:
 - Start command is `python serve.py` (not `app.py`)
 
 **For `crud-app`:**
-- `app.py` → edit the Item model section: change `CREATE_TABLE_SQL` fields and queries
-- Routes handle list/detail/create/edit/delete automatically based on the model
-- SQLite database auto-creates on first request
+After copying, your app directory contains these files — do NOT create or delete any:
+`app.py`, `templates/base.html`, `templates/list.html`, `templates/form.html`, `templates/detail.html`, `static/style.css`, `static/app.js`, `requirements.txt`
+
+**DO NOT rewrite app.py or create new template files.** The template already has working HTML, CSS, routing, and CRUD operations. Only make these targeted changes:
+
+1. **Edit `CREATE_TABLE_SQL`** in app.py — change the `items` table columns to match your entity (e.g., `title TEXT`, `author TEXT`, `genre TEXT`)
+2. **Update SQL queries** in each route function to match your new column names
+3. **Update `templates/list.html`** — change table column headers and `{{ item.field }}` references to your columns
+4. **Update `templates/form.html`** — change form field labels and input names to your columns
+5. **Update `templates/detail.html`** — change displayed field labels and values to your columns
+6. **Rename entity** — use `sed -i 's/items/yourentity/g; s/item/yourentity/g'` across app.py and templates (adjust for plural/singular)
 
 **For `file-tool`:**
 - `app.py` → edit `ALLOWED_EXTENSIONS` and `MAX_CONTENT_LENGTH` for your needs
