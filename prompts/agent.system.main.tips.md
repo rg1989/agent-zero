@@ -28,10 +28,12 @@ When user asks to build any web app, dashboard, tool, tracker, or browser interf
 
 The **web-app-builder** skill auto-loads into your context. Do NOT call skills_tool:load — it is already loaded.
 
+Use the `webapp-helper` CLI for all webapp API operations (name validation, port allocation, init, register, start, stop, health checks). Do NOT construct raw curl commands to http://localhost/webapp — use webapp-helper subcommands instead.
+
 1. Follow the skill's MANDATORY 8-STEP SEQUENCE exactly — execute every step with code_execution_tool
 2. NEVER write ad-hoc Flask/Python scripts outside the Apps System
 3. NEVER save apps to workdir — apps go in /a0/apps/{app_name}/
-4. NEVER pick your own port — the skill allocates ports via the webapp API
+4. NEVER pick your own port — use `webapp-helper alloc-port` to allocate ports
 5. Execute ALL steps end-to-end in one go — do not stop to describe plans, just build it
 6. Tell the user their app is at localhost:50000/{app_name}/ (external URL). Your API calls inside the container use http://localhost/webapp (no port).
 
@@ -42,6 +44,7 @@ The **web-app-builder** skill auto-loads into your context. Do NOT call skills_t
 - Port 50000 is the HOST-side mapping. Inside this container, the web server runs on port 80
 - If you call localhost:50000 from inside the container, you WILL get "Connection refused"
 - ALL curl commands to the webapp API MUST use `http://localhost/webapp` (no port number)
+- **CLI helper:** `webapp-helper` handles all internal API calls — you never need to construct URLs manually
 
 ## FORBIDDEN — Standalone Apps
 
